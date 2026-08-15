@@ -45,6 +45,10 @@ export default function LeadGenPage() {
   // Demo Generator State
   const [templateTheme, setTemplateTheme] = useState("modern_dark");
   const [customTagline, setCustomTagline] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#ec4899"); // Pink default
+  const [fontStyle, setFontStyle] = useState("modern_sans");
+  const [heroLayout, setHeroLayout] = useState("centered_overlay");
+  const [ctaText, setCtaText] = useState("");
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [demoPreviewData, setDemoPreviewData] = useState<any>(null);
 
@@ -127,7 +131,11 @@ export default function LeadGenPage() {
         body: JSON.stringify({
           lead_id: lead.id,
           template_theme: templateTheme,
-          custom_tagline: customTagline || undefined
+          custom_tagline: customTagline || undefined,
+          primary_color: primaryColor,
+          font_style: fontStyle,
+          hero_layout: heroLayout,
+          cta_text: ctaText || undefined
         })
       });
       const data = await res.json();
@@ -490,29 +498,81 @@ export default function LeadGenPage() {
                 <div>
                   <h3 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>Template Customization</h3>
                   
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem" }}>Select Theme Style</label>
-                    <select
-                      value={templateTheme}
-                      onChange={(e) => setTemplateTheme(e.target.value)}
-                      style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
-                    >
-                      <option value="modern_dark">Modern Dark Minimalist</option>
-                      <option value="warm_restaurant">Warm Gourmet / Restaurant</option>
-                      <option value="elegant_salon">Elegant Luxury Salon / Beauty</option>
-                      <option value="professional_service">Professional Business & Service</option>
-                    </select>
-                  </div>
+                  <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "1.25rem", borderRadius: "12px", border: "1px solid rgba(255, 255, 255, 0.08)", marginBottom: "1.5rem" }}>
+                    <div style={{ marginBottom: "1rem" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#e2e8f0" }}>
+                        <span>🎨 Primary Brand Color</span>
+                      </label>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        {[
+                          { color: "#ec4899", name: "Rose" },
+                          { color: "#3b82f6", name: "Ocean" },
+                          { color: "#10b981", name: "Emerald" },
+                          { color: "#8b5cf6", name: "Purple" },
+                          { color: "#f59e0b", name: "Sunset" }
+                        ].map((c) => (
+                          <div 
+                            key={c.color}
+                            onClick={() => setPrimaryColor(c.color)}
+                            style={{ 
+                              width: "30px", height: "30px", borderRadius: "50%", background: c.color, 
+                              cursor: "pointer", border: primaryColor === c.color ? "2px solid #fff" : "2px solid transparent",
+                              boxShadow: primaryColor === c.color ? `0 0 10px ${c.color}` : "none",
+                              transition: "all 0.2s ease"
+                            }}
+                            title={c.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
 
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem" }}>Custom Tagline (Optional)</label>
-                    <input
-                      type="text"
-                      value={customTagline}
-                      onChange={(e) => setCustomTagline(e.target.value)}
-                      placeholder="e.g. Best Taste & Fast Delivery in City"
-                      style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
-                    />
+                    <div style={{ marginBottom: "1rem" }}>
+                      <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#e2e8f0" }}>✍️ Typography Vibe</label>
+                      <select
+                        value={fontStyle}
+                        onChange={(e) => setFontStyle(e.target.value)}
+                        style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                      >
+                        <option value="modern_sans">Modern Sans (Inter / Roboto)</option>
+                        <option value="elegant_serif">Elegant Serif (Playfair / Merriweather)</option>
+                        <option value="playful_rounded">Playful Rounded (Quicksand)</option>
+                      </select>
+                    </div>
+
+                    <div style={{ marginBottom: "1rem" }}>
+                      <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#e2e8f0" }}>📐 Hero Section Layout</label>
+                      <select
+                        value={heroLayout}
+                        onChange={(e) => setHeroLayout(e.target.value)}
+                        style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                      >
+                        <option value="centered_overlay">Centered Image Overlay</option>
+                        <option value="split_view">Split View (Text Left, Image Right)</option>
+                        <option value="minimalist_card">Minimalist Floating Card</option>
+                      </select>
+                    </div>
+
+                    <div style={{ marginBottom: "1rem" }}>
+                      <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#e2e8f0" }}>🔥 Custom CTA Button (Optional)</label>
+                      <input
+                        type="text"
+                        value={ctaText}
+                        onChange={(e) => setCtaText(e.target.value)}
+                        placeholder="e.g. Get a Free Quote"
+                        style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                      />
+                    </div>
+                    
+                    <div style={{ marginBottom: "0.5rem" }}>
+                      <label style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#e2e8f0" }}>🏷️ Custom Tagline (Optional)</label>
+                      <input
+                        type="text"
+                        value={customTagline}
+                        onChange={(e) => setCustomTagline(e.target.value)}
+                        placeholder="e.g. Best Taste & Fast Delivery in City"
+                        style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.3)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                      />
+                    </div>
                   </div>
 
                   <button
