@@ -19,7 +19,7 @@ export default function ChatClient({ projectId }: { projectId: string }) {
   useEffect(() => {
     const init = async () => {
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://samai-platform-production.up.railway.app";
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://samaipro-production.up.railway.app";
         const url = `${API_BASE}/chat/${projectId || "default"}`;
         const res = await fetch(url);
         const data = await res.json();
