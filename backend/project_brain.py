@@ -8,6 +8,9 @@ import json
 import math
 from typing import List, Dict, Optional, Tuple
 from dotenv import load_dotenv
+from database import SessionLocal
+from models import ProjectDocumentDB
+import sqlalchemy
 
 load_dotenv()
 
@@ -21,27 +24,55 @@ class Document:
 class ProjectBrain:
     def __init__(self, project_id: str):
         self.project_id = project_id
-        self.documents: List[Document] = []
-        self.embeddings_cache: Dict[str, List[float]] = {}
+        # We load documents directly from DB when needed to save memory
         
     def add_document(self, text: str, metadata: Dict, doc_id: str):
-        """Add a document to the knowledge base"""
-        doc = Document(text, metadata, doc_id)
-        self.documents.append(doc)
-        return doc
+        """Add a document to the knowledge base (persisted to DB)"""
+        try:
+            db = SessionLocal()
+            existing = db.query(ProjectDocumentDB).filter(
+                ProjectDocumentDB.project_id == self.project_id,
+                ProjectDocumentDB.doc_id == doc_id
+            ).first()
+            
+            if not existing:
+                new_doc = ProjectDocumentDB(
+                    project_id=self.project_id,
+                    doc_id=doc_id,
+                    text=text,
+                    metadata_json=json.dumps(metadata)
+                )
+                db.add(new_doc)
+                db.commit()
+            db.close()
+        except Exception as e:
+            print(f"Error persisting document to DB: {e}")
+        
+        return Document(text, metadata, doc_id)
     
     async def index_documents(self):
-        """Generate embeddings for all documents"""
+        """Generate embeddings for all documents missing them in DB"""
         from api_hub import api_hub
         
-        for doc in self.documents:
-            if doc.text and not doc.embedding:
-                try:
-                    embedding = await api_hub.embed(doc.text)
-                    doc.embedding = embedding
-                    self.embeddings_cache[doc.doc_id] = embedding
-                except Exception as e:
-                    print(f"Failed to embed document {doc.doc_id}: {e}")
+        try:
+            db = SessionLocal()
+            unindexed_docs = db.query(ProjectDocumentDB).filter(
+                ProjectDocumentDB.project_id == self.project_id,
+                ProjectDocumentDB.embedding_json == None
+            ).all()
+            
+            for db_doc in unindexed_docs:
+                if db_doc.text:
+                    try:
+                        embedding = await api_hub.embed(db_doc.text)
+                        if embedding:
+                            db_doc.embedding_json = json.dumps(embedding)
+                            db.commit()
+                    except Exception as e:
+                        print(f"Failed to embed document {db_doc.doc_id}: {e}")
+            db.close()
+        except Exception as e:
+            print(f"Error indexing documents: {e}")
     
     def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
         """Calculate cosine similarity between two vectors"""
@@ -64,7 +95,22 @@ class ProjectBrain:
         """
         from api_hub import api_hub
         
-        if not self.documents:
+        try:
+            db = SessionLocal()
+            db_docs = db.query(ProjectDocumentDB).filter(ProjectDocumentDB.project_id == self.project_id).all()
+            
+            documents = []
+            for d in db_docs:
+                doc = Document(d.text, json.loads(d.metadata_json) if d.metadata_json else {}, d.doc_id)
+                if d.embedding_json:
+                    doc.embedding = json.loads(d.embedding_json)
+                documents.append(doc)
+            db.close()
+        except Exception as e:
+            print(f"Error loading docs for retrieval: {e}")
+            return []
+
+        if not documents:
             return []
         
         # Try embedding-based retrieval first
@@ -78,7 +124,7 @@ class ProjectBrain:
         
         if query_embedding:
             # Cosine similarity retrieval
-            for doc in self.documents:
+            for doc in documents:
                 if doc.embedding:
                     score = self._cosine_similarity(query_embedding, doc.embedding)
                     scored_docs.append({
@@ -90,7 +136,7 @@ class ProjectBrain:
         else:
             # Fallback: keyword-based retrieval
             query_words = set(query.lower().split())
-            for doc in self.documents:
+            for doc in documents:
                 doc_words = set(doc.text.lower().split())
                 overlap = len(query_words.intersection(doc_words))
                 score = overlap / max(len(query_words), 1)
@@ -127,50 +173,19 @@ class ProjectBrain:
             context_parts.append(f"[Document {i} (Score: {doc['score']:.2f})]\n{doc['text']}\n")
         
         return "\n".join(context_parts)
-    
-    def to_dict(self) -> Dict:
-        """Serialize brain state"""
-        return {
-            "project_id": self.project_id,
-            "documents": [
-                {
-                    "doc_id": doc.doc_id,
-                    "text": doc.text,
-                    "metadata": doc.metadata,
-                    "embedding": doc.embedding
-                }
-                for doc in self.documents
-            ]
-        }
-    
-    @classmethod
-    def from_dict(cls, data: Dict) -> "ProjectBrain":
-        """Deserialize brain state"""
-        brain = cls(data["project_id"])
-        for doc_data in data.get("documents", []):
-            doc = Document(
-                text=doc_data["text"],
-                metadata=doc_data["metadata"],
-                doc_id=doc_data["doc_id"]
-            )
-            doc.embedding = doc_data.get("embedding")
-            brain.documents.append(doc)
-            if doc.embedding:
-                brain.embeddings_cache[doc.doc_id] = doc.embedding
-        return brain
 
-
-# In-memory store for project brains
-# In production, this should be persisted to database or Redis
-_project_brains: Dict[str, ProjectBrain] = {}
-
+# Singleton-like factory pattern, but now brains are completely stateless
+# and load directly from DB.
 def get_project_brain(project_id: str) -> ProjectBrain:
-    """Get or create a Project Brain for a project"""
-    if project_id not in _project_brains:
-        _project_brains[project_id] = ProjectBrain(project_id)
-    return _project_brains[project_id]
+    """Get a Project Brain for a project (stateless DB wrapper)"""
+    return ProjectBrain(project_id)
 
 def remove_project_brain(project_id: str):
-    """Remove a Project Brain (e.g., when project is deleted)"""
-    if project_id in _project_brains:
-        del _project_brains[project_id]
+    """Clean up Project Brain documents from DB"""
+    try:
+        db = SessionLocal()
+        db.query(ProjectDocumentDB).filter(ProjectDocumentDB.project_id == project_id).delete()
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"Error removing project brain {project_id}: {e}")

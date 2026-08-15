@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 import models
@@ -85,6 +85,7 @@ def extract_text_from_file(file_path: str, content_type: str, filename: str) -> 
 @router.post("/{project_id}")
 async def send_message(
     project_id: str,
+    background_tasks: BackgroundTasks,
     content: Optional[str] = Form(None),
     files: list[UploadFile] = File(default=[]),
     db: Session = Depends(get_db), 
@@ -110,6 +111,8 @@ async def send_message(
     
     # 3. Process uploaded files
     file_contents = []
+    has_new_docs = False
+    
     for uploaded_file in files:
         # Save file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(uploaded_file.filename)[1]) as tmp_file:
@@ -128,9 +131,14 @@ async def send_message(
                 metadata={"source": uploaded_file.filename, "type": uploaded_file.content_type},
                 doc_id=f"{project_id}_{uploaded_file.filename}"
             )
+            has_new_docs = True
         
         # Clean up temp file
         os.remove(tmp_file_path)
+    
+    # Trigger background embedding index if new docs were added
+    if has_new_docs:
+        background_tasks.add_task(brain.index_documents)
     
     # 4. Combine content
     full_content = content or ""

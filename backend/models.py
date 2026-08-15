@@ -112,3 +112,14 @@ class UserKnowledgeDB(Base):
     metadata_json = Column(Text)
     usage_count = Column(Integer, default=0)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+class ProjectDocumentDB(Base):
+    __tablename__ = "project_documents"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), index=True)
+    doc_id = Column(String(255), index=True)
+    text = Column(Text, nullable=False)
+    metadata_json = Column(Text)
+    embedding_json = Column(Text) # JSON serialized list of floats
+    timestamp = Column(DateTime, default=datetime.utcnow)

@@ -254,6 +254,7 @@ class APIHub:
                     model_override or "text-embedding-3-small",
                     "text-embedding-3-large",
                     "text-embedding-ada-002",
+                    "text-embedding-004", # Gemini Embedding Model
                     "embed-english-v3.0",
                 ]
                 
