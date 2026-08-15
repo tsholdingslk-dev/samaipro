@@ -561,7 +561,7 @@ export default function LeadGenPage() {
                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f59e0b" }}></div>
                     <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#10b981" }}></div>
                     <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginLeft: "0.5rem" }}>
-                      Preview: samaipro.com{selectedLead.demo_url || `/demo/${selectedLead.id}`}
+                      Preview: samaipro-zrlr.vercel.app{selectedLead.demo_url || `/demo/${selectedLead.id}`}
                     </span>
                   </div>
 
