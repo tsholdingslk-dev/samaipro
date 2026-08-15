@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
 from database import SessionLocal
-from models import User, Chat
+from models import User, Chat, UserPreferenceDB, UserKnowledgeDB
 import sqlalchemy
 
 @dataclass
@@ -22,17 +22,9 @@ class UserFeedback:
     category: str  # quality, speed, accuracy, relevance
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
-@dataclass
-class UserPreference:
-    user_id: str
-    preference_type: str  # response_length, tone, format, language
-    preference_value: str
-    confidence: float = 1.0
-    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-
 class FeedbackCollector:
     def __init__(self):
-        self.feedback_db: List[UserFeedback] = []
+        pass
     
     def record_feedback(self, user_id: str, message_id: str, rating: int, feedback_text: str, category: str) -> UserFeedback:
         feedback = UserFeedback(
@@ -42,7 +34,6 @@ class FeedbackCollector:
             feedback_text=feedback_text,
             category=category
         )
-        self.feedback_db.append(feedback)
         self._persist_feedback(feedback)
         return feedback
     
@@ -50,7 +41,6 @@ class FeedbackCollector:
         try:
             db = SessionLocal()
             try:
-                # Create feedback table if not exists
                 from sqlalchemy import text
                 db.execute(text("""
                     CREATE TABLE IF NOT EXISTS user_feedback (
@@ -84,7 +74,25 @@ class FeedbackCollector:
             print(f"Database error: {e}")
     
     def get_user_feedback(self, user_id: str, limit: int = 50) -> List[UserFeedback]:
-        return [f for f in self.feedback_db if f.user_id == user_id][-limit:]
+        try:
+            db = SessionLocal()
+            from sqlalchemy import text
+            res = db.execute(text("SELECT * FROM user_feedback WHERE user_id = :uid ORDER BY timestamp DESC LIMIT :limit"), {"uid": user_id, "limit": limit}).fetchall()
+            db.close()
+            
+            feedbacks = []
+            for r in res:
+                # SQLAlchemy result row handles indexing or attribute access
+                feedbacks.append(UserFeedback(
+                    user_id=r[1] if isinstance(r, tuple) else getattr(r, 'user_id', ''),
+                    message_id=r[2] if isinstance(r, tuple) else getattr(r, 'message_id', ''),
+                    rating=r[3] if isinstance(r, tuple) else getattr(r, 'rating', 0),
+                    feedback_text=r[4] if isinstance(r, tuple) else getattr(r, 'feedback_text', ''),
+                    category=r[5] if isinstance(r, tuple) else getattr(r, 'category', '')
+                ))
+            return feedbacks
+        except Exception:
+            return []
     
     def get_feedback_stats(self, user_id: str) -> Dict[str, Any]:
         user_feedback = self.get_user_feedback(user_id)
@@ -108,29 +116,36 @@ class FeedbackCollector:
 
 class PreferenceLearner:
     def __init__(self):
-        self.preferences: Dict[str, UserPreference] = {}
+        pass
     
     def learn_preference(self, user_id: str, preference_type: str, preference_value: str):
-        key = f"{user_id}:{preference_type}"
-        
-        if key in self.preferences:
-            existing = self.preferences[key]
-            existing.preference_value = preference_value
-            existing.confidence = min(existing.confidence + 0.1, 1.0)
-            existing.last_updated = datetime.utcnow().isoformat()
-        else:
-            self.preferences[key] = UserPreference(
-                user_id=user_id,
-                preference_type=preference_type,
-                preference_value=preference_value
-            )
+        try:
+            db = SessionLocal()
+            existing = db.query(UserPreferenceDB).filter(UserPreferenceDB.user_id == user_id, UserPreferenceDB.preference_type == preference_type).first()
+            if existing:
+                existing.preference_value = preference_value
+                existing.confidence = min(existing.confidence + 0.1, 1.0)
+                existing.last_updated = datetime.utcnow()
+            else:
+                new_pref = UserPreferenceDB(
+                    user_id=user_id,
+                    preference_type=preference_type,
+                    preference_value=preference_value
+                )
+                db.add(new_pref)
+            db.commit()
+            db.close()
+        except Exception as e:
+            print(f"Error saving preference: {e}")
     
     def get_preferences(self, user_id: str) -> Dict[str, str]:
-        return {
-            p.preference_type: p.preference_value
-            for k, p in self.preferences.items()
-            if p.user_id == user_id and p.confidence > 0.5
-        }
+        try:
+            db = SessionLocal()
+            prefs = db.query(UserPreferenceDB).filter(UserPreferenceDB.user_id == user_id).all()
+            db.close()
+            return {p.preference_type: p.preference_value for p in prefs if p.confidence > 0.5}
+        except:
+            return {}
     
     def get_prompt_modifiers(self, user_id: str) -> Dict[str, Any]:
         prefs = self.get_preferences(user_id)
@@ -182,32 +197,50 @@ class ResponseAnalyzer:
 
 class KnowledgeUpdater:
     def __init__(self):
-        self.knowledge_base: Dict[str, List[Dict[str, Any]]] = {}
+        pass
     
     def add_knowledge(self, user_id: str, source: str, content: str, metadata: Dict[str, Any] = None):
-        if user_id not in self.knowledge_base:
-            self.knowledge_base[user_id] = []
-        
-        self.knowledge_base[user_id].append({
-            "source": source,
-            "content": content,
-            "metadata": metadata or {},
-            "timestamp": datetime.utcnow().isoformat(),
-            "usage_count": 0
-        })
+        try:
+            db = SessionLocal()
+            new_kb = UserKnowledgeDB(
+                user_id=user_id,
+                source=source,
+                content=content,
+                metadata_json=json.dumps(metadata or {})
+            )
+            db.add(new_kb)
+            db.commit()
+            db.close()
+        except Exception as e:
+            print(f"Error adding knowledge: {e}")
     
     def get_user_knowledge(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
-        if user_id not in self.knowledge_base:
+        try:
+            db = SessionLocal()
+            kb_list = db.query(UserKnowledgeDB).filter(UserKnowledgeDB.user_id == user_id).order_by(UserKnowledgeDB.usage_count.desc()).limit(limit).all()
+            db.close()
+            return [
+                {
+                    "source": kb.source,
+                    "content": kb.content,
+                    "metadata": json.loads(kb.metadata_json) if kb.metadata_json else {},
+                    "timestamp": kb.timestamp.isoformat(),
+                    "usage_count": kb.usage_count
+                } for kb in kb_list
+            ]
+        except:
             return []
-        return sorted(
-            self.knowledge_base[user_id],
-            key=lambda x: x["usage_count"],
-            reverse=True
-        )[:limit]
     
-    def increment_usage(self, user_id: str, knowledge_index: int):
-        if user_id in self.knowledge_base and 0 <= knowledge_index < len(self.knowledge_base[user_id]):
-            self.knowledge_base[user_id][knowledge_index]["usage_count"] += 1
+    def increment_usage(self, user_id: str, source: str):
+        try:
+            db = SessionLocal()
+            kb = db.query(UserKnowledgeDB).filter(UserKnowledgeDB.user_id == user_id, UserKnowledgeDB.source == source).first()
+            if kb:
+                kb.usage_count += 1
+                db.commit()
+            db.close()
+        except:
+            pass
 
 class SelfLearningSystem:
     def __init__(self):

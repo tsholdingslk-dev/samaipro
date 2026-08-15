@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -16,6 +16,7 @@ router = APIRouter(
 
 @router.post("/feedback")
 async def submit_feedback(
+    background_tasks: BackgroundTasks,
     message_id: str = Form(...),
     rating: int = Form(...),
     feedback_text: str = Form(""),
@@ -26,7 +27,9 @@ async def submit_feedback(
     if rating < 1 or rating > 5:
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
     
-    feedback = self_learning.record_feedback(
+    # Run the heavy self-learning recording process in the background
+    background_tasks.add_task(
+        self_learning.record_feedback,
         user_id=current_user["user_id"],
         message_id=message_id,
         rating=rating,
@@ -36,9 +39,7 @@ async def submit_feedback(
     
     return {
         "status": "recorded",
-        "feedback_id": f"{message_id}_{feedback.timestamp}",
-        "rating": feedback.rating,
-        "message": "Thank you for your feedback!"
+        "message": "Thank you for your feedback! The AI is continuously learning in the background."
     }
 
 @router.get("/preferences")
@@ -51,6 +52,7 @@ async def get_preferences(
 
 @router.post("/knowledge")
 async def add_knowledge(
+    background_tasks: BackgroundTasks,
     source: str = Form(...),
     content: str = Form(...),
     metadata: str = Form(None),
@@ -64,14 +66,16 @@ async def add_knowledge(
         except:
             meta = {"raw": metadata}
     
-    self_learning.add_user_knowledge(
+    # Process knowledge vectors in background
+    background_tasks.add_task(
+        self_learning.add_user_knowledge,
         user_id=current_user["user_id"],
         source=source,
         content=content,
         metadata=meta
     )
     
-    return {"status": "added", "source": source}
+    return {"status": "added", "source": source, "message": "Knowledge added and indexing in background."}
 
 @router.get("/knowledge")
 async def get_knowledge(

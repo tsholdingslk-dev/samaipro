@@ -196,10 +196,13 @@ class APIHub:
 
         last_error = None
         
-        for provider in available:
+        for idx, provider in enumerate(available):
             try:
                 if not provider.client:
                     continue
+
+                if idx > 0:
+                    print(f"🔄 Rotating to fallback provider: {provider.name} (Priority {provider.priority})")
 
                 # Merge default params with kwargs (kwargs override defaults)
                 params = {
@@ -220,17 +223,19 @@ class APIHub:
             except Exception as e:
                 error_msg = str(e)
                 last_error = e
-                print(f"Provider {provider.name} failed: {error_msg}")
+                print(f"⚠️ Provider Vault Alert | {provider.name} failed: {error_msg}")
                 
                 # Mark provider as unavailable if rate limited or out of credits
                 if "rate limit" in error_msg.lower() or "quota" in error_msg.lower() or "429" in error_msg or "402" in error_msg:
+                    print(f"🔒 Vault locked {provider.name} due to Rate Limit / Quota.")
                     provider.status = "rate_limited"
                 elif "unauthorized" in error_msg.lower() or "invalid" in error_msg.lower() or "401" in error_msg:
+                    print(f"❌ Vault disabled {provider.name} due to Invalid API Key.")
                     provider.status = "error"
                 
                 continue
 
-        raise Exception(f"All providers failed. Last error: {last_error}")
+        raise Exception(f"All providers in the vault failed. Last error: {last_error}")
 
     async def embed(self, text: str, model_override: Optional[str] = None) -> List[float]:
         """

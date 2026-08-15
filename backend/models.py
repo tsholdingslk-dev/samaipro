@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -92,3 +92,23 @@ class Lead(Base):
     outreach_status = Column(String(50), default="new") # new, demo_created, proposal_sent, converted
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class UserPreferenceDB(Base):
+    __tablename__ = "user_preferences"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), index=True)
+    preference_type = Column(String(50))
+    preference_value = Column(String(255))
+    confidence = Column(Float, default=1.0)
+    last_updated = Column(DateTime, default=datetime.utcnow)
+
+class UserKnowledgeDB(Base):
+    __tablename__ = "user_knowledge"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), index=True)
+    source = Column(String(255))
+    content = Column(Text)
+    metadata_json = Column(Text)
+    usage_count = Column(Integer, default=0)
+    timestamp = Column(DateTime, default=datetime.utcnow)

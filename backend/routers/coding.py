@@ -47,6 +47,13 @@ async def generate_code(
 Generate clean, well-documented, production-ready code.
 Include comments explaining key parts.
 Follow best practices and modern patterns.
+
+IMPORTANT DESIGN STANDARDS:
+If generating frontend web code (HTML, React, Next.js, Vue, etc.):
+1. YOU MUST USE Tailwind CSS for all styling.
+2. Implement modern, responsive UI/UX using CSS Grid and Flexbox.
+3. Ensure international production-level design aesthetics (proper padding, typography, dark/light mode compatibility).
+
 Return only the code with minimal explanation unless asked."""
     
     messages = [
@@ -126,17 +133,51 @@ Provide the corrected code and a brief explanation of the fix.{error_context}
 Code:
 ```{language}
 {code}
-```"""
+```
+
+IMPORTANT: You MUST return your response as a valid JSON object matching this exact schema:
+{{
+  "fixed_code": "The raw corrected code here (no markdown blocks inside the string)",
+  "explanation": "A clear explanation of what was fixed and why"
+}}
+Return ONLY the JSON. Do not include markdown codeblocks around the JSON.
+"""
     
     messages = [
-        {"role": "system", "content": "You are a debugging expert. Fix code and explain the solution clearly."},
+        {"role": "system", "content": "You are a debugging expert. Fix code and explain the solution clearly. ALWAYS respond with valid JSON only."},
         {"role": "user", "content": prompt}
     ]
     
     try:
-        result = await api_hub.chat(messages)
+        # Request JSON format if supported by provider
+        result = await api_hub.chat(messages, response_format={"type": "json_object"})
+        
+        # Parse the JSON response
+        import json
+        import re
+        
+        content = result["content"].strip()
+        # Clean markdown code blocks if the AI accidentally included them
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+            
+        parsed = json.loads(content.strip())
+        
+        return {
+            "fixed_code": parsed.get("fixed_code", ""),
+            "explanation": parsed.get("explanation", ""),
+            "language": language,
+            "provider": result.get("provider", "unknown")
+        }
+    except json.JSONDecodeError as e:
+        # Fallback if AI fails to return valid JSON
         return {
             "fixed_code": result["content"],
+            "explanation": "AI failed to return valid JSON format.",
             "language": language,
             "provider": result.get("provider", "unknown")
         }
