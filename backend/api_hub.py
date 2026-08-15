@@ -66,29 +66,33 @@ class APIHub:
 
     def _load_providers_from_env(self):
         """Load providers from environment variables"""
-        # InferX / DeepSeek
-        inferx_key = os.getenv("INFERX_API_KEY")
-        if inferx_key and inferx_key != "your_inferx_api_key_here":
-            self.providers.append(APIProvider(
-                name="InferX",
-                api_key=inferx_key,
-                base_url="https://model.inferx.net/endpoints/v1",
-                model="deepseek-v4-flash-0731",
-                priority=1,
-                quota_limit=1000
-            ))
+        # InferX / DeepSeek (supports multiple comma-separated keys)
+        inferx_keys_str = os.getenv("INFERX_API_KEY")
+        if inferx_keys_str and inferx_keys_str != "your_inferx_api_key_here":
+            inferx_keys = [k.strip() for k in inferx_keys_str.split(",") if k.strip()]
+            for idx, key in enumerate(inferx_keys):
+                self.providers.append(APIProvider(
+                    name=f"InferX_{idx+1}",
+                    api_key=key,
+                    base_url="https://model.inferx.net/endpoints/v1",
+                    model="deepseek-v4-flash-0731",
+                    priority=1,
+                    quota_limit=1000
+                ))
 
-        # Gemini (via OpenAI-compatible endpoint)
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if gemini_key and gemini_key != "your_gemini_api_key_here":
-            self.providers.append(APIProvider(
-                name="Gemini",
-                api_key=gemini_key,
-                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-                model="gemini-1.5-pro",
-                priority=0,
-                quota_limit=1500
-            ))
+        # Gemini (supports multiple comma-separated keys)
+        gemini_keys_str = os.getenv("GEMINI_API_KEY")
+        if gemini_keys_str and gemini_keys_str != "your_gemini_api_key_here":
+            gemini_keys = [k.strip() for k in gemini_keys_str.split(",") if k.strip()]
+            for idx, key in enumerate(gemini_keys):
+                self.providers.append(APIProvider(
+                    name=f"Gemini_{idx+1}",
+                    api_key=key,
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                    model="gemini-1.5-pro",
+                    priority=0,
+                    quota_limit=1500
+                ))
 
         # OpenRouter (supports multiple comma-separated keys)
         openrouter_keys_str = os.getenv("OPENROUTER_API_KEY")
@@ -104,29 +108,34 @@ class APIHub:
                     quota_limit=500
                 ))
 
-        # Groq (Ultra-Fast LPUs)
-        groq_key = os.getenv("GROQ_API_KEY")
-        if groq_key and groq_key != "your_groq_api_key_here":
-            self.providers.append(APIProvider(
-                name="Groq",
-                api_key=groq_key,
-                base_url="https://api.groq.com/openai/v1",
-                model="llama-3.3-70b-versatile",
-                priority=0,
-                quota_limit=1000
-            ))
+        # Groq (supports multiple comma-separated keys)
+        groq_keys_str = os.getenv("GROQ_API_KEY")
+        if groq_keys_str and groq_keys_str != "your_groq_api_key_here":
+            groq_keys = [k.strip() for k in groq_keys_str.split(",") if k.strip()]
+            for idx, key in enumerate(groq_keys):
+                self.providers.append(APIProvider(
+                    name=f"Groq_{idx+1}",
+                    api_key=key,
+                    base_url="https://api.groq.com/openai/v1",
+                    model="llama-3.3-70b-versatile",
+                    priority=0,
+                    quota_limit=1000
+                ))
 
-        # HuggingFace Inference Provider
-        hf_key = os.getenv("HUGGINGFACE_API_KEY")
-        if hf_key and hf_key.startswith("hf_"):
-            self.providers.append(APIProvider(
-                name="HuggingFace",
-                api_key=hf_key,
-                base_url="https://router.huggingface.co/v1",
-                model="Qwen/Qwen2.5-Coder-32B-Instruct",
-                priority=2,
-                quota_limit=1000
-            ))
+        # HuggingFace (supports multiple comma-separated keys)
+        hf_keys_str = os.getenv("HUGGINGFACE_API_KEY")
+        if hf_keys_str and hf_keys_str != "your_huggingface_api_key_here":
+            hf_keys = [k.strip() for k in hf_keys_str.split(",") if k.strip()]
+            for idx, key in enumerate(hf_keys):
+                if key.startswith("hf_"):
+                    self.providers.append(APIProvider(
+                        name=f"HuggingFace_{idx+1}",
+                        api_key=key,
+                        base_url="https://router.huggingface.co/v1",
+                        model="Qwen/Qwen2.5-Coder-32B-Instruct",
+                        priority=2,
+                        quota_limit=1000
+                    ))
 
         # Load dynamic API keys from database
         self._load_providers_from_db()
