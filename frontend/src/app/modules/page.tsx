@@ -94,6 +94,14 @@ const modules: Module[] = [
     color: "#10b981"
   },
   {
+    id: "social-news",
+    title: "NewsFlash Elite Editor",
+    description: "Create viral, fact-checked Facebook posts and analyze reference images.",
+    icon: "📰",
+    href: "/modules/social-news",
+    color: "#3b82f6"
+  },
+  {
     id: "docs",
     title: "Interactive API Documentation",
     description: "Complete API reference with endpoints, SDK examples, and live Try-It runner.",
