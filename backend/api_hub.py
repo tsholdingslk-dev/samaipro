@@ -199,8 +199,24 @@ class APIHub:
         available = self.get_available_providers()
         if provider_name:
             available = [p for p in available if p.name.lower() == provider_name.lower()]
+            
+        # Detect if this is a vision request (multimodal)
+        is_vision = False
+        for msg in messages:
+            if isinstance(msg.get("content"), list):
+                for item in msg["content"]:
+                    if isinstance(item, dict) and item.get("type") == "image_url":
+                        is_vision = True
+                        break
         
+        # Filter for vision-capable models if needed
+        if is_vision:
+            vision_models = ["gemini-1.5-pro", "gemini-1.5-flash", "gpt-4o", "gpt-4o-mini", "claude-3"]
+            available = [p for p in available if any(vm in p.model.lower() for vm in vision_models) or "gpt-4o" in p.model.lower()]
+
         if not available:
+            if is_vision:
+                raise Exception("No multimodal (vision) AI providers available. Please check your API keys for Gemini or OpenAI.")
             raise Exception("No matching AI providers available. Please check your API keys.")
 
         last_error = None
