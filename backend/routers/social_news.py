@@ -88,12 +88,28 @@ async def analyze_image(
     Step 4: Analyze reference image for Facebook post.
     """
     content_bytes = await image.read()
+    from PIL import Image
+    import io
     
-    # Check if api_hub has a vision_chat method or just use chat with image
-    # Assuming api_hub.chat handles vision if image_url or base64 is provided
-    # Let's use base64
-    base64_image = base64.b64encode(content_bytes).decode('utf-8')
-    mime_type = image.content_type or "image/jpeg"
+    # Process image to ensure compatibility (convert WebP/PNG to JPEG, resize if too large)
+    img = Image.open(io.BytesIO(content_bytes))
+    
+    # Convert to RGB (in case of RGBA/PNG)
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+        
+    # Resize if too large to save tokens and prevent 500 errors
+    max_size = 1024
+    if img.width > max_size or img.height > max_size:
+        img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+        
+    # Save to bytes as JPEG
+    jpeg_io = io.BytesIO()
+    img.save(jpeg_io, format="JPEG", quality=85)
+    jpeg_bytes = jpeg_io.getvalue()
+    
+    base64_image = base64.b64encode(jpeg_bytes).decode('utf-8')
+    mime_type = "image/jpeg"
     image_data_url = f"data:{mime_type};base64,{base64_image}"
     
     system_prompt = """You are an elite American social media graphic designer and content analyst.
