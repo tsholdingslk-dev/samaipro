@@ -326,38 +326,83 @@ async def generate_image(
     """
     Generate an image. Supports both multipart/form-data and application/json (for NewsFlash Pro)
     """
-    content_type = request.headers.get("content-type", "")
-    
-    if "application/json" in content_type:
-        body = await request.json()
-        prompt = body.get("prompt", "")
-        width_str, height_str = body.get("size", "1024x1024").split("x") if "x" in body.get("size", "") else ("1024", "1024")
-        width, height = int(width_str), int(height_str)
-        model = body.get("style", "flux") # Using style as model if provided
-    else:
-        form = await request.form()
-        prompt = form.get("prompt", "")
-        width = int(form.get("width", 1024))
-        height = int(form.get("height", 1024))
-        model = form.get("model", "flux")
+    try:
+        content_type = request.headers.get("content-type", "")
         
-    from tools import ImageGeneratorTool
-    tool = ImageGeneratorTool()
-    res = tool.execute(prompt=prompt, width=width, height=height, model=model)
-    
-    # Standardize output for NewsFlash Pro
-    if "error" in res:
-        import urllib.parse
-        encoded_prompt = urllib.parse.quote(prompt[:100])
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model={model}"
-    else:
-        url = res.get("image_url", "")
+        prompt = ""
+        width = 1024
+        height = 1024
+        model = "flux"
         
-    return {
-        "url": url,
-        "image_url": url, # Keep for backwards compatibility
-        "status": "success",
-        "provider": res.get("provider", "Pollinations_Direct") if "error" in res else res.get("provider", "Unknown")
-    }
-
+        if "application/json" in content_type:
+            try:
+                body = await request.json()
+            except Exception:
+                body = {}
+                
+            prompt = body.get("prompt") or ""
+            
+            # Handle size properly, checking for None
+            size_val = body.get("size")
+            if isinstance(size_val, str) and "x" in size_val:
+                try:
+                    width_str, height_str = size_val.split("x")
+                    width = int(width_str)
+                    height = int(height_str)
+                except ValueError:
+                    width, height = 1024, 1024
+            elif body.get("width") and body.get("height"):
+                try:
+                    width = int(body.get("width"))
+                    height = int(body.get("height"))
+                except (ValueError, TypeError):
+                    pass
+                    
+            model = body.get("style", "flux") or "flux"
+        else:
+            form = await request.form()
+            prompt = form.get("prompt") or ""
+            try:
+                width = int(form.get("width", 1024) or 1024)
+                height = int(form.get("height", 1024) or 1024)
+            except (ValueError, TypeError):
+                width, height = 1024, 1024
+            model = form.get("model", "flux") or "flux"
+            
+        # Ensure prompt is a string
+        if not isinstance(prompt, str):
+            prompt = str(prompt)
+            
+        from tools import ImageGeneratorTool
+        tool = ImageGeneratorTool()
+        res = tool.execute(prompt=prompt, width=width, height=height, model=model)
+        
+        # Standardize output for NewsFlash Pro
+        if "error" in res:
+            import urllib.parse
+            safe_prompt = prompt[:100] if prompt else "random"
+            encoded_prompt = urllib.parse.quote(safe_prompt)
+            url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model={model}"
+            provider = "Pollinations_Direct"
+        else:
+            url = res.get("image_url", "")
+            provider = res.get("provider", "Unknown")
+            
+        return {
+            "url": url,
+            "image_url": url, # Keep for backwards compatibility
+            "status": "success",
+            "provider": provider
+        }
+    except Exception as e:
+        # Prevent 502 Bad Gateway by catching all unhandled exceptions
+        import traceback
+        print(f"Image Generate Error: {e}")
+        print(traceback.format_exc())
+        return {
+            "url": "https://image.pollinations.ai/prompt/error?width=1024&height=1024",
+            "image_url": "https://image.pollinations.ai/prompt/error?width=1024&height=1024",
+            "status": "error",
+            "message": str(e)
+        }
 

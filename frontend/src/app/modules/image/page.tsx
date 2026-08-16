@@ -16,7 +16,7 @@ export default function ImagePage() {
   const [genPrompt, setGenPrompt] = useState("");
   const [genWidth, setGenWidth] = useState("1024");
   const [genHeight, setGenHeight] = useState("1024");
-  const [genModel, setGenModel] = useState("flux");
+  const [genModel, setGenModel] = useState("flux-realism");
   const [genImageUrl, setGenImageUrl] = useState("");
 
   // Prompt state
@@ -284,8 +284,11 @@ export default function ImagePage() {
               <div>
                 <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Model</label>
                 <select className="input-field" value={genModel} onChange={(e) => setGenModel(e.target.value)}>
+                  <option value="flux-realism">Flux Realism (Cinematic/Photo)</option>
                   <option value="flux">Flux (High Quality)</option>
-                  <option value="turbo">Turbo (Ultra Fast)</option>
+                  <option value="flux-3d">Flux 3D (Render/Game)</option>
+                  <option value="flux-anime">Flux Anime (Illustration)</option>
+                  <option value="turbo">Turbo (Basic Fast)</option>
                 </select>
               </div>
               <div>
