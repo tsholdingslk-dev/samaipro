@@ -185,6 +185,23 @@ async def send_message(
     # 11. Return the AI's chat object
     return ai_chat
 
+@router.get("/default")
+def chat_default(
+    prompt: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Dedicated endpoint for external integrations (like NewsFlash Pro).
+    GET /api/chat/default?prompt=... -> returns {"content": "..."}
+    """
+    if not prompt:
+        return {"content": "Hello! Welcome to SAM AI Workspace (default). I am your 24/7 AI Assistant. How can I help you today?"}
+    
+    # Generate AI Response
+    ai_text = get_ai_response(user_message=prompt, chat_history=[])
+    
+    return {"content": ai_text}
+
 @router.get("/{project_id}", response_model=list[schemas.ChatResponse])
 def get_chat_history(
     project_id: str, 

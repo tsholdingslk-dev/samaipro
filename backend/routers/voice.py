@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -11,6 +11,7 @@ import os
 import tempfile
 import asyncio
 import concurrent.futures
+import base64
 
 router = APIRouter(
     prefix="/voice",
@@ -33,20 +34,42 @@ def run_async(coro):
 
 @router.post("/transcribe")
 async def transcribe_audio(
-    audio: UploadFile = File(...),
-    language: str = Form("en"),
-    project_id: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """Transcribe audio file to text"""
+    """
+    Transcribe audio file to text. Supports multipart/form-data and application/json with Base64 audio (for NewsFlash Pro)
+    """
+    content_type = request.headers.get("content-type", "")
+    language = "en"
+    project_id = None
+    
+    if "application/json" in content_type:
+        body = await request.json()
+        audio_b64 = body.get("audio", "")
+        # Remove data URI scheme prefix if present (e.g., data:audio/webm;base64,)
+        if "," in audio_b64:
+            audio_b64 = audio_b64.split(",")[1]
+            
+        content_bytes = base64.b64decode(audio_b64)
+        suffix = ".webm" # default for web uploads
+    else:
+        form = await request.form()
+        audio = form.get("audio")
+        if not audio:
+            raise HTTPException(status_code=400, detail="Audio file required")
+        language = form.get("language", "en")
+        project_id = form.get("project_id")
+        content_bytes = await audio.read()
+        suffix = os.path.splitext(audio.filename)[1]
+        
     if project_id:
         project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
         if not project:
             raise HTTPException(status_code=404, detail="Project not found or access denied")
     
-    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio.filename)[1]) as tmp_file:
-        content_bytes = await audio.read()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
         tmp_file.write(content_bytes)
         tmp_file_path = tmp_file.name
     
@@ -54,7 +77,19 @@ async def transcribe_audio(
         import speech_recognition as sr
         recognizer = sr.Recognizer()
         
-        with sr.AudioFile(tmp_file_path) as source:
+        # Determine the file type and process accordingly
+        if suffix.lower() in [".webm", ".mp4", ".ogg"]:
+            # Need to convert to wav for speech_recognition
+            from moviepy.editor import AudioFileClip
+            wav_path = tmp_file_path + ".wav"
+            audio_clip = AudioFileClip(tmp_file_path)
+            audio_clip.write_audiofile(wav_path, verbose=False, logger=None)
+            audio_clip.close()
+            process_path = wav_path
+        else:
+            process_path = tmp_file_path
+
+        with sr.AudioFile(process_path) as source:
             audio_data = recognizer.record(source)
         
         text = recognizer.recognize_google(audio_data, language=language)

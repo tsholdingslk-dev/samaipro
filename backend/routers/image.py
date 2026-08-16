@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Form, UploadFile, File, Request
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -320,23 +320,44 @@ async def add_text_to_image(
 
 @router.post("/generate")
 async def generate_image(
-    prompt: str = Form(...),
-    width: int = Form(1024),
-    height: int = Form(1024),
-    model: str = Form("flux"),
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
+    """
+    Generate an image. Supports both multipart/form-data and application/json (for NewsFlash Pro)
+    """
+    content_type = request.headers.get("content-type", "")
+    
+    if "application/json" in content_type:
+        body = await request.json()
+        prompt = body.get("prompt", "")
+        width_str, height_str = body.get("size", "1024x1024").split("x") if "x" in body.get("size", "") else ("1024", "1024")
+        width, height = int(width_str), int(height_str)
+        model = body.get("style", "flux") # Using style as model if provided
+    else:
+        form = await request.form()
+        prompt = form.get("prompt", "")
+        width = int(form.get("width", 1024))
+        height = int(form.get("height", 1024))
+        model = form.get("model", "flux")
+        
     from tools import ImageGeneratorTool
     tool = ImageGeneratorTool()
     res = tool.execute(prompt=prompt, width=width, height=height, model=model)
+    
+    # Standardize output for NewsFlash Pro
     if "error" in res:
         import urllib.parse
         encoded_prompt = urllib.parse.quote(prompt[:100])
-        return {
-            "image_url": f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model={model}",
-            "status": "success",
-            "provider": "Pollinations_Direct"
-        }
-    return res
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model={model}"
+    else:
+        url = res.get("image_url", "")
+        
+    return {
+        "url": url,
+        "image_url": url, # Keep for backwards compatibility
+        "status": "success",
+        "provider": res.get("provider", "Pollinations_Direct") if "error" in res else res.get("provider", "Unknown")
+    }
 
 
