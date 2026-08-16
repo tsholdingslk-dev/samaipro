@@ -130,11 +130,10 @@ Determine why this image attracts attention and provide strategic advice on how 
 
     # Construct vision payload format (OpenAI/Anthropic standard)
     messages = [
-        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "Please analyze this reference image."},
+                {"type": "text", "text": f"{system_prompt}\n\nPlease analyze this reference image."},
                 {"type": "image_url", "image_url": {"url": image_data_url}}
             ]
         }
