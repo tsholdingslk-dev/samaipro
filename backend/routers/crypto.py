@@ -162,7 +162,16 @@ async def get_candlesticks(symbol: str = "BTC", count: int = 15):
     import math
 
     symbol = symbol.upper()
-    base_price = 96000.0 if symbol == "BTC" else 2750.0 if symbol == "ETH" else 215.0 if symbol == "SOL" else 640.0 if symbol == "BNB" else 2.40
+    
+    market_data = await get_crypto_market()
+    base_price = 0.0
+    for coin in market_data.get("coins", []):
+        if coin["symbol"].upper() == symbol:
+            base_price = float(coin["price"])
+            break
+            
+    if base_price == 0.0:
+        base_price = 96000.0 if symbol == "BTC" else 2750.0 if symbol == "ETH" else 215.0 if symbol == "SOL" else 640.0 if symbol == "BNB" else 2.40
     
     candles = []
     current = base_price
@@ -267,7 +276,17 @@ async def predict_time_series_price(
     import math
 
     symbol = symbol.upper()
-    base_price = 0.245 if symbol == "TRX" else 96450.0 if symbol == "BTC" else 2780.0 if symbol == "ETH" else 215.0 if symbol == "SOL" else 645.0
+    
+    # Fetch real live price from market data
+    market_data = await get_crypto_market()
+    base_price = 0.0
+    for coin in market_data.get("coins", []):
+        if coin["symbol"].upper() == symbol:
+            base_price = float(coin["price"])
+            break
+            
+    if base_price == 0.0:
+        base_price = 0.245 if symbol == "TRX" else 96450.0 if symbol == "BTC" else 2780.0 if symbol == "ETH" else 215.0 if symbol == "SOL" else 645.0
     
     # Calculate high-accuracy simulated time-series metrics & futures market sentiment
     long_ratio = round(random.uniform(55.0, 72.0), 1)
