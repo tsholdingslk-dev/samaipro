@@ -132,12 +132,7 @@ def integrate_new_api(
 
     # Step 3: Hot-update API Hub runtime memory
     try:
-        api_hub.register_provider(
-            name=provider_name_clean,
-            api_key=api_key_clean,
-            model=model_name_clean,
-            priority=priority
-        )
+        api_hub._load_providers_from_db()
     except Exception as hub_err:
         print(f"API Hub Hot-update notice: {hub_err}")
 

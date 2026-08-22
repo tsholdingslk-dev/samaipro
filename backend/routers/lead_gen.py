@@ -6,7 +6,7 @@ import requests
 import random
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Form
 from fastapi.responses import Response, JSONResponse
 from sqlalchemy.orm import Session
 
@@ -602,3 +602,195 @@ def export_leads_csv(db: Session = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=samai_leads_export.csv"}
     )
+
+# 10. AI Web Code Generator (samaicoder Powered Engine)
+@router.post("/generate-web-code")
+async def generate_website_code(
+    business_name: str = Form("Dolce Vita"),
+    category: str = Form("Restaurant & Fine Dining"),
+    city: str = Form("Galle"),
+    phone: Optional[str] = Form("+94 91 223 4567"),
+    color_theme: Optional[str] = Form("pink"),
+    tagline: Optional[str] = Form(None)
+):
+    """Generate 100% real, production-ready HTML5 + Tailwind CSS web code for local business proposals"""
+    from api_hub import api_hub
+
+    theme_colors = {
+        "pink": ("#ec4899", "from-pink-600 to-rose-500"),
+        "blue": ("#3b82f6", "from-blue-600 to-indigo-600"),
+        "emerald": ("#10b981", "from-emerald-600 to-teal-600"),
+        "amber": ("#f59e0b", "from-amber-500 to-orange-600"),
+        "purple": ("#8b5cf6", "from-purple-600 to-violet-600")
+    }
+
+    primary_hex, bg_gradient = theme_colors.get(color_theme or "pink", theme_colors["pink"])
+
+    prompt = (
+        f"You are a World-Class Senior Web Architect in SAM AI & samaicoder.\n"
+        f"Generate a COMPLETE, standalone 100% production-ready HTML5 webpage code for this business:\n"
+        f"- Business Name: '{business_name}'\n"
+        f"- Category: '{category}'\n"
+        f"- Location: '{city}'\n"
+        f"- Phone Contact: '{phone or 'Available on Request'}'\n"
+        f"- Primary Brand Color Theme: {primary_hex}\n"
+        f"- Custom Tagline: '{tagline or f'Authentic {category} in {city}'}'\n\n"
+        f"REQUIREMENTS FOR THE GENERATED HTML:\n"
+        f"1. Include `<script src=\"https://cdn.tailwindcss.com\"></script>` and FontAwesome CDN.\n"
+        f"2. Modern responsive layout with Hero Section, Feature Offerings/Menu Grid, About Story, Testimonials, Interactive Contact Form, and Footer.\n"
+        f"3. High contrast, elegant typography, smooth rounded cards, and dynamic CTA buttons.\n"
+        f"4. RETURN ONLY RAW HTML CODE inside <!DOCTYPE html> ... </html> without markdown commentary."
+    )
+
+    try:
+        res = await api_hub.chat([
+            {"role": "system", "content": "You are a master web developer creating stunning Tailwind CSS HTML pages."},
+            {"role": "user", "content": prompt}
+        ])
+
+        html_code = res["content"].strip()
+        if html_code.startswith("```html"):
+            html_code = html_code[7:]
+        if html_code.startswith("```"):
+            html_code = html_code[3:]
+        if html_code.endswith("```"):
+            html_code = html_code[:-3]
+
+        return {
+            "status": "success",
+            "business_name": business_name,
+            "category": category,
+            "html_code": html_code.strip(),
+            "provider_used": res.get("provider", "AI Hub")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Web code generation failed: {str(e)}")
+
+# 11. AI Web Code Refactor Chat Assistant (samaicoder Powered)
+@router.post("/refactor-web-code")
+async def refactor_website_code(
+    current_html: str = Form(...),
+    instruction: str = Form(...),
+    lead_id: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Refactor and edit existing HTML webpage code live based on user prompt instructions"""
+    from api_hub import api_hub
+
+    prompt = (
+        f"You are a Senior UI/UX Architect and Code Refactoring AI in SAM AI & samaicoder.\n"
+        f"The user wants you to modify this HTML webpage code according to their instructions.\n\n"
+        f"USER DESIGN EDIT INSTRUCTION: '{instruction}'\n\n"
+        f"EXISTING HTML CODE:\n"
+        f"```html\n{current_html}\n```\n\n"
+        f"REQUIREMENTS:\n"
+        f"1. Apply the user's requested design edit precisely while preserving all existing functioning content.\n"
+        f"2. Maintain responsive Tailwind CSS styling, FontAwesome icons, and interactive elements.\n"
+        f"3. RETURN ONLY THE COMPLETE UPDATED HTML CODE inside <!DOCTYPE html> ... </html> without markdown commentary."
+    )
+
+    try:
+        res = await api_hub.chat([
+            {"role": "system", "content": "You are a master web developer refactoring Tailwind CSS HTML code."},
+            {"role": "user", "content": prompt}
+        ])
+
+        updated_html = res["content"].strip()
+        if updated_html.startswith("```html"):
+            updated_html = updated_html[7:]
+        if updated_html.startswith("```"):
+            updated_html = updated_html[3:]
+        if updated_html.endswith("```"):
+            updated_html = updated_html[:-3]
+
+        updated_html = updated_html.strip()
+
+        # Update lead demo_data if lead_id is present
+        if lead_id:
+            lead = db.query(models.Lead).filter(models.Lead.id == lead_id).first()
+            if lead:
+                existing_data = json.loads(lead.demo_data) if lead.demo_data else {}
+                existing_data["html_code"] = updated_html
+                lead.demo_data = json.dumps(existing_data)
+                db.commit()
+
+        return {
+            "status": "success",
+            "instruction_applied": instruction,
+            "html_code": updated_html,
+            "provider_used": res.get("provider", "AI Hub")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Web code refactor failed: {str(e)}")
+
+# 12. Telegram Bot Lead Dispatcher
+@router.get("/telegram-config")
+def get_telegram_config():
+    """Check if Telegram Bot Token and Chat ID are configured"""
+    import os
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    return {
+        "configured": bool(bot_token and chat_id),
+        "bot_token_set": bool(bot_token),
+        "chat_id_set": bool(chat_id)
+    }
+
+@router.post("/send-telegram-proposal")
+def send_telegram_proposal(
+    lead_id: str = Form(...),
+    proposal_text: str = Form(...),
+    demo_url: str = Form(...),
+    whatsapp_url: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Dispatches lead details, proposal text, and WhatsApp links directly to user's Telegram Bot"""
+    import os
+    lead = db.query(models.Lead).filter(models.Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+
+    if not bot_token or not chat_id:
+        return {
+            "status": "config_missing",
+            "message": "Telegram Bot Token or Chat ID is not configured in backend/.env."
+        }
+
+    clean_phone = lead.phone.replace("+", "").replace(" ", "") if lead.phone else ""
+
+    message_body = (
+        f"🚀 *SAM AI LEAD OUTREACH DISPATCH*\n\n"
+        f"🏢 *Business:* {lead.business_name}\n"
+        f"📍 *Location:* {lead.city}\n"
+        f"📞 *WhatsApp:* +{clean_phone}\n"
+        f"🌐 *Demo Site Link:* {demo_url}\n\n"
+        f"📝 *PROPOSAL TEXT (COPY & PASTE TO CLIENT):*\n"
+        f"```\n{proposal_text}\n```\n\n"
+        f"👉 *DIRECT WHATSAPP LINK:*\n{whatsapp_url}"
+    )
+
+    try:
+        tg_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        resp = requests.post(tg_url, data={
+            "chat_id": chat_id,
+            "text": message_body,
+            "parse_mode": "Markdown"
+        }, timeout=8)
+
+        if resp.status_code == 200:
+            lead.outreach_status = "proposal_sent"
+            db.commit()
+            return {"status": "success", "message": "Proposal dispatched to your Telegram Bot!"}
+        else:
+            err_json = resp.json() if resp.text.startswith("{") else {}
+            if err_json.get("description") == "Bad Request: chat not found":
+                return {
+                    "status": "chat_not_started",
+                    "message": "Please open @Samaicoderbot in Telegram app and click 'START' once so your bot can send you messages!"
+                }
+            return {"status": "error", "message": f"Telegram API error ({resp.status_code}): {resp.text}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Telegram dispatch failed: {str(e)}")

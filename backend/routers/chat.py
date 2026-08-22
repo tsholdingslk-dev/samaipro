@@ -138,7 +138,15 @@ async def send_message(
     
     # Trigger background embedding index if new docs were added
     if has_new_docs:
-        background_tasks.add_task(brain.index_documents)
+        def _run_index():
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                loop.run_until_complete(brain.index_documents())
+            finally:
+                loop.close()
+        background_tasks.add_task(_run_index)
     
     # 4. Combine content
     full_content = content or ""

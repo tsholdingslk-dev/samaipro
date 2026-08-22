@@ -83,6 +83,9 @@ app.add_middleware(
 )
 
 @app.get("/health")
-@app.get("/api/health")
 def health_check():
+    return {"status": "SAM AI Backend is Running 🚀"}
+
+@app.get("/api/health")
+def api_health_check():
     return {"status": "SAM AI Backend is Running 🚀"}

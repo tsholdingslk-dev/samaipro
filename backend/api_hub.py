@@ -227,7 +227,7 @@ class APIHub:
                     continue
 
                 if idx > 0:
-                    print(f"🔄 Rotating to fallback provider: {provider.name} (Priority {provider.priority})")
+                    print(f"[AI Vault] Rotating to fallback provider: {provider.name} (Priority {provider.priority})")
 
                 # Merge default params with kwargs (kwargs override defaults)
                 params = {
@@ -248,14 +248,14 @@ class APIHub:
             except Exception as e:
                 error_msg = str(e)
                 last_error = e
-                print(f"⚠️ Provider Vault Alert | {provider.name} failed: {error_msg}")
+                print(f"[AI Vault Alert] {provider.name} failed: {error_msg}")
                 
                 # Mark provider as unavailable if rate limited or out of credits
                 if "rate limit" in error_msg.lower() or "quota" in error_msg.lower() or "429" in error_msg or "402" in error_msg:
-                    print(f"🔒 Vault locked {provider.name} due to Rate Limit / Quota.")
+                    print(f"[AI Vault] Locked {provider.name} due to Rate Limit / Quota.")
                     provider.status = "rate_limited"
                 elif "unauthorized" in error_msg.lower() or "invalid" in error_msg.lower() or "401" in error_msg:
-                    print(f"❌ Vault disabled {provider.name} due to Invalid API Key.")
+                    print(f"[AI Vault] Disabled {provider.name} due to Invalid API Key.")
                     provider.status = "error"
                 
                 continue

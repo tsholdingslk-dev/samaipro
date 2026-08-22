@@ -44,6 +44,7 @@ async def transcribe_audio(
     content_type = request.headers.get("content-type", "")
     language = "en"
     project_id = None
+    filename = "audio"
     
     if "application/json" in content_type:
         body = await request.json()
@@ -51,7 +52,7 @@ async def transcribe_audio(
         # Remove data URI scheme prefix if present (e.g., data:audio/webm;base64,)
         if "," in audio_b64:
             audio_b64 = audio_b64.split(",")[1]
-            
+             
         content_bytes = base64.b64decode(audio_b64)
         suffix = ".webm" # default for web uploads
     else:
@@ -62,6 +63,7 @@ async def transcribe_audio(
         language = form.get("language", "en")
         project_id = form.get("project_id")
         content_bytes = await audio.read()
+        filename = audio.filename
         suffix = os.path.splitext(audio.filename)[1]
         
     if project_id:
@@ -97,13 +99,13 @@ async def transcribe_audio(
         return {
             "text": text,
             "language": language,
-            "filename": audio.filename
+            "filename": filename
         }
     except Exception as e:
         return {
-            "text": f"[Voice Audio Received: {audio.filename}] Audio uploaded successfully. (Instant speech transcription active)",
+            "text": f"[Voice Audio Received: {filename}] Audio uploaded successfully. (Instant speech transcription active)",
             "language": language,
-            "filename": audio.filename
+            "filename": filename
         }
     finally:
         if os.path.exists(tmp_file_path):

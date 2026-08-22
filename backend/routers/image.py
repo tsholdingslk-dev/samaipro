@@ -35,50 +35,8 @@ def run_async(coro):
         return asyncio.run(coro)
 
 
-@router.post("/generate-prompt")
-async def generate_image_prompt(
-    description: str = Form(...),
-    style: str = Form("photorealistic"),
-    project_id: str | None = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """Generate optimized prompts for image generation models"""
-    if project_id:
-        project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found or access denied")
-    
-    prompt = f"""Create a detailed image generation prompt for: {description}
-Style: {style}
-
-Include:
-1. Main subject description
-2. Lighting and atmosphere
-3. Camera angle and composition
-4. Color palette
-5. Style details
-6. Technical parameters
-
-Make it detailed enough for Midjourney, DALL-E, or Stable Diffusion."""
-    
-    messages = [
-        {"role": "system", "content": "You are an AI image prompt engineer. Create detailed, effective prompts."},
-        {"role": "user", "content": prompt}
-    ]
-    
-    try:
-        result = await api_hub.chat(messages)
-        return {
-            "prompt": result["content"],
-            "style": style,
-            "provider": result.get("provider", "unknown")
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prompt generation failed: {str(e)}")
-
-@router.post("/edit")
-async def edit_image(
+@router.post("/analyze")
+async def analyze_image(
     image: UploadFile = File(...),
     instruction: str = Form(...),
     project_id: str | None = Form(None),

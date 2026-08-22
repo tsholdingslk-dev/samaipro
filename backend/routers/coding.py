@@ -10,10 +10,16 @@ from api_hub import api_hub
 import asyncio
 import concurrent.futures
 
+from tools import CodeExecutorTool
+import urllib.request
+import json
+
 router = APIRouter(
     prefix="/coding",
     tags=["Coding Module"]
 )
+
+code_executor_tool = CodeExecutorTool()
 
 def run_async(coro):
     """Helper to run async code in sync context"""
@@ -76,16 +82,9 @@ Return only the code with minimal explanation unless asked."""
 async def explain_code(
     code: str = Form(...),
     language: str = Form("javascript"),
-    project_id: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    project_id: Optional[str] = Form(None)
 ):
     """Explain what a piece of code does"""
-    if project_id:
-        project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found or access denied")
-    
     prompt = f"""Explain the following {language} code in detail.
 Break down what each part does.
 Point out any potential issues or improvements.
@@ -115,16 +114,9 @@ async def fix_code(
     code: str = Form(...),
     error: Optional[str] = Form(None),
     language: str = Form("javascript"),
-    project_id: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    project_id: Optional[str] = Form(None)
 ):
     """Fix bugs or errors in code"""
-    if project_id:
-        project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found or access denied")
-    
     error_context = f"\n\nError message:\n{error}" if error else ""
     
     prompt = f"""Fix the following {language} code and explain what was wrong.
@@ -152,12 +144,7 @@ Return ONLY the JSON. Do not include markdown codeblocks around the JSON.
         # Request JSON format if supported by provider
         result = await api_hub.chat(messages, response_format={"type": "json_object"})
         
-        # Parse the JSON response
-        import json
-        import re
-        
         content = result["content"].strip()
-        # Clean markdown code blocks if the AI accidentally included them
         if content.startswith("```json"):
             content = content[7:]
         if content.startswith("```"):
@@ -174,30 +161,63 @@ Return ONLY the JSON. Do not include markdown codeblocks around the JSON.
             "provider": result.get("provider", "unknown")
         }
     except json.JSONDecodeError as e:
-        # Fallback if AI fails to return valid JSON
         return {
-            "fixed_code": result["content"],
+            "fixed_code": result["content"] if result else "",
             "explanation": "AI failed to return valid JSON format.",
             "language": language,
-            "provider": result.get("provider", "unknown")
+            "provider": result.get("provider", "unknown") if result else "unknown"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Code fix failed: {str(e)}")
+
+@router.post("/execute")
+async def execute_code(
+    code: str = Form(...),
+    language: str = Form("python")
+):
+    """Safely execute Python/JavaScript code and return live stdout & stderr terminal output"""
+    try:
+        res = code_executor_tool.execute(code)
+        return {
+            "status": "success",
+            "language": language,
+            "engine": res.get("engine", "Sandbox"),
+            "stdout": res.get("stdout", ""),
+            "stderr": res.get("stderr", ""),
+            "error": res.get("error", ""),
+            "success": res.get("success", True)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Code execution error: {str(e)}")
+
+@router.get("/samaicoder/status")
+async def get_samaicoder_status():
+    """Check status of samaicoder local Fastify agent service on port 3210"""
+    try:
+        req = urllib.request.Request("http://localhost:3210/health", headers={"User-Agent": "SAM-AI-Bridge"})
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return {
+                "status": "active",
+                "service": "samaicoder (SamForge AI)",
+                "port": 3210,
+                "health": data
+            }
+    except Exception as e:
+        return {
+            "status": "offline",
+            "service": "samaicoder (SamForge AI)",
+            "port": 3210,
+            "message": "samaicoder agent service is not running on port 3210. Start via 'pnpm dev:backend' in samaicoder directory."
+        }
 
 @router.post("/api-connect")
 async def api_connect_help(
     description: str = Form(...),
     language: str = Form("javascript"),
-    project_id: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    project_id: Optional[str] = Form(None)
 ):
     """Help connect to an API or set up API integration"""
-    if project_id:
-        project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found or access denied")
-    
     prompt = f"""Help me connect to an API using {language}.
 Provide complete working code examples including:
 1. API client setup
@@ -226,18 +246,11 @@ Description of what I need:
 
 @router.post("/deploy")
 async def deploy_guide(
-    project_type: str = Form(...),  # react, php, python, etc.
+    project_type: str = Form(...),
     platform: str = Form("local"),
-    project_id: Optional[str] = Form(None),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    project_id: Optional[str] = Form(None)
 ):
     """Get deployment guide for a project"""
-    if project_id:
-        project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.user_id == current_user["user_id"]).first()
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found or access denied")
-    
     prompt = f"""Provide a step-by-step deployment guide for a {project_type} project to {platform}.
 Include:
 1. Prerequisites

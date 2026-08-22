@@ -52,6 +52,49 @@ export default function LeadGenPage() {
   const [generatingDemo, setGeneratingDemo] = useState(false);
   const [demoPreviewData, setDemoPreviewData] = useState<any>(null);
 
+  // AI Web Code Generator (samaicoder engine) state
+  const [aiWebCode, setAiWebCode] = useState("");
+  const [generatingWebCode, setGeneratingWebCode] = useState(false);
+  const [refactorPrompt, setRefactorPrompt] = useState("");
+  const [refactoring, setRefactoring] = useState(false);
+
+  // Handle AI Live Refactor Design Edits
+  const handleRefactorWebCode = async (customInstruction?: string) => {
+    const instructionToUse = customInstruction || refactorPrompt;
+    if (!instructionToUse.trim() || !aiWebCode) return;
+
+    setRefactoring(true);
+    try {
+      const formData = new FormData();
+      formData.append("current_html", aiWebCode);
+      formData.append("instruction", instructionToUse);
+      if (selectedLead) {
+        formData.append("lead_id", selectedLead.id);
+      }
+
+      const res = await fetch("http://localhost:8000/lead-gen/refactor-web-code", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Server error (${res.status}): ${errText}`);
+      }
+
+      const data = await res.json();
+      if (data.html_code) {
+        setAiWebCode(data.html_code);
+        setRefactorPrompt("");
+        showNotification(`✨ Applied Design Edit: "${instructionToUse}"`);
+      }
+    } catch (err: any) {
+      showNotification(err.message || "Design refactor failed", "error");
+    } finally {
+      setRefactoring(false);
+    }
+  };
+
   // Proposal State
   const [proposalLang, setProposalLang] = useState<"tamil" | "english" | "bilingual">("tamil");
   const [senderName, setSenderName] = useState("SAM AI Studio");
@@ -59,8 +102,117 @@ export default function LeadGenPage() {
   const [generatingProposal, setGeneratingProposal] = useState(false);
   const [proposalResult, setProposalResult] = useState<{ proposal_text: string; whatsapp_url: string; demo_url: string } | null>(null);
 
+  // Telegram Bot Dispatch State
+  const [sendingTelegram, setSendingTelegram] = useState(false);
+  const [telegramGuideModal, setTelegramGuideModal] = useState(false);
+
+  // Handle Telegram Proposal Dispatch
+  const handleSendTelegram = async () => {
+    if (!selectedLead) {
+      showNotification("Please select a lead first", "error");
+      return;
+    }
+    setSendingTelegram(true);
+
+    try {
+      let propText = proposalResult?.proposal_text;
+      let demoUrl = proposalResult?.demo_url;
+      let waUrl = proposalResult?.whatsapp_url;
+
+      if (!propText || !demoUrl || !waUrl) {
+        const formDataProp = new FormData();
+        formDataProp.append("lead_id", selectedLead.id);
+        formDataProp.append("language", proposalLang);
+        formDataProp.append("sender_name", senderName);
+        formDataProp.append("sender_phone", senderPhone);
+
+        const resProp = await fetch("http://localhost:8000/lead-gen/generate-proposal", {
+          method: "POST",
+          body: formDataProp,
+        });
+
+        const dataProp = await resProp.json();
+        propText = dataProp.proposal_text;
+        demoUrl = dataProp.demo_url;
+        waUrl = dataProp.whatsapp_url;
+        setProposalResult(dataProp);
+      }
+
+      const formData = new FormData();
+      formData.append("lead_id", selectedLead.id);
+      formData.append("proposal_text", propText || "");
+      formData.append("demo_url", demoUrl || "");
+      formData.append("whatsapp_url", waUrl || "");
+
+      const res = await fetch("http://localhost:8000/lead-gen/send-telegram-proposal", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.status === "success") {
+        showNotification("✈️ Proposal successfully dispatched to your Telegram Bot!");
+      } else if (data.status === "config_missing") {
+        setTelegramGuideModal(true);
+      } else {
+        showNotification(data.message || "Telegram dispatch failed", "error");
+      }
+    } catch (err: any) {
+      showNotification(err.message || "Telegram dispatch failed", "error");
+    } finally {
+      setSendingTelegram(false);
+    }
+  };
+
   // Notification Banner
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  // Handle AI Full Webpage Code Generation
+  const handleGenerateAiWebCode = async () => {
+    if (!selectedLead) return;
+    setGeneratingWebCode(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("business_name", selectedLead.business_name);
+      formData.append("category", selectedLead.category);
+      formData.append("city", selectedLead.city);
+      formData.append("phone", selectedLead.phone || "");
+      formData.append("color_theme", primaryColor === "#ec4899" ? "pink" : primaryColor === "#3b82f6" ? "blue" : primaryColor === "#10b981" ? "emerald" : primaryColor === "#8b5cf6" ? "purple" : "amber");
+      formData.append("tagline", customTagline || "");
+
+      const res = await fetch("http://localhost:8000/lead-gen/generate-web-code", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Server error (${res.status}): ${errText}`);
+      }
+
+      const data = await res.json();
+      if (data.html_code) {
+        setAiWebCode(data.html_code);
+        showNotification("✨ Production-Ready AI Webpage Code Generated Successfully!");
+      }
+    } catch (err: any) {
+      console.error("AI web code generation failed", err);
+      showNotification(err.message || "Failed to generate AI Webpage code", "error");
+    } finally {
+      setGeneratingWebCode(false);
+    }
+  };
+
+  const downloadHtmlFile = () => {
+    if (!aiWebCode || !selectedLead) return;
+    const blob = new Blob([aiWebCode], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedLead.business_name.toLowerCase().replace(/\s+/g, "_")}_website.html`;
+    a.click();
+  };
 
   const showNotification = (message: string, type: "success" | "error" = "success") => {
     setNotification({ message, type });
@@ -72,6 +224,11 @@ export default function LeadGenPage() {
     setLoadingLeads(true);
     try {
       const res = await fetch("/api/lead-gen/leads");
+      if (!res.ok) {
+        console.warn("Backend leads response not OK:", res.status);
+        setLeads([]);
+        return;
+      }
       const data = await res.json();
       const leadArr = Array.isArray(data) ? data : (data.leads || []);
       setLeads(leadArr);
@@ -587,10 +744,28 @@ export default function LeadGenPage() {
                       color: "#fff",
                       fontWeight: 700,
                       cursor: "pointer",
-                      marginBottom: "1rem"
+                      marginBottom: "0.8rem"
                     }}
                   >
                     {generatingDemo ? "Generating..." : "⚡ Build Dynamic Demo Page"}
+                  </button>
+
+                  <button
+                    onClick={handleGenerateAiWebCode}
+                    disabled={generatingWebCode}
+                    style={{
+                      width: "100%",
+                      padding: "0.8rem",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "linear-gradient(135deg, #ec4899, #be185d)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      marginBottom: "1rem"
+                    }}
+                  >
+                    {generatingWebCode ? "Generating Tailwind HTML Code..." : "✨ Generate Full AI Web Code (samaicoder)"}
                   </button>
 
                   {selectedLead.demo_url && (
@@ -606,11 +781,30 @@ export default function LeadGenPage() {
                         background: "#3b82f6",
                         color: "#fff",
                         textDecoration: "none",
-                        fontWeight: 700
+                        fontWeight: 700,
+                        marginBottom: "1rem"
                       }}
                     >
                       🔗 Open Live Demo Link
                     </a>
+                  )}
+
+                  {aiWebCode && (
+                    <button
+                      onClick={downloadHtmlFile}
+                      style={{
+                        width: "100%",
+                        padding: "0.8rem",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "#10b981",
+                        color: "#fff",
+                        fontWeight: 700,
+                        cursor: "pointer"
+                      }}
+                    >
+                      📥 Download website.html File
+                    </button>
                   )}
                 </div>
 
@@ -625,8 +819,116 @@ export default function LeadGenPage() {
                     </span>
                   </div>
 
-                  <div style={{ padding: "1.5rem", maxHeight: "500px", overflowY: "auto" }}>
-                    {demoPreviewData ? (
+                  <div style={{ padding: "1.5rem", maxHeight: "600px", overflowY: "auto" }}>
+                    {aiWebCode ? (
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                          <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "#ec4899" }}>✨ Live AI Webpage Preview (samaicoder Engine):</span>
+                          <button
+                            onClick={downloadHtmlFile}
+                            style={{ background: "#10b981", color: "#fff", border: "none", padding: "0.3rem 0.8rem", borderRadius: "5px", fontSize: "0.8rem", cursor: "pointer" }}
+                          >
+                            📥 Save .html
+                          </button>
+                        </div>
+                        
+                        <iframe
+                          srcDoc={aiWebCode}
+                          title="Live AI Webpage Preview"
+                          style={{
+                            width: "100%",
+                            height: "450px",
+                            border: "none",
+                            borderRadius: "8px",
+                            background: "#fff"
+                          }}
+                        />
+
+                        <div style={{ marginTop: "1rem" }}>
+                          <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>
+                            📝 Editable HTML5 & Tailwind CSS Source Code:
+                          </span>
+                          <textarea
+                            value={aiWebCode}
+                            onChange={(e) => setAiWebCode(e.target.value)}
+                            style={{
+                              width: "100%",
+                              height: "140px",
+                              background: "#020617",
+                              color: "#38bdf8",
+                              fontFamily: "monospace",
+                              fontSize: "0.8rem",
+                              padding: "0.8rem",
+                              borderRadius: "6px",
+                              border: "1px solid rgba(255,255,255,0.1)"
+                            }}
+                          />
+                        </div>
+
+                        {/* 🤖 AI Design Refactor Assistant Chatbot */}
+                        <div style={{
+                          marginTop: "1.2rem",
+                          padding: "1.2rem",
+                          background: "rgba(15, 23, 42, 0.9)",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(236, 72, 153, 0.3)"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                            <span style={{ fontSize: "1.2rem" }}>🤖</span>
+                            <strong style={{ fontSize: "0.95rem", color: "#f472b6" }}>AI Web Design Refactor Assistant (samaicoder Chatbot)</strong>
+                          </div>
+                          <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.8rem" }}>
+                            Tell AI what design changes to make (e.g. "Add a dark luxury theme", "Add a 20% discount promo banner", "Translate content to Tamil").
+                          </p>
+
+                          {/* Quick Edit Presets */}
+                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.8rem" }}>
+                            {[
+                              "🎨 Apply Dark Luxury Theme",
+                              "🏷️ Add 20% Off Special Promo Banner",
+                              "🌐 Translate All Text to Tamil",
+                              "📞 Add Floating WhatsApp Chat Button"
+                            ].map((chip, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => handleRefactorWebCode(chip)}
+                                disabled={refactoring}
+                                style={{
+                                  background: "rgba(255,255,255,0.08)",
+                                  border: "1px solid rgba(255,255,255,0.15)",
+                                  color: "#cbd5e1",
+                                  padding: "0.3rem 0.7rem",
+                                  borderRadius: "15px",
+                                  fontSize: "0.78rem",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                {chip}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Custom Refactor Chat Input */}
+                          <div style={{ display: "grid", gridTemplateColumns: "4fr 1fr", gap: "0.6rem" }}>
+                            <input
+                              type="text"
+                              className="input-field"
+                              placeholder="Type design edit (e.g. Change primary button to Gold color)..."
+                              value={refactorPrompt}
+                              onChange={(e) => setRefactorPrompt(e.target.value)}
+                            />
+                            <button
+                              onClick={() => handleRefactorWebCode()}
+                              disabled={refactoring || !refactorPrompt.trim()}
+                              className="btn-primary"
+                              style={{ padding: "0.5rem", fontSize: "0.85rem", background: "linear-gradient(135deg, #ec4899, #8b5cf6)" }}
+                            >
+                              {refactoring ? "Refactoring..." : "✨ Apply Edit"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : demoPreviewData ? (
                       <div>
                         <div style={{ textAlign: "center", padding: "2rem 1rem", background: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(" + demoPreviewData.hero_image + ") center/cover", borderRadius: "8px", marginBottom: "1.5rem" }}>
                           <h1 style={{ fontSize: "1.8rem", color: "#fff", marginBottom: "0.5rem" }}>{demoPreviewData.business_name}</h1>
@@ -654,7 +956,7 @@ export default function LeadGenPage() {
                       </div>
                     ) : (
                       <div style={{ textAlign: "center", padding: "4rem 2rem", color: "var(--text-muted)" }}>
-                        Click "Build Dynamic Demo Page" to generate interactive preview!
+                        Click "✨ Generate Full AI Web Code (samaicoder)" or "⚡ Build Dynamic Demo Page" to generate interactive preview!
                       </div>
                     )}
                   </div>
@@ -749,14 +1051,13 @@ export default function LeadGenPage() {
                       }}
                     />
 
-                    <div style={{ display: "flex", gap: "1rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.8rem", marginTop: "1rem" }}>
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(proposalResult.proposal_text);
                           showNotification("Proposal copied to clipboard!", "success");
                         }}
                         style={{
-                          flex: 1,
                           padding: "0.8rem",
                           borderRadius: "8px",
                           border: "1px solid rgba(255,255,255,0.2)",
@@ -769,12 +1070,31 @@ export default function LeadGenPage() {
                         📋 Copy Text
                       </button>
 
+                      <button
+                        onClick={handleSendTelegram}
+                        disabled={sendingTelegram}
+                        style={{
+                          padding: "0.8rem",
+                          borderRadius: "8px",
+                          border: "none",
+                          background: "#0088cc",
+                          color: "#fff",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          gap: "0.4rem"
+                        }}
+                      >
+                        {sendingTelegram ? "Sending..." : "✈️ Send to Telegram Bot"}
+                      </button>
+
                       <a
                         href={proposalResult.whatsapp_url}
                         target="_blank"
                         rel="noreferrer"
                         style={{
-                          flex: 1.5,
                           padding: "0.8rem",
                           borderRadius: "8px",
                           background: "#25D366",
@@ -785,11 +1105,20 @@ export default function LeadGenPage() {
                           display: "flex",
                           justifyContent: "center",
                           alignItems: "center",
-                          gap: "0.5rem"
+                          gap: "0.4rem"
                         }}
                       >
-                        🟢 Send via WhatsApp Web
+                        🟢 Open WhatsApp
                       </a>
+                    </div>
+
+                    <div style={{ marginTop: "1rem", textAlign: "right" }}>
+                      <button
+                        onClick={() => setTelegramGuideModal(true)}
+                        style={{ background: "transparent", border: "none", color: "#38bdf8", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+                      >
+                        ⚙️ How to setup Telegram Bot in 2 Mins?
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -802,6 +1131,52 @@ export default function LeadGenPage() {
           ) : (
             <p style={{ color: "var(--text-muted)" }}>Please select a lead from the Lead Pipeline table first!</p>
           )}
+        </div>
+      )}
+
+      {/* Telegram Setup Guide Modal */}
+      {telegramGuideModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100, padding: "1rem" }}>
+          <div style={{ background: "#1e293b", padding: "2rem", borderRadius: "16px", maxWidth: "600px", width: "100%", border: "1px solid rgba(56, 189, 248, 0.4)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#38bdf8" }}>✈️ How to Setup Telegram Bot Dispatcher (2-Min Guide)</h3>
+              <button onClick={() => setTelegramGuideModal(false)} style={{ background: "transparent", border: "none", color: "#fff", fontSize: "1.5rem", cursor: "pointer" }}>×</button>
+            </div>
+
+            <div style={{ fontSize: "0.9rem", color: "#cbd5e1", lineHeight: 1.7 }}>
+              <p style={{ marginBottom: "1rem" }}>
+                Connect SAM AI directly to your personal Telegram Bot so every generated lead proposal and demo site link is instantly dispatched to your phone!
+              </p>
+
+              <ol style={{ paddingLeft: "1.2rem", marginBottom: "1.5rem" }}>
+                <li style={{ marginBottom: "0.8rem" }}>
+                  <strong>Create a Bot on Telegram:</strong><br />
+                  Open Telegram app, search for <code>@BotFather</code>, send <code>/newbot</code>, choose a name for your bot, and copy your <strong>HTTP API Token</strong> (e.g. <code>123456789:ABCdefGHIjklMNOpqrs...</code>).
+                </li>
+                <li style={{ marginBottom: "0.8rem" }}>
+                  <strong>Get Your Telegram Chat ID:</strong><br />
+                  Search for <code>@userinfobot</code> or <code>@raw_data_bot</code> on Telegram, click Start, and copy your <strong>Id</strong> number (e.g. <code>987654321</code>).
+                </li>
+                <li style={{ marginBottom: "0.8rem" }}>
+                  <strong>Save Credentials in SAM AI:</strong><br />
+                  Open <code>c:\Users\ASUS\Desktop\xampp\htdocs\samai\backend\.env</code> and add:
+                  <div style={{ background: "#020617", padding: "0.8rem", borderRadius: "8px", fontFamily: "monospace", margin: "0.5rem 0", color: "#4ade80" }}>
+                    TELEGRAM_BOT_TOKEN="your_bot_token_here"<br />
+                    TELEGRAM_CHAT_ID="your_chat_id_here"
+                  </div>
+                </li>
+              </ol>
+
+              <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+                <button
+                  onClick={() => setTelegramGuideModal(false)}
+                  style={{ background: "#38bdf8", color: "#000", border: "none", padding: "0.7rem 2rem", borderRadius: "8px", fontWeight: 800, cursor: "pointer" }}
+                >
+                  Got It! Done
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

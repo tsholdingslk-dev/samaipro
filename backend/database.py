@@ -30,7 +30,6 @@ def get_db():
         yield db
     except Exception as e:
         print(f"Database Session Error: {e}")
-        yield None
     finally:
         try:
             db.close()

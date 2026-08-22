@@ -37,8 +37,11 @@ class CouncilAgent(BaseAgent):
             f"Analyze from an architectural, technical, modular, and long-term scalability perspective. "
             f"Provide concrete structural recommendations."
         )
-        architect_res = await api_hub.generate(architect_prompt, provider=provider, model=model)
-        architect_opinion = architect_res.get("response", "Architect analysis unavailable.")
+        architect_res = await api_hub.chat([
+            {"role": "system", "content": "You are a Lead Systems Architect. Analyze from an architectural perspective."},
+            {"role": "user", "content": architect_prompt}
+        ])
+        architect_opinion = architect_res.get("content", "Architect analysis unavailable.")
 
         # Step 2: Critic Perspective
         steps.append("🛡️ Security & Performance Critic analyzing risks, edge cases & flaws...")
@@ -48,8 +51,11 @@ class CouncilAgent(BaseAgent):
             f"Architect's Proposal:\n{architect_opinion}\n\n"
             f"Critique this proposal rigorously. Identify security risks, performance bottlenecks, edge cases, and missing safeguards."
         )
-        critic_res = await api_hub.generate(critic_prompt, provider=provider, model=model)
-        critic_opinion = critic_res.get("response", "Critic analysis unavailable.")
+        critic_res = await api_hub.chat([
+            {"role": "system", "content": "You are a Security & Performance Critic. Identify risks and flaws."},
+            {"role": "user", "content": critic_prompt}
+        ])
+        critic_opinion = critic_res.get("content", "Critic analysis unavailable.")
 
         # Step 3: Strategist Perspective
         steps.append("💡 Product & User Strategist reviewing user value & execution simplicity...")
@@ -60,8 +66,11 @@ class CouncilAgent(BaseAgent):
             f"Critic Feedback:\n{critic_opinion}\n\n"
             f"Evaluate user experience, practical implementation timeline, simplicity, and key business/user value."
         )
-        strategist_res = await api_hub.generate(strategist_prompt, provider=provider, model=model)
-        strategist_opinion = strategist_res.get("response", "Strategist analysis unavailable.")
+        strategist_res = await api_hub.chat([
+            {"role": "system", "content": "You are a Product & User Strategist. Evaluate user value and simplicity."},
+            {"role": "user", "content": strategist_prompt}
+        ])
+        strategist_opinion = strategist_res.get("content", "Strategist analysis unavailable.")
 
         # Step 4: Final Master Synthesis
         steps.append("👑 Council Chair synthesizing master verdict and actionable plan...")
@@ -72,8 +81,11 @@ class CouncilAgent(BaseAgent):
             f"--- PERSPECTIVE 3: PRODUCT STRATEGIST ---\n{strategist_opinion}\n\n"
             f"Synthesize these perspectives into a brilliant, polished, cohesive master response with clear actionable recommendations."
         )
-        synthesis_res = await api_hub.generate(synthesis_prompt, provider=provider, model=model)
-        final_synthesis = synthesis_res.get("response", "Synthesis unavailable.")
+        synthesis_res = await api_hub.chat([
+            {"role": "system", "content": "You are the Council Chair synthesizing a master response."},
+            {"role": "user", "content": synthesis_prompt}
+        ])
+        final_synthesis = synthesis_res.get("content", "Synthesis unavailable.")
 
         execution_time = round(time.time() - start_time, 2)
         

@@ -44,7 +44,7 @@ class FeedbackCollector:
                 from sqlalchemy import text
                 db.execute(text("""
                     CREATE TABLE IF NOT EXISTS user_feedback (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id VARCHAR(36) NOT NULL,
                         message_id VARCHAR(36) NOT NULL,
                         rating INT NOT NULL,
@@ -82,13 +82,13 @@ class FeedbackCollector:
             
             feedbacks = []
             for r in res:
-                # SQLAlchemy result row handles indexing or attribute access
+                # SQLAlchemy Row objects support both index and attribute access
                 feedbacks.append(UserFeedback(
-                    user_id=r[1] if isinstance(r, tuple) else getattr(r, 'user_id', ''),
-                    message_id=r[2] if isinstance(r, tuple) else getattr(r, 'message_id', ''),
-                    rating=r[3] if isinstance(r, tuple) else getattr(r, 'rating', 0),
-                    feedback_text=r[4] if isinstance(r, tuple) else getattr(r, 'feedback_text', ''),
-                    category=r[5] if isinstance(r, tuple) else getattr(r, 'category', '')
+                    user_id=r[1] if isinstance(r, (tuple, list)) else r.user_id,
+                    message_id=r[2] if isinstance(r, (tuple, list)) else r.message_id,
+                    rating=r[3] if isinstance(r, (tuple, list)) else r.rating,
+                    feedback_text=r[4] if isinstance(r, (tuple, list)) else r.feedback_text,
+                    category=r[5] if isinstance(r, (tuple, list)) else r.category
                 ))
             return feedbacks
         except Exception:

@@ -24,7 +24,6 @@ def get_password_hash(password: str) -> str:
 
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
-import jwt
 from jwt.exceptions import PyJWTError
 
 # OAuth2 Scheme for Swagger UI and token extraction
