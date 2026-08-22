@@ -192,23 +192,23 @@ async def execute_code(
 
 @router.get("/samaicoder/status")
 async def get_samaicoder_status():
-    """Check status of samaicoder local Fastify agent service on port 3210"""
+    """Check status of samaicoder local Fastify agent service"""
     try:
-        req = urllib.request.Request("http://localhost:3210/health", headers={"User-Agent": "SAM-AI-Bridge"})
+        base_url = os.environ.get("SAMAICODER_URL", "http://localhost:3210")
+        req = urllib.request.Request(f"{base_url.rstrip('/')}/health", headers={"User-Agent": "SAM-AI-Bridge"})
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             return {
                 "status": "active",
                 "service": "samaicoder (SamForge AI)",
-                "port": 3210,
+                "url": base_url,
                 "health": data
             }
     except Exception as e:
         return {
             "status": "offline",
             "service": "samaicoder (SamForge AI)",
-            "port": 3210,
-            "message": "samaicoder agent service is not running on port 3210. Start via 'pnpm dev:backend' in samaicoder directory."
+            "message": f"samaicoder agent service is not running or reachable at {os.environ.get('SAMAICODER_URL', 'http://localhost:3210')}. If running locally, make sure to expose it via ngrok when the backend is on Railway."
         }
 
 @router.post("/api-connect")
