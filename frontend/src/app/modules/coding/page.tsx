@@ -57,7 +57,7 @@ export default function CodingPage() {
   const checkSamaicoderStatus = async () => {
     setCheckingSamaicoder(true);
     try {
-      const res = await fetch("http://localhost:8000/coding/samaicoder/status");
+      const res = await fetch("/api/coding/samaicoder/status");
       const data = await res.json();
       setSamaicoderStatus(data);
     } catch (err) {
@@ -90,7 +90,7 @@ export default function CodingPage() {
       formData.append("language", genLanguage);
       formData.append("framework", genFramework || "");
 
-      const res = await fetch("http://localhost:8000/coding/generate", {
+      const res = await fetch("/api/coding/generate", {
         method: "POST",
         body: formData,
       });
@@ -120,7 +120,7 @@ export default function CodingPage() {
       formData.append("code", editableCode);
       formData.append("language", genLanguage);
 
-      const res = await fetch("http://localhost:8000/coding/execute", {
+      const res = await fetch("/api/coding/execute", {
         method: "POST",
         body: formData,
       });
@@ -153,7 +153,7 @@ export default function CodingPage() {
       formData.append("error", fixErrorMsg || "");
       formData.append("language", fixLanguage);
 
-      const res = await fetch("http://localhost:8000/coding/fix", {
+      const res = await fetch("/api/coding/fix", {
         method: "POST",
         body: formData,
       });
@@ -183,7 +183,7 @@ export default function CodingPage() {
       formData.append("description", apiDesc);
       formData.append("language", apiLanguage);
 
-      const res = await fetch("http://localhost:8000/coding/api-connect", {
+      const res = await fetch("/api/coding/api-connect", {
         method: "POST",
         body: formData,
       });
@@ -568,3 +568,4 @@ export default function CodingPage() {
     </div>
   );
 }
+

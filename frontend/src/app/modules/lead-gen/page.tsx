@@ -72,7 +72,7 @@ export default function LeadGenPage() {
         formData.append("lead_id", selectedLead.id);
       }
 
-      const res = await fetch("http://localhost:8000/lead-gen/refactor-web-code", {
+      const res = await fetch("/api/lead-gen/refactor-web-code", {
         method: "POST",
         body: formData,
       });
@@ -126,7 +126,7 @@ export default function LeadGenPage() {
         formDataProp.append("sender_name", senderName);
         formDataProp.append("sender_phone", senderPhone);
 
-        const resProp = await fetch("http://localhost:8000/lead-gen/generate-proposal", {
+        const resProp = await fetch("/api/lead-gen/generate-proposal", {
           method: "POST",
           body: formDataProp,
         });
@@ -144,7 +144,7 @@ export default function LeadGenPage() {
       formData.append("demo_url", demoUrl || "");
       formData.append("whatsapp_url", waUrl || "");
 
-      const res = await fetch("http://localhost:8000/lead-gen/send-telegram-proposal", {
+      const res = await fetch("/api/lead-gen/send-telegram-proposal", {
         method: "POST",
         body: formData,
       });
@@ -181,7 +181,7 @@ export default function LeadGenPage() {
       formData.append("color_theme", primaryColor === "#ec4899" ? "pink" : primaryColor === "#3b82f6" ? "blue" : primaryColor === "#10b981" ? "emerald" : primaryColor === "#8b5cf6" ? "purple" : "amber");
       formData.append("tagline", customTagline || "");
 
-      const res = await fetch("http://localhost:8000/lead-gen/generate-web-code", {
+      const res = await fetch("/api/lead-gen/generate-web-code", {
         method: "POST",
         body: formData,
       });
@@ -1182,3 +1182,4 @@ export default function LeadGenPage() {
     </div>
   );
 }
+
