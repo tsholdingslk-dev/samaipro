@@ -19,7 +19,7 @@ export default function DemoClient() {
   useEffect(() => {
     if (!leadId) return;
 
-    fetch(`http://localhost:8000/lead-gen/demo/${leadId}`)
+    fetch(`/api/lead-gen/demo/${leadId}`)
       .then(async (res) => {
         if (!res.ok) {
           throw new Error("Demo website not found");

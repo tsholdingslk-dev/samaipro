@@ -80,7 +80,7 @@ export default function ChatClient({ projectId }: { projectId: string }) {
       });
 
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:8000/chat/${projectId}`, {
+      const response = await fetch(`/api/chat/${projectId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
