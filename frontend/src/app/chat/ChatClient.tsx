@@ -12,16 +12,17 @@ export default function ChatClient({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Safe fetch on mount
   useEffect(() => {
     const init = async () => {
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://samaipro-production-477a.up.railway.app";
-        const url = `${API_BASE}/chat/${projectId || "default"}`;
-        const res = await fetch(url);
+        const url = `/api/chat/${projectId || "default"}`;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           setMessages(data.map((m: any, i: number) => ({
@@ -42,8 +43,6 @@ export default function ChatClient({ projectId }: { projectId: string }) {
           role: "assistant",
           content: "Hello! I am SAM AI Turbo Engine. How can I assist you today?",
         }]);
-      } finally {
-        setReady(true);
       }
     };
     init();
@@ -68,10 +67,13 @@ export default function ChatClient({ projectId }: { projectId: string }) {
       const formData = new FormData();
       formData.append("content", text);
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://samaipro-production-477a.up.railway.app";
-      const url = `${API_BASE}/chat/${projectId || "default"}`;
+      const url = `/api/chat/${projectId || "default"}`;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch(url, {
         method: "POST",
+        headers: token ? {
+          Authorization: `Bearer ${token}`
+        } : {},
         body: formData,
       });
       const data = await res.json();
@@ -91,14 +93,6 @@ export default function ChatClient({ projectId }: { projectId: string }) {
       setLoading(false);
     }
   };
-
-  if (!ready) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: "3rem", color: "var(--text-muted)" }}>
-        <div>Loading SAM AI Workspace...</div>
-      </div>
-    );
-  }
 
   return (
     <>
