@@ -52,16 +52,17 @@ async def generate_code(
     
     system_prompt = f"""You are an expert {language} developer{context}.
 Generate clean, well-documented, production-ready code.
-Include comments explaining key parts.
-Follow best practices and modern patterns.
 
 IMPORTANT DESIGN STANDARDS:
 If generating frontend web code (HTML, React, Next.js, Vue, etc.):
 1. YOU MUST USE Tailwind CSS for all styling.
 2. Implement modern, responsive UI/UX using CSS Grid and Flexbox.
-3. Ensure international production-level design aesthetics (proper padding, typography, dark/light mode compatibility).
 
-Return only the code with minimal explanation unless asked."""
+CRITICAL EXECUTOR RULES:
+You are generating code that will be injected directly into a live sandbox code editor for immediate execution.
+1. DO NOT wrap the code in markdown code blocks (e.g. ```python or ```jsx).
+2. DO NOT include any introductory or concluding text, explanations, or chatty responses.
+3. Your ENTIRE output must be 100% valid, raw, executable {language} code. Nothing else."""
     
     messages = [
         {"role": "system", "content": system_prompt},
