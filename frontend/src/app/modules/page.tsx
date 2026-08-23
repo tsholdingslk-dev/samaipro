@@ -7,7 +7,7 @@ import {
   MessageSquare, Briefcase, TrendingUp, Cpu, 
   Terminal, Image as ImageIcon, Mic, FileText, 
   Share2, Brain, Newspaper, BookOpen, MonitorPlay, 
-  Network, KeyRound, Database, Activity 
+  Network, KeyRound, Database, Activity, ShieldAlert
 } from "lucide-react";
 
 type Module = {
@@ -36,7 +36,8 @@ const modules: Module[] = [
   { id: "api-hub", title: "Multi-API Provider Hub", description: "Auto-failover AI model rotator across Gemini, Groq, OpenRouter & Pollinations.", icon: Network, href: "/modules/api-hub", color: "#3b82f6" },
   { id: "auto-integrator", title: "Auto API Integrator", description: "Dynamically test and register new AI API keys without touching backend code.", icon: KeyRound, href: "/modules/auto-integrator", color: "#eab308" },
   { id: "project-memory", title: "Project Memory Storage", description: "Persistent workspace memory for files, code snippets, and logs.", icon: Database, href: "/modules/project-memory", color: "#64748b" },
-  { id: "ai-intelligence", title: "24/7 System Intelligence", description: "AI market monitoring, performance diagnostics, and automated admin digests.", icon: Activity, href: "/modules/ai-intelligence", color: "#f43f5e" }
+  { id: "ai-intelligence", title: "24/7 System Intelligence", description: "AI market monitoring, performance diagnostics, and automated admin digests.", icon: Activity, href: "/modules/ai-intelligence", color: "#f43f5e" },
+  { id: "admin-keys", title: "Admin: Access Keys", description: "Generate and manage dynamic access tokens for users.", icon: ShieldAlert, href: "/modules/admin-keys", color: "#ef4444" }
 ];
 
 const containerVariants: Variants = {
