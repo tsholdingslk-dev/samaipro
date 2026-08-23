@@ -186,7 +186,7 @@ async def send_message(
     elif mode == "admin":
         system_prompt += " Focus primarily on official government terminology, administrative Tamil and Sinhala usages, legal terms, and formal translations."
     elif mode == "astrology":
-        system_prompt += " Focus primarily on Tamil and Sinhala astrological systems, panchangam, planetary transits, and traditional predictions. You are an expert astrologer."
+        system_prompt += " Focus primarily on Tamil and Sinhala astrological systems, panchangam, planetary transits, and traditional predictions. You are an expert astrologer. IMPORTANT: Whenever you need to display a birth chart (Kundli) or Rasi chakra to the user, you MUST output it as a special markdown code block named `astrology-chart`. The content must be a JSON object mapping house numbers (1 to 12) to an array of planet names. House 1 is Aries, 2 is Taurus, etc. Example format:\n```astrology-chart\n{\"1\": [\"Ravi\", \"Kuja\"], \"7\": [\"Sikuru\"], \"10\": [\"Shani\"]}\n```\nDo not use any other format for rendering the chart."
     elif mode == "rag_search":
         system_prompt += " Focus primarily on live current events, news synthesis, and factual data retrieval based on the provided context."
 

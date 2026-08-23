@@ -5,6 +5,7 @@ import { Paperclip, Send, X, File as FileIcon, Image as ImageIcon, Loader2 } fro
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import AstrologyChart from "@/components/AstrologyChart";
 
 type Message = {
   id: string;
@@ -146,7 +147,34 @@ export default function ChatClient({ projectId, mode = "general" }: { projectId:
             }}
           >
             {msg.role === "assistant" ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert max-w-none">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                className="prose prose-invert max-w-none"
+                components={{
+                  code({node, inline, className, children, ...props}: any) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    if (!inline && match && match[1] === 'astrology-chart') {
+                      try {
+                        const planetsData = JSON.parse(String(children).replace(/\n/g, ''))
+                        return <AstrologyChart planets={planetsData} />
+                      } catch(e) {
+                        return <div style={{color:'red'}}>Error rendering chart</div>
+                      }
+                    }
+                    return !inline && match ? (
+                      <pre className={className} {...props} style={{ background: "rgba(0,0,0,0.5)", padding: "1rem", borderRadius: "8px", overflowX: "auto", margin: "1rem 0", border: "1px solid rgba(255,255,255,0.1)" }}>
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      </pre>
+                    ) : (
+                      <code className={className} {...props} style={{ fontFamily: "monospace", background: "rgba(255,255,255,0.1)", padding: "0.1rem 0.3rem", borderRadius: "4px", fontSize: "0.9em" }}>
+                        {children}
+                      </code>
+                    )
+                  }
+                }}
+              >
                 {msg.content}
               </ReactMarkdown>
             ) : (
