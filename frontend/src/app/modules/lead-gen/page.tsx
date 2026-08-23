@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import WhatsAppAutomation from "@/components/WhatsAppAutomation";
 
 // Using native fetch for Vercel compatibility
 
@@ -1089,7 +1090,6 @@ export default function LeadGenPage() {
                       >
                         {sendingTelegram ? "Sending..." : "✈️ Send to Telegram Bot"}
                       </button>
-
                       <a
                         href={proposalResult.whatsapp_url}
                         target="_blank"
