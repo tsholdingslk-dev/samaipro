@@ -147,10 +147,10 @@ export default function ChatClient({ projectId, mode = "general" }: { projectId:
             }}
           >
             {msg.role === "assistant" ? (
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]} 
-                className="prose prose-invert max-w-none"
-                components={{
+              <div className="prose prose-invert max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  components={{
                   code({node, inline, className, children, ...props}: any) {
                     const match = /language-(\w+)/.exec(className || '')
                     if (!inline && match && match[1] === 'astrology-chart') {
@@ -176,7 +176,8 @@ export default function ChatClient({ projectId, mode = "general" }: { projectId:
                 }}
               >
                 {msg.content}
-              </ReactMarkdown>
+                </ReactMarkdown>
+              </div>
             ) : (
               <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
             )}
