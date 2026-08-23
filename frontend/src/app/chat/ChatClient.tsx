@@ -12,7 +12,7 @@ type Message = {
   content: string;
 };
 
-export default function ChatClient({ projectId }: { projectId: string }) {
+export default function ChatClient({ projectId, mode = "general" }: { projectId: string; mode?: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,6 +91,7 @@ export default function ChatClient({ projectId }: { projectId: string }) {
     try {
       const formData = new FormData();
       if (text) formData.append("content", text);
+      formData.append("mode", mode);
       
       filesToSend.forEach(file => {
         formData.append("files", file);
