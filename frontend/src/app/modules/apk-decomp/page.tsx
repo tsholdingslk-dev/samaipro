@@ -133,9 +133,19 @@ export default function ApkDecompPage() {
 
         {/* Report Column */}
         <div className="glass-panel p-6 rounded-xl h-full flex flex-col">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <ShieldAlert size={18} className="text-red-500" /> Security Audit Report
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <ShieldAlert size={18} className="text-red-500" /> Security Audit Report
+            </h3>
+            {status === "done" && (
+              <button 
+                onClick={() => alert("Backend integration required to bundle zip. For now, the source is simulated.")} 
+                className="flex items-center gap-2 text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-md border border-gray-600 transition-colors"
+              >
+                <Code size={16} /> Download Decompiled Source (.zip)
+              </button>
+            )}
+          </div>
           <div className="flex-1 bg-gray-900/50 p-4 rounded-lg overflow-y-auto whitespace-pre-wrap prose prose-invert max-w-none text-sm">
             {report ? (
               <ReactMarkdown>{report}</ReactMarkdown>
