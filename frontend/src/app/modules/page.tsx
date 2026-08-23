@@ -37,7 +37,8 @@ const modules: Module[] = [
   { id: "auto-integrator", title: "Auto API Integrator", description: "Dynamically test and register new AI API keys without touching backend code.", icon: KeyRound, href: "/modules/auto-integrator", color: "#eab308" },
   { id: "project-memory", title: "Project Memory Storage", description: "Persistent workspace memory for files, code snippets, and logs.", icon: Database, href: "/modules/project-memory", color: "#64748b" },
   { id: "ai-intelligence", title: "24/7 System Intelligence", description: "AI market monitoring, performance diagnostics, and automated admin digests.", icon: Activity, href: "/modules/ai-intelligence", color: "#f43f5e" },
-  { id: "admin-keys", title: "Admin: Access Keys", description: "Generate and manage dynamic access tokens for users.", icon: ShieldAlert, href: "/modules/admin-keys", color: "#ef4444" }
+  { id: "apk-decomp", title: "AtoZ-DecompEngine", description: "Upload APKs, Auto-Decompile, Security Audit, and Generate Reverse Engineering Reports.", icon: ShieldAlert, href: "/modules/apk-decomp", color: "#ef4444" },
+  { id: "admin-keys", title: "Admin: Access Keys", description: "Generate and manage dynamic access tokens for users.", icon: KeyRound, href: "/modules/admin-keys", color: "#000000" }
 ];
 
 const containerVariants: Variants = {
