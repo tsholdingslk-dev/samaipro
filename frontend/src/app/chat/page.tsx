@@ -98,6 +98,12 @@ export default function ChatDashboard() {
                 <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.9rem" }}>General intelligence, live news crossing, and document retrieval.</p>
               </motion.div>
 
+              <motion.div whileHover={{ y: -5 }} onClick={() => startSession('apk_decomp')} className="glass-panel" style={{ cursor: "pointer", padding: "1.5rem", borderTop: "4px solid #ef4444" }}>
+                <BrainCircuit size={28} color="#ef4444" style={{ marginBottom: "1rem" }} />
+                <h3 style={{ margin: "0 0 0.5rem 0" }}>AtoZ-DecompEngine</h3>
+                <p style={{ color: "var(--text-muted)", margin: 0, fontSize: "0.9rem" }}>Automated APK Reverse Engineering, Security Auditor & Code Analysis System.</p>
+              </motion.div>
+
             </div>
           </section>
 
