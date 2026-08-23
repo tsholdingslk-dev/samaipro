@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-const LIVE_DOMAIN = "https://samaipro-zrlr.vercel.app";
+const LIVE_DOMAIN = "https://samaipro.vercel.app";
 
 const MODULES = [
   { icon: "💬", name: "Chat Engine", path: "/api/chat/default", method: "GET", desc: "AI-powered conversational assistant" },
