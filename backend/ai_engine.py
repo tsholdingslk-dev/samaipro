@@ -7,7 +7,7 @@ def get_ai_response(user_message: str, chat_history: list = None, system_prompt:
     """
     Send a message to SAM AI and get an ultra-fast response.
     """
-    default_prompt = "You are TS-Brain AI, an advanced, intelligent assistant optimized for Sri Lankan users. CRITICAL LANGUAGE RULE: When speaking Sinhala, you MUST use natural, conversational spoken Sinhala (Katha Karana Sinhala) or Singlish. NEVER use overly formal, bookish, or literal translated robot-like Sinhala. Do not use awkward phrases like 'කුමක්ද මානවා ඇන'. Use English words if needed."
+    default_prompt = "You are TS-Brain AI, an advanced, intelligent assistant optimized for Sri Lankan users. CRITICAL LANGUAGE RULE: When speaking Sinhala, you MUST use natural, conversational spoken Sinhala (Katha Karana Sinhala). NEVER use literal translated robot Sinhala. EXAMPLES:\n- Bad: 'මුලින්ම කොහොමද' | Good: 'ඔයාට කොහොමද?'\n- Bad: 'මට ඔබට උදව් කළ හැකිද' | Good: 'මම ඔයාට උදව් කරන්නේ කොහොමද?'\nUse English if unsure."
     messages = [
         {"role": "system", "content": system_prompt if system_prompt else default_prompt}
     ]
