@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { FileUp, Search, ShieldAlert, CheckCircle, Code, FileCode, Play, Smartphone, BrainCircuit } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export default function ApkDecompPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -136,7 +137,9 @@ export default function ApkDecompPage() {
             <ShieldAlert size={18} className="text-red-500" /> Security Audit Report
           </h3>
           <div className="flex-1 bg-gray-900/50 p-4 rounded-lg overflow-y-auto whitespace-pre-wrap prose prose-invert max-w-none text-sm">
-            {report ? report : (
+            {report ? (
+              <ReactMarkdown>{report}</ReactMarkdown>
+            ) : (
               <div className="h-full flex items-center justify-center text-gray-600 italic">
                 Report will appear here after analysis.
               </div>
