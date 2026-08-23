@@ -173,11 +173,42 @@ async def send_message(
     # 7. Get Chat History for context (last 10 messages)
     chat_history = db.query(models.Chat).filter(models.Chat.project_id == project_id).order_by(models.Chat.timestamp.asc()).limit(10).all()
     
-    # 8. Build enhanced prompt with RAG context
     enhanced_message = full_content
     if context:
         enhanced_message = f"[Knowledge Base Context]\n{context}\n\n[User Message]\n{full_content}"
-    
+        
+    if mode == "astrology":
+        import re
+        # Basic check for date-like pattern (e.g. 01.08.1985 or 1985-08-01)
+        date_match = re.search(r'(\d{1,4}[-./]\d{1,2}[-./]\d{1,4})', full_content)
+        if date_match:
+            try:
+                import sys
+                import os
+                sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+                from tools.astrology import ProKeralaAPI
+                from tools.geocoder import get_lat_lon
+                import dateutil.parser
+                
+                # Try to parse the entire message string for datetime
+                dt = dateutil.parser.parse(full_content, fuzzy=True)
+                iso_str = dt.isoformat() + "+05:30" # Assume SL time
+                
+                lat, lon = 6.9271, 79.8612 # Default
+                # Check for city name roughly
+                cities = ["colombo", "kandy", "galle", "jaffna", "negombo", "matara", "kurunegala"]
+                for c in cities:
+                    if c in full_content.lower():
+                        lat, lon = get_lat_lon(c)
+                        break
+                        
+                api = ProKeralaAPI()
+                kundli = api.get_kundli(lat, lon, iso_str)
+                if kundli:
+                    enhanced_message += f"\n\n[SYSTEM API INJECTION]\nThe ProKerala API has successfully calculated the birth chart for the user's provided time. The JSON chart data is: {kundli}. You MUST immediately output this exact data as an `astrology-chart` markdown code block, and then provide a brief reading in Sinhala or English."
+            except Exception as e:
+                enhanced_message += f"\n\n[SYSTEM NOTE: Failed to calculate astrology chart automatically: {str(e)}]"
+
     system_prompt = "You are TS-Brain AI, an advanced AI optimized specifically for Sri Lanka. CRITICAL LANGUAGE RULE: When speaking Sinhala, you MUST use natural, conversational spoken Sinhala (Katha Karana Sinhala) or Singlish. NEVER use overly formal, bookish, or literal translated robot-like Sinhala. Do not use awkward phrases like 'කුමක්ද මානවා ඇන' or 'මුලින්ම කොහොමද'.\nEXAMPLES OF GOOD SINHALA:\n- English 'Hi, how are you?' -> Good: 'ආයුබෝවන්! ඔයාට කොහොමද?' (Bad: 'මුලින්ම කොහොමද')\n- English 'Can I help you?' -> Good: 'මම කොහොමද ඔයාට උදව් කරන්නේ?' (Bad: 'මට ඔබට උදව් කළ හැකිද?')\nUse natural Sri Lankan local phrasing. If you don't know the exact word, use English. Maintain strict cultural accuracy."
     if mode == "history":
         system_prompt += " Focus primarily on deep Sri Lankan historical, archaeological, and cultural heritage."

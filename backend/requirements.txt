@@ -18,3 +18,4 @@ Pillow
 SpeechRecognition
 moviepy
 pyswisseph
+python-dateutil
