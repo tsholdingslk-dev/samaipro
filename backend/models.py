@@ -45,6 +45,21 @@ class Chat(Base):
     # Relationships
     project = relationship("Project", back_populates="chats")
 
+class AccessKey(Base):
+    __tablename__ = "access_keys"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    key_code = Column(String(50), unique=True, index=True, nullable=False)
+    status = Column(String(20), default="active") # active, expired, revoked
+    max_uses = Column(Integer, default=1)
+    current_uses = Column(Integer, default=0)
+    created_by = Column(String(36), ForeignKey("users.id"), nullable=True) # admin ID
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
+    
+    # Map a key to a specific pseudo-user so they retain chat history
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+
 class APIProvider(Base):
     __tablename__ = "api_providers"
 

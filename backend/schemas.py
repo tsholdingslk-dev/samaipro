@@ -18,6 +18,24 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+# --- Access Key Schemas ---
+class AccessKeyBase(BaseModel):
+    max_uses: Optional[int] = 1
+    expires_at: Optional[datetime] = None
+
+class AccessKeyCreate(AccessKeyBase):
+    pass
+
+class AccessKeyResponse(AccessKeyBase):
+    id: str
+    key_code: str
+    status: str
+    current_uses: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 # --- Project Schemas ---
 class ProjectBase(BaseModel):
     title: str
