@@ -87,6 +87,7 @@ async def send_message(
     project_id: str,
     background_tasks: BackgroundTasks,
     content: Optional[str] = Form(None),
+    mode: Optional[str] = Form("general"),
     files: list[UploadFile] = File(default=[]),
     db: Session = Depends(get_db), 
     current_user: dict = Depends(get_current_user)
@@ -177,8 +178,20 @@ async def send_message(
     if context:
         enhanced_message = f"[Knowledge Base Context]\n{context}\n\n[User Message]\n{full_content}"
     
+    # Mode-based System Prompt
+    system_prompt = "You are TS-Brain AI, an advanced, self-learning AI assistant and intelligence engine optimized specifically for Sri Lankan domain knowledge, history, culture, administrative languages, and specialized domains including astrology. Always respond in the language requested by the user, maintain strict cultural accuracy, and do not expose internal DB metadata."
+    
+    if mode == "history":
+        system_prompt += " Focus primarily on deep Sri Lankan historical, archaeological, and cultural heritage."
+    elif mode == "admin":
+        system_prompt += " Focus primarily on official government terminology, administrative Tamil and Sinhala usages, legal terms, and formal translations."
+    elif mode == "astrology":
+        system_prompt += " Focus primarily on Tamil and Sinhala astrological systems, panchangam, planetary transits, and traditional predictions. You are an expert astrologer."
+    elif mode == "rag_search":
+        system_prompt += " Focus primarily on live current events, news synthesis, and factual data retrieval based on the provided context."
+
     # 9. Generate AI Response
-    ai_text = get_ai_response(user_message=enhanced_message, chat_history=chat_history)
+    ai_text = get_ai_response(user_message=enhanced_message, chat_history=chat_history, system_prompt=system_prompt)
     
     # 10. Save AI's Response to Database
     ai_chat = models.Chat(

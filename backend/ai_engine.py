@@ -3,12 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_ai_response(user_message: str, chat_history: list = None) -> str:
+def get_ai_response(user_message: str, chat_history: list = None, system_prompt: str = None) -> str:
     """
-    Send a message to SAM AI and get an ultra-fast response (< 0.5s).
+    Send a message to SAM AI and get an ultra-fast response.
     """
+    default_prompt = "You are SAM AI, a helpful, intelligent, and friendly assistant. You help students, creators, and developers with their tasks."
     messages = [
-        {"role": "system", "content": "You are SAM AI, a helpful, intelligent, and friendly assistant. You help students, creators, and developers with their tasks."}
+        {"role": "system", "content": system_prompt if system_prompt else default_prompt}
     ]
     
     if chat_history:
