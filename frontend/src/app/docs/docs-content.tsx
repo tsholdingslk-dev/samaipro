@@ -32,11 +32,11 @@ export default function DocsContent() {
 
   useEffect(() => {
     // Check live API status
-    fetch(`${LIVE_DOMAIN}/api/crypto/market`)
+    fetch("/api/crypto/market")
       .then(r => r.json())
       .then(d => {
         setApiStatus("online");
-        if (d.count) setLiveStats(prev => ({ ...prev, coins: d.count }));
+        if (d.coins && Array.isArray(d.coins)) setLiveStats(prev => ({ ...prev, coins: d.coins.length }));
       })
       .catch(() => setApiStatus("offline"));
   }, []);
