@@ -67,11 +67,8 @@ class MyApp extends StatelessWidget {
       formData.append("zip_file", zipBlob, "project.zip");
       
       // Hit our new real backend
-      const res = await fetch("https://puny-pigs-yell.loca.lt/api/flutter-build/", {
+      const res = await fetch("/api/flutter-build/", {
         method: "POST",
-        headers: {
-            "Bypass-Tunnel-Reminder": "true"
-        },
         body: formData,
       });
       
