@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Search, Box } from 'lucide-react';
+import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function FlutterStudioPage() {
@@ -42,55 +42,55 @@ class MyApp extends StatelessWidget {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-300 font-sans overflow-hidden">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-dark)', color: 'var(--text-main)', fontFamily: 'var(--font-family, "Outfit", sans-serif)', overflow: 'hidden' }}>
       
       {/* Top Navbar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-slate-900 border-b border-slate-800 shadow-sm z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-500/20 rounded-lg">
-            <Smartphone size={22} className="text-blue-400" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', backgroundColor: 'var(--bg-sidebar)', borderBottom: '1px solid var(--border)', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'rgba(99, 102, 241, 0.15)', borderRadius: '8px' }}>
+            <Smartphone size={22} style={{ color: 'var(--primary)' }} />
           </div>
-          <span className="text-lg font-bold text-white tracking-wide">Flutter AI Studio</span>
-          <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[10px] uppercase font-bold tracking-wider text-slate-400 ml-2">Beta</span>
+          <span style={{ fontSize: '18px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Flutter AI Studio</span>
+          <span style={{ padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', color: 'var(--text-muted)' }}>Beta</span>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="px-4 py-2 text-sm bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg flex items-center gap-2 transition-all">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <CheckCircle size={16} /> Run Analyzer
           </button>
-          <button className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 rounded-lg flex items-center gap-2 transition-all">
+          <button style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
             <Play size={16} /> Live Preview
           </button>
         </div>
       </div>
 
       {/* Main Workspace */}
-      <div className="flex flex-1 overflow-hidden">
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
         {/* Left Sidebar - File Explorer */}
-        <div className="w-72 border-r border-slate-800 bg-slate-900/50 flex flex-col">
-          <div className="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800 flex items-center justify-between">
+        <div style={{ width: '280px', borderRight: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             Project Explorer
-            <Settings size={14} className="text-slate-600 hover:text-slate-400 cursor-pointer" />
+            <Settings size={14} style={{ cursor: 'pointer' }} />
           </div>
-          <div className="flex-1 p-3 overflow-y-auto text-sm font-medium">
-            <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800/50 rounded-lg cursor-pointer text-slate-300 transition-colors">
-              <Database size={16} className="text-slate-500" /> /workspace
+          <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontSize: '14px', fontWeight: 500 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)', marginBottom: '4px' }}>
+              <Database size={16} style={{ color: 'var(--text-muted)' }} /> /workspace
             </div>
-            <div className="pl-6 mt-1 flex flex-col gap-1">
-              <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800/50 rounded-lg cursor-pointer text-slate-300 transition-colors">
-                <FileCode size={16} className="text-amber-400" /> pubspec.yaml
+            <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)' }}>
+                <FileCode size={16} style={{ color: '#fbbf24' }} /> pubspec.yaml
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800/50 rounded-lg cursor-pointer text-slate-300 transition-colors">
-                <LayoutPanelLeft size={16} className="text-blue-400" /> lib/
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)' }}>
+                <LayoutPanelLeft size={16} style={{ color: 'var(--primary)' }} /> lib/
               </div>
-              <div className="pl-6 flex flex-col gap-1">
-                <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 text-blue-400 rounded-lg cursor-pointer border border-blue-500/20 shadow-sm">
+              <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
                   <FileCode size={16} /> main.dart
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800/50 rounded-lg cursor-pointer text-slate-400 transition-colors">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}>
                   <FileCode size={16} /> home_screen.dart
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-800/50 rounded-lg cursor-pointer text-slate-400 transition-colors">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}>
                   <FileCode size={16} /> api_service.dart
                 </div>
               </div>
@@ -99,58 +99,58 @@ class MyApp extends StatelessWidget {
         </div>
 
         {/* Center - Monaco/Code Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-[#0f172a]">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, backgroundColor: '#0a0a0f' }}>
           {/* Tabs */}
-          <div className="flex border-b border-slate-800 bg-slate-900 overflow-x-auto">
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)', overflowX: 'auto' }}>
             <button 
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-r border-slate-800 transition-colors ${activeTab === 'editor' ? 'bg-[#0f172a] text-blue-400 border-t-2 border-t-blue-500 shadow-inner' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}`} 
               onClick={() => setActiveTab('editor')}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '14px', fontWeight: 500, borderRight: '1px solid var(--border)', borderTop: activeTab === 'editor' ? '2px solid var(--primary)' : '2px solid transparent', backgroundColor: activeTab === 'editor' ? '#0a0a0f' : 'transparent', color: activeTab === 'editor' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', outline: 'none' }}
             >
               <Code size={16} /> main.dart
             </button>
             <button 
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-r border-slate-800 transition-colors ${activeTab === 'preview' ? 'bg-[#0f172a] text-blue-400 border-t-2 border-t-blue-500 shadow-inner' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}`} 
               onClick={() => setActiveTab('preview')}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '14px', fontWeight: 500, borderRight: '1px solid var(--border)', borderTop: activeTab === 'preview' ? '2px solid var(--primary)' : '2px solid transparent', backgroundColor: activeTab === 'preview' ? '#0a0a0f' : 'transparent', color: activeTab === 'preview' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', outline: 'none' }}
             >
               <LayoutPanelLeft size={16} /> UI Preview
             </button>
           </div>
           
           {/* Code / Preview Area */}
-          <div className="flex-1 p-6 overflow-auto">
+          <div style={{ flex: 1, padding: '24px', overflow: 'auto' }}>
             {activeTab === 'editor' ? (
-              <div className="h-full bg-slate-900 rounded-xl border border-slate-800 p-6 shadow-xl">
-                <pre className="font-mono text-sm leading-loose text-slate-300">
-                  <span className="text-purple-400">import</span> <span className="text-green-400">'package:flutter/material.dart'</span>;<br/><br/>
-                  <span className="text-purple-400">void</span> <span className="text-blue-400">main</span>() {'{\n'}
-                  {'  '}<span className="text-blue-400">runApp</span>(<span className="text-purple-400">const</span> <span className="text-yellow-200">MyApp</span>());<br/>
+              <div className="glass-panel" style={{ height: '100%', padding: '24px', overflow: 'auto', backgroundColor: '#13131a', border: '1px solid var(--border)', borderRadius: '12px' }}>
+                <pre style={{ fontFamily: 'monospace', fontSize: '14px', lineHeight: '1.6', color: 'var(--text-main)', margin: 0 }}>
+                  <span style={{ color: '#c586c0' }}>import</span> <span style={{ color: '#ce9178' }}>'package:flutter/material.dart'</span>;<br/><br/>
+                  <span style={{ color: '#c586c0' }}>void</span> <span style={{ color: '#dcdcaa' }}>main</span>() {'{\n'}
+                  {'  '}<span style={{ color: '#dcdcaa' }}>runApp</span>(<span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#4ec9b0' }}>MyApp</span>());<br/>
                   {'}'}<br/><br/>
-                  <span className="text-purple-400">class</span> <span className="text-yellow-200">MyApp</span> <span className="text-purple-400">extends</span> <span className="text-yellow-200">StatelessWidget</span> {'{\n'}
-                  {'  '}<span className="text-purple-400">const</span> <span className="text-blue-400">MyApp</span>({'{super.key}'});<br/><br/>
-                  {'  '}<span className="text-purple-400">@override</span><br/>
-                  {'  '}<span className="text-yellow-200">Widget</span> <span className="text-blue-400">build</span>(<span className="text-yellow-200">BuildContext</span> context) {'{\n'}
-                  {'    '}<span className="text-purple-400">return</span> <span className="text-yellow-200">MaterialApp</span>(<br/>
-                  {'      '}title: <span className="text-green-400">'Flutter Reconstruction'</span>,<br/>
-                  {'      '}theme: <span className="text-yellow-200">ThemeData</span>(<br/>
-                  {'        '}colorScheme: <span className="text-yellow-200">ColorScheme</span>.<span className="text-blue-400">fromSeed</span>(seedColor: <span className="text-yellow-200">Colors</span>.indigo),<br/>
+                  <span style={{ color: '#c586c0' }}>class</span> <span style={{ color: '#4ec9b0' }}>MyApp</span> <span style={{ color: '#c586c0' }}>extends</span> <span style={{ color: '#4ec9b0' }}>StatelessWidget</span> {'{\n'}
+                  {'  '}<span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#dcdcaa' }}>MyApp</span>({'{super.key}'});<br/><br/>
+                  {'  '}<span style={{ color: '#c586c0' }}>@override</span><br/>
+                  {'  '}<span style={{ color: '#4ec9b0' }}>Widget</span> <span style={{ color: '#dcdcaa' }}>build</span>(<span style={{ color: '#4ec9b0' }}>BuildContext</span> context) {'{\n'}
+                  {'    '}<span style={{ color: '#c586c0' }}>return</span> <span style={{ color: '#4ec9b0' }}>MaterialApp</span>(<br/>
+                  {'      '}title: <span style={{ color: '#ce9178' }}>'Flutter Reconstruction'</span>,<br/>
+                  {'      '}theme: <span style={{ color: '#4ec9b0' }}>ThemeData</span>(<br/>
+                  {'        '}colorScheme: <span style={{ color: '#4ec9b0' }}>ColorScheme</span>.<span style={{ color: '#dcdcaa' }}>fromSeed</span>(seedColor: <span style={{ color: '#4ec9b0' }}>Colors</span>.indigo),<br/>
                   {'      '}),<br/>
-                  {'      '}home: <span className="text-purple-400">const</span> <span className="text-yellow-200">MyHomePage</span>(title: <span className="text-green-400">'Compliance-First IDE'</span>),<br/>
+                  {'      '}home: <span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#4ec9b0' }}>MyHomePage</span>(title: <span style={{ color: '#ce9178' }}>'Compliance-First IDE'</span>),<br/>
                   {'    '});<br/>
                   {'  }'}<br/>
                   {'}'}
                 </pre>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="w-[375px] h-[812px] border-[12px] border-slate-900 rounded-[3rem] bg-white flex flex-col overflow-hidden shadow-2xl relative">
-                  <div className="absolute top-0 inset-x-0 h-6 bg-black/5 flex items-center justify-center">
-                    <div className="w-32 h-6 bg-slate-900 rounded-b-3xl"></div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <div style={{ width: '375px', height: '812px', border: '12px solid #13131a', borderRadius: '48px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '24px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '120px', height: '24px', backgroundColor: '#13131a', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}></div>
                   </div>
-                  <div className="flex-1 flex items-center justify-center flex-col gap-4 bg-slate-50">
-                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center animate-pulse">
-                      <Box size={32} className="text-indigo-600" />
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', backgroundColor: '#f8fafc' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Box size={32} style={{ color: 'var(--primary)' }} />
                     </div>
-                    <span className="text-slate-500 font-medium">Flutter Web Canvas Active</span>
+                    <span style={{ color: '#64748b', fontWeight: 500 }}>Flutter Web Canvas Active</span>
                   </div>
                 </div>
               </div>
@@ -158,58 +158,58 @@ class MyApp extends StatelessWidget {
           </div>
           
           {/* Bottom Terminal */}
-          <div className="h-56 border-t border-slate-800 bg-slate-900 flex flex-col shadow-inner">
-            <div className="px-4 py-2 border-b border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 bg-slate-900/80">
+          <div style={{ height: '220px', borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Terminal size={14} /> Terminal & Build Pipeline
             </div>
-            <div className="p-4 font-mono text-sm overflow-y-auto space-y-2">
-              <div className="flex items-center gap-2"><span className="text-blue-400">➜</span> <span className="text-white">flutter analyze</span></div>
-              <div className="text-slate-400">Analyzing samai_flutter_workspace...</div>
-              <div className="text-emerald-400">No issues found! (ran in 1.2s)</div>
-              <div className="flex items-center gap-2 mt-4"><span className="text-blue-400">➜</span> <span className="text-white">dart format .</span></div>
-              <div className="text-emerald-400">Formatted 12 files (0.8s)</div>
-              <div className="mt-4 flex items-center gap-2"><span className="text-blue-400 animate-pulse">_</span></div>
+            <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>➜</span> <span style={{ color: '#fff' }}>flutter analyze</span></div>
+              <div style={{ color: 'var(--text-muted)' }}>Analyzing samai_flutter_workspace...</div>
+              <div style={{ color: 'var(--success)' }}>No issues found! (ran in 1.2s)</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}><span style={{ color: 'var(--primary)' }}>➜</span> <span style={{ color: '#fff' }}>dart format .</span></div>
+              <div style={{ color: 'var(--success)' }}>Formatted 12 files (0.8s)</div>
+              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>_</span></div>
             </div>
           </div>
         </div>
 
         {/* Right Sidebar - AI Assistant */}
-        <div className="w-[380px] border-l border-slate-800 bg-slate-900 flex flex-col shadow-xl z-20">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
-              <Server size={18} className="text-blue-400" /> AI Natural-Language Editor
+        <div style={{ width: '380px', borderLeft: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-main)' }}>
+              <Server size={18} style={{ color: 'var(--primary)' }} /> AI Natural-Language Editor
             </div>
-            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></div>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></div>
           </div>
           
-          <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-6 text-sm bg-slate-900/50">
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
             {chatLog.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`p-4 rounded-2xl max-w-[85%] shadow-md ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-800 text-slate-200 rounded-tl-sm border border-slate-700'}`}>
-                  <div className="prose prose-invert max-w-none text-sm leading-relaxed"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+              <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                <div style={{ padding: '16px', borderRadius: '16px', maxWidth: '85%', backgroundColor: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)', color: msg.role === 'user' ? '#fff' : 'var(--text-main)', borderTopRightRadius: msg.role === 'user' ? '4px' : '16px', borderTopLeftRadius: msg.role === 'user' ? '16px' : '4px', border: msg.role === 'user' ? 'none' : '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                  <div style={{ fontSize: '14px', lineHeight: '1.6' }}><ReactMarkdown>{msg.content}</ReactMarkdown></div>
                 </div>
               </div>
             ))}
           </div>
           
-          <div className="p-4 border-t border-slate-800 bg-slate-900">
-            <div className="relative">
+          <div style={{ padding: '16px', borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-sidebar)' }}>
+            <div style={{ position: 'relative' }}>
               <textarea 
                 value={prompt}
                 onChange={e => setPrompt(e.target.value)}
                 placeholder="e.g., 'Make the home page modern'..."
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 pr-12 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none shadow-inner placeholder:text-slate-600 transition-all"
+                style={{ width: '100%', backgroundColor: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', paddingRight: '48px', fontSize: '14px', color: '#fff', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
                 rows={3}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
               />
               <button 
                 onClick={handleSend}
-                className="absolute bottom-3 right-3 p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition-all"
+                style={{ position: 'absolute', bottom: '12px', right: '12px', padding: '8px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <Play size={16} className="ml-0.5" />
+                <Play size={16} />
               </button>
             </div>
-            <div className="mt-3 text-center text-xs text-slate-600 font-medium">
+            <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
               AI can modify files, run commands, and rebuild previews.
             </div>
           </div>
