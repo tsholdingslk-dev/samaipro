@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
+import JSZip from 'jszip';
 import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box, Upload, FolderUp, Cpu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -51,40 +52,51 @@ class MyApp extends StatelessWidget {
 
   const handleBuildApk = async () => {
     setIsBuilding(true);
-    setTerminalLogs(prev => [...prev, '➜ ./gradlew assembleDebug', 'Starting a Gradle Daemon...']);
+    setTerminalLogs(prev => [...prev, '➜ Preparing workspace...', 'Zipping project files...']);
     
-    const steps = [
-      'Checking dependencies (Gradle 8.0)...',
-      'Resolving SDK paths (Target SDK 34)...',
-      '> Task :app:preBuild UP-TO-DATE',
-      '> Task :app:compileDebugJavaWithJavac',
-      '> Task :app:mergeDebugNativeLibs',
-      'Dexing classes... (Building multidex)',
-      'Packaging resources...',
-      '> Task :app:assembleDebug',
-      'Signing APK with debug key...',
-      'BUILD SUCCESSFUL in 14s',
-      'Success: Generated app-debug.apk (24.5 MB). Check your downloads.'
-    ];
-
-    for (let i = 0; i < steps.length; i++) {
-      await new Promise(r => setTimeout(r, 800));
-      setTerminalLogs(prev => [...prev, steps[i]]);
+    try {
+      const zip = new JSZip();
+      Object.entries(projectFiles).forEach(([path, content]) => {
+        zip.file(path, content);
+      });
+      
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      setTerminalLogs(prev => [...prev, 'Sending project to Build Server...', 'Running: flutter build apk --debug']);
+      
+      const formData = new FormData();
+      formData.append("zip_file", zipBlob, "project.zip");
+      
+      // Hit our new real backend
+      const res = await fetch("http://localhost:8000/api/flutter-build/", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const err = await res.json();
+        setTerminalLogs(prev => [...prev, `[ERROR] Build failed: ${err.detail || 'Server error'}`]);
+        setIsBuilding(false);
+        return;
+      }
+      
+      setTerminalLogs(prev => [...prev, 'BUILD SUCCESSFUL!', 'Downloading APK...']);
+      
+      const apkBlob = await res.blob();
+      const url = URL.createObjectURL(apkBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `app-debug.apk`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setTerminalLogs(prev => [...prev, `Success: Generated app-debug.apk (${(apkBlob.size / 1024 / 1024).toFixed(2)} MB)`]);
+    } catch (error) {
+      setTerminalLogs(prev => [...prev, `[ERROR] Network or Server Error: ${error}`]);
     }
     
-    // Trigger fake download
-    const blob = new Blob(["Simulated APK content - Compile locally for real APK"], { type: 'application/vnd.android.package-archive' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `app-debug.apk`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
     setIsBuilding(false);
-    alert("ℹ️ SIMULATION MODE: The downloaded APK is a dummy 52-byte file.\n\nTo compile a REAL Android APK, we need to set up a dedicated Backend Build Server (AWS/Docker) with Android SDK and Gradle installed. Web browsers cannot compile Java/Kotlin natively.");
   };
 
   const handleRunAnalyzer = () => {

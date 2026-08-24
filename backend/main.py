@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import models
 from database import engine
-from routers import auth, chat, project, api_provider, pdf_translate, coding, voice, media, image, agents, learning, api_proxy, lead_gen, crypto, auto_integrator, ai_intelligence, translate, social_news
+from routers import auth, chat, project, api_provider, pdf_translate, coding, voice, media, image, agents, learning, api_proxy, lead_gen, crypto, auto_integrator, ai_intelligence, translate, social_news, flutter_build
 from routers.modules.module import router as module_router
 
 # Create Database Tables safely
@@ -59,7 +59,8 @@ routers = [
     module_router, pdf_translate.router, coding.router, voice.router,
     media.router, image.router, agents.router, learning.router,
     api_proxy.router, lead_gen.router, crypto.router, auto_integrator.router,
-    ai_intelligence.router, translate.router, social_news.router
+    ai_intelligence.router, translate.router, social_news.router,
+    flutter_build.router
 ]
 
 # Mount under standard paths (/crypto/market, /chat, etc.)
