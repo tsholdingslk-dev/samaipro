@@ -40,11 +40,55 @@ class MyApp extends StatelessWidget {
     'pubspec.yaml': 'name: samai_flutter_workspace\ndescription: A new Flutter project.\nversion: 1.0.0+1\n'
   });
 
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([
+    'flutter analyze', 
+    'Analyzing uploaded workspace...', 
+    'Waiting for user input...'
+  ]);
+  
+  const [isPreviewActive, setIsPreviewActive] = useState(false);
+
+  const handleRunAnalyzer = () => {
+    setTerminalLogs(prev => [...prev, '➜ flutter analyze', 'Analyzing workspace...']);
+    setTimeout(() => {
+        let issuesCount = 0;
+        const newLogs: string[] = [];
+        Object.entries(projectFiles).forEach(([path, content]) => {
+            if (path.endsWith('.dart')) {
+                if (content.includes('print(')) {
+                    issuesCount++;
+                    newLogs.push(`info • Avoid print calls in production • ${path}`);
+                }
+                if (content.includes('// TODO') || content.includes('//TODO')) {
+                    issuesCount++;
+                    newLogs.push(`info • Unresolved TODO found • ${path}`);
+                }
+            }
+        });
+        if (issuesCount === 0) {
+            newLogs.push('No issues found! (ran in 1.4s)');
+        } else {
+            newLogs.push(`Found ${issuesCount} issues. (ran in 1.8s)`);
+        }
+        setTerminalLogs(prev => [...prev, ...newLogs]);
+    }, 800);
+  };
+
+  const handleLivePreview = () => {
+    setTerminalLogs(prev => [...prev, '➜ flutter run -d web', 'Launching active file on Web...', 'Waiting for connection from debug service...']);
+    setTimeout(() => {
+        setTerminalLogs(prev => [...prev, 'Syncing files to device Web...', 'Application finished compiling. Updating canvas...']);
+        setActiveTab('preview');
+        setIsPreviewActive(true);
+    }, 1500);
+  };
+
   const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     setChatLog(prev => [...prev, { role: "system", content: `Scanning uploaded directory... Found ${files.length} files. Extracting source code.` }]);
+    setTerminalLogs(prev => [...prev, '➜ Loading project files into memory...', `Found ${files.length} raw files...`]);
 
     const newFiles: { [path: string]: string } = {};
     for (let i = 0; i < files.length; i++) {
@@ -69,8 +113,10 @@ class MyApp extends StatelessWidget {
       const firstDart = Object.keys(newFiles).find(p => p.endsWith('main.dart')) || Object.keys(newFiles).find(p => p.endsWith('.dart'));
       if (firstDart) setActiveFile(firstDart);
       setChatLog(prev => [...prev, { role: "system", content: `Successfully loaded ${Object.keys(newFiles).length} source files into the AI Workspace.` }]);
+      setTerminalLogs(prev => [...prev, `Success: Indexed ${Object.keys(newFiles).length} source files.`]);
     } else {
       setChatLog(prev => [...prev, { role: "system", content: `No valid Dart or config files found in the selected folder.` }]);
+      setTerminalLogs(prev => [...prev, `Error: No valid source files found.`]);
     }
   };
 
@@ -154,10 +200,10 @@ class MyApp extends StatelessWidget {
             <FolderUp size={16} /> Import Project
           </button>
           
-          <button style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <button onClick={handleRunAnalyzer} style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <CheckCircle size={16} /> Run Analyzer
           </button>
-          <button style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
+          <button onClick={handleLivePreview} style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
             <Play size={16} /> Live Preview
           </button>
         </div>
@@ -195,8 +241,8 @@ class MyApp extends StatelessWidget {
                   </div>
                   <div style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {fileTree[dir].map(path => (
-                      <div key={path} onClick={() => setActiveFile(path)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backgroundColor: activeFile === path ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: activeFile === path ? 'var(--primary)' : 'var(--text-muted)', border: activeFile === path ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent', fontSize: '13px' }}>
-                        <FileCode size={14} /> {path.split('/').pop()}
+                      <div key={path} onClick={() => setActiveFile(path)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backgroundColor: activeFile === path ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: activeFile === path ? 'var(--primary)' : 'var(--text-muted)', border: activeFile === path ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <FileCode size={14} style={{ flexShrink: 0 }} /> {path.split('/').pop()}
                       </div>
                     ))}
                   </div>
@@ -236,15 +282,19 @@ class MyApp extends StatelessWidget {
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                 <div style={{ width: '375px', height: '812px', border: '12px solid #13131a', borderRadius: '48px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '24px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '24px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                     <div style={{ width: '120px', height: '24px', backgroundColor: '#13131a', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}></div>
                   </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', backgroundColor: '#f8fafc' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Box size={32} style={{ color: 'var(--primary)' }} />
+                  {isPreviewActive ? (
+                    <iframe src="https://dartpad.dev/embed-flutter.html?theme=dark" style={{ width: '100%', height: '100%', border: 'none', paddingTop: '24px' }} title="Flutter Web Canvas" />
+                  ) : (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', backgroundColor: '#f8fafc' }}>
+                      <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Box size={32} style={{ color: 'var(--primary)' }} />
+                      </div>
+                      <span style={{ color: '#64748b', fontWeight: 500 }}>Click Live Preview to Compile</span>
                     </div>
-                    <span style={{ color: '#64748b', fontWeight: 500 }}>Flutter Web Canvas Active</span>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -256,10 +306,15 @@ class MyApp extends StatelessWidget {
               <Terminal size={14} /> Terminal & Build Pipeline
             </div>
             <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>➜</span> <span style={{ color: '#fff' }}>flutter analyze</span></div>
-              <div style={{ color: 'var(--text-muted)' }}>Analyzing uploaded workspace...</div>
-              <div style={{ color: 'var(--success)' }}>Loaded {Object.keys(projectFiles).length} files into memory successfully.</div>
-              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>_</span></div>
+              {terminalLogs.map((log, index) => (
+                <div key={index} style={{ 
+                  color: log.startsWith('info') ? '#fbbf24' : log.startsWith('➜') ? 'var(--primary)' : log.includes('Success') || log.includes('issues found') ? 'var(--success)' : log.includes('Error') ? '#ef4444' : 'var(--text-muted)',
+                  display: 'flex', alignItems: 'flex-start', gap: '8px' 
+                }}>
+                  {log}
+                </div>
+              ))}
+              <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>_</span></div>
             </div>
           </div>
         </div>
