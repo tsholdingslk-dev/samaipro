@@ -28,6 +28,7 @@ const modules: Module[] = [
   { id: "image", title: "AI Image Studio", description: "Generate prompts, edit images, resize, apply filters, and overlays.", icon: ImageIcon, href: "/modules/image", color: "#a855f7" },
   { id: "voice", title: "Voice Workspace", description: "Transcribe audio files, voice commands, and text-to-speech support.", icon: Mic, href: "/modules/voice", color: "#f97316" },
   { id: "pdf-translate", title: "PDF & Translation Engine", description: "Extract text from PDFs. Translate between Tamil, Sinhala, English.", icon: FileText, href: "/modules/pdf-translate", color: "#06b6d4" },
+  { id: "flutter-studio", title: "Flutter AI Studio", description: "Compliance-First Visual Code Editor & App Reconstruction Engine.", icon: Smartphone, href: "/modules/flutter-studio", color: "#0ea5e9" },
   { id: "media", title: "Media & Content Studio", description: "Social media prompts, image/video generation prompts, resize guides.", icon: Share2, href: "/modules/media", color: "#ef4444" },
   { id: "learning", title: "Self Learning AI Brain", description: "SAM AI learns from your feedback and adapts to your personal style.", icon: Brain, href: "/modules/learning", color: "#10b981" },
   { id: "social-news", title: "NewsFlash Elite Editor", description: "Create viral, fact-checked Facebook posts and analyze reference images.", icon: Newspaper, href: "/modules/social-news", color: "#3b82f6" },
