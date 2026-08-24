@@ -1,16 +1,19 @@
 "use client";
-import React, { useState } from 'react';
-import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box, Upload, FolderUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function FlutterStudioPage() {
   const [activeTab, setActiveTab] = useState('editor');
+  const [activeFile, setActiveFile] = useState('lib/main.dart');
   const [prompt, setPrompt] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [chatLog, setChatLog] = useState<{role: string, content: string}[]>([
-    { role: "system", content: "Welcome to Flutter AI Studio. I am ready to analyze, reconstruct, and edit your authorized Flutter project. What would you like to build today?" }
+    { role: "system", content: "Welcome to Flutter AI Studio. Upload your project folder to begin analysis. I am connected to the backend AI and ready to reconstruct or edit your Flutter app." }
   ]);
   
-  const code = `import 'package:flutter/material.dart';
+  const defaultCode = `import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,17 +35,58 @@ class MyApp extends StatelessWidget {
   }
 }`;
 
+  const [projectFiles, setProjectFiles] = useState<{ [path: string]: string }>({
+    'lib/main.dart': defaultCode,
+    'pubspec.yaml': 'name: samai_flutter_workspace\ndescription: A new Flutter project.\nversion: 1.0.0+1\n'
+  });
+
+  const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    setChatLog(prev => [...prev, { role: "system", content: `Scanning uploaded directory... Found ${files.length} files. Extracting source code.` }]);
+
+    const newFiles: { [path: string]: string } = {};
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      // Limit to text/code files to prevent browser memory crash on massive assets/build folders
+      if (file.name.endsWith('.dart') || file.name.endsWith('.yaml') || file.name.endsWith('.txt') || file.name.endsWith('.json') || file.name.endsWith('.xml') || file.name.endsWith('.gradle') || file.name.endsWith('.md')) {
+        try {
+          const text = await file.text();
+          // Remove the top level folder name from the path
+          const pathParts = file.webkitRelativePath.split('/');
+          pathParts.shift(); 
+          const path = pathParts.join('/');
+          newFiles[path] = text;
+        } catch (err) {
+          console.error("Failed to read", file.name);
+        }
+      }
+    }
+    
+    if (Object.keys(newFiles).length > 0) {
+      setProjectFiles(newFiles);
+      const firstDart = Object.keys(newFiles).find(p => p.endsWith('main.dart')) || Object.keys(newFiles).find(p => p.endsWith('.dart'));
+      if (firstDart) setActiveFile(firstDart);
+      setChatLog(prev => [...prev, { role: "system", content: `Successfully loaded ${Object.keys(newFiles).length} source files into the AI Workspace.` }]);
+    } else {
+      setChatLog(prev => [...prev, { role: "system", content: `No valid Dart or config files found in the selected folder.` }]);
+    }
+  };
+
   const handleSend = async () => {
     if (!prompt.trim()) return;
     const userMessage = prompt;
     setPrompt("");
     
     setChatLog(prev => [...prev, { role: "user", content: userMessage }]);
-    setChatLog(prev => [...prev, { role: "assistant", content: "Thinking..." }]);
+    setChatLog(prev => [...prev, { role: "assistant", content: "Analyzing workspace and thinking..." }]);
 
     try {
       const formData = new FormData();
-      formData.append("content", userMessage);
+      // Send the prompt along with the current active file's code as context
+      const context = `[SYSTEM CONTEXT - Active File: ${activeFile}]\n\`\`\`dart\n${projectFiles[activeFile]}\n\`\`\`\n\nUser Request: ${userMessage}`;
+      formData.append("content", context);
       formData.append("mode", "flutter_studio");
       
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -69,6 +113,22 @@ class MyApp extends StatelessWidget {
     }
   };
 
+  // Group files by top-level directory for the sidebar
+  const getFileTree = () => {
+    const tree: { [dir: string]: string[] } = { '/': [] };
+    Object.keys(projectFiles).forEach(path => {
+      if (path.includes('/')) {
+        const dir = path.split('/')[0];
+        if (!tree[dir]) tree[dir] = [];
+        tree[dir].push(path);
+      } else {
+        tree['/'].push(path);
+      }
+    });
+    return tree;
+  };
+  const fileTree = getFileTree();
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: 'var(--bg-dark)', color: 'var(--text-main)', fontFamily: 'var(--font-family, "Outfit", sans-serif)', overflow: 'hidden' }}>
       
@@ -82,6 +142,18 @@ class MyApp extends StatelessWidget {
           <span style={{ padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', color: 'var(--text-muted)' }}>Beta</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Hidden File Input for Folder Upload */}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFolderUpload} 
+            style={{ display: 'none' }} 
+            {...({ webkitdirectory: "true", directory: "true", multiple: true } as any)} 
+          />
+          <button onClick={() => fileInputRef.current?.click()} style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid var(--border)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <FolderUp size={16} /> Import Project
+          </button>
+          
           <button style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <CheckCircle size={16} /> Run Analyzer
           </button>
@@ -101,27 +173,36 @@ class MyApp extends StatelessWidget {
             <Settings size={14} style={{ cursor: 'pointer' }} />
           </div>
           <div style={{ flex: 1, padding: '12px', overflowY: 'auto', fontSize: '14px', fontWeight: 500 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)', marginBottom: '4px', backgroundColor: 'rgba(255,255,255,0.02)' }}>
               <Database size={16} style={{ color: 'var(--text-muted)' }} /> /workspace
             </div>
-            <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)' }}>
-                <FileCode size={16} style={{ color: '#fbbf24' }} /> pubspec.yaml
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-main)' }}>
-                <LayoutPanelLeft size={16} style={{ color: 'var(--primary)' }} /> lib/
-              </div>
-              <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                  <FileCode size={16} /> main.dart
+            
+            {/* Dynamic File Tree */}
+            <div style={{ paddingLeft: '12px', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+              
+              {/* Root level files */}
+              {fileTree['/'].map(path => (
+                 <div key={path} onClick={() => setActiveFile(path)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backgroundColor: activeFile === path ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: activeFile === path ? 'var(--primary)' : 'var(--text-main)', border: activeFile === path ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent' }}>
+                   <FileCode size={14} style={{ color: path.endsWith('.yaml') ? '#fbbf24' : 'inherit' }} /> {path}
+                 </div>
+              ))}
+
+              {/* Directories */}
+              {Object.keys(fileTree).filter(k => k !== '/').map(dir => (
+                <div key={dir}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', color: 'var(--text-muted)' }}>
+                    <LayoutPanelLeft size={14} style={{ color: 'var(--primary)' }} /> {dir}/
+                  </div>
+                  <div style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {fileTree[dir].map(path => (
+                      <div key={path} onClick={() => setActiveFile(path)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backgroundColor: activeFile === path ? 'rgba(99, 102, 241, 0.1)' : 'transparent', color: activeFile === path ? 'var(--primary)' : 'var(--text-muted)', border: activeFile === path ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid transparent', fontSize: '13px' }}>
+                        <FileCode size={14} /> {path.split('/').pop()}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                  <FileCode size={16} /> home_screen.dart
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                  <FileCode size={16} /> api_service.dart
-                </div>
-              </div>
+              ))}
+              
             </div>
           </div>
         </div>
@@ -134,7 +215,7 @@ class MyApp extends StatelessWidget {
               onClick={() => setActiveTab('editor')}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '14px', fontWeight: 500, borderRight: '1px solid var(--border)', borderTop: activeTab === 'editor' ? '2px solid var(--primary)' : '2px solid transparent', backgroundColor: activeTab === 'editor' ? '#0a0a0f' : 'transparent', color: activeTab === 'editor' ? 'var(--primary)' : 'var(--text-muted)', cursor: 'pointer', outline: 'none' }}
             >
-              <Code size={16} /> main.dart
+              <Code size={16} /> {activeFile.split('/').pop()}
             </button>
             <button 
               onClick={() => setActiveTab('preview')}
@@ -147,25 +228,9 @@ class MyApp extends StatelessWidget {
           {/* Code / Preview Area */}
           <div style={{ flex: 1, padding: '24px', overflow: 'auto' }}>
             {activeTab === 'editor' ? (
-              <div className="glass-panel" style={{ height: '100%', padding: '24px', overflow: 'auto', backgroundColor: '#13131a', border: '1px solid var(--border)', borderRadius: '12px' }}>
-                <pre style={{ fontFamily: 'monospace', fontSize: '14px', lineHeight: '1.6', color: 'var(--text-main)', margin: 0 }}>
-                  <span style={{ color: '#c586c0' }}>import</span> <span style={{ color: '#ce9178' }}>'package:flutter/material.dart'</span>;<br/><br/>
-                  <span style={{ color: '#c586c0' }}>void</span> <span style={{ color: '#dcdcaa' }}>main</span>() {'{\n'}
-                  {'  '}<span style={{ color: '#dcdcaa' }}>runApp</span>(<span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#4ec9b0' }}>MyApp</span>());<br/>
-                  {'}'}<br/><br/>
-                  <span style={{ color: '#c586c0' }}>class</span> <span style={{ color: '#4ec9b0' }}>MyApp</span> <span style={{ color: '#c586c0' }}>extends</span> <span style={{ color: '#4ec9b0' }}>StatelessWidget</span> {'{\n'}
-                  {'  '}<span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#dcdcaa' }}>MyApp</span>({'{super.key}'});<br/><br/>
-                  {'  '}<span style={{ color: '#c586c0' }}>@override</span><br/>
-                  {'  '}<span style={{ color: '#4ec9b0' }}>Widget</span> <span style={{ color: '#dcdcaa' }}>build</span>(<span style={{ color: '#4ec9b0' }}>BuildContext</span> context) {'{\n'}
-                  {'    '}<span style={{ color: '#c586c0' }}>return</span> <span style={{ color: '#4ec9b0' }}>MaterialApp</span>(<br/>
-                  {'      '}title: <span style={{ color: '#ce9178' }}>'Flutter Reconstruction'</span>,<br/>
-                  {'      '}theme: <span style={{ color: '#4ec9b0' }}>ThemeData</span>(<br/>
-                  {'        '}colorScheme: <span style={{ color: '#4ec9b0' }}>ColorScheme</span>.<span style={{ color: '#dcdcaa' }}>fromSeed</span>(seedColor: <span style={{ color: '#4ec9b0' }}>Colors</span>.indigo),<br/>
-                  {'      '}),<br/>
-                  {'      '}home: <span style={{ color: '#569cd6' }}>const</span> <span style={{ color: '#4ec9b0' }}>MyHomePage</span>(title: <span style={{ color: '#ce9178' }}>'Compliance-First IDE'</span>),<br/>
-                  {'    '});<br/>
-                  {'  }'}<br/>
-                  {'}'}
+              <div className="glass-panel" style={{ minHeight: '100%', padding: '24px', backgroundColor: '#13131a', border: '1px solid var(--border)', borderRadius: '12px' }}>
+                <pre style={{ fontFamily: 'monospace', fontSize: '14px', lineHeight: '1.6', color: 'var(--text-main)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {projectFiles[activeFile]}
                 </pre>
               </div>
             ) : (
@@ -192,10 +257,8 @@ class MyApp extends StatelessWidget {
             </div>
             <div style={{ padding: '16px', fontFamily: 'monospace', fontSize: '14px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>➜</span> <span style={{ color: '#fff' }}>flutter analyze</span></div>
-              <div style={{ color: 'var(--text-muted)' }}>Analyzing samai_flutter_workspace...</div>
-              <div style={{ color: 'var(--success)' }}>No issues found! (ran in 1.2s)</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '16px' }}><span style={{ color: 'var(--primary)' }}>➜</span> <span style={{ color: '#fff' }}>dart format .</span></div>
-              <div style={{ color: 'var(--success)' }}>Formatted 12 files (0.8s)</div>
+              <div style={{ color: 'var(--text-muted)' }}>Analyzing uploaded workspace...</div>
+              <div style={{ color: 'var(--success)' }}>Loaded {Object.keys(projectFiles).length} files into memory successfully.</div>
               <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: 'var(--primary)' }}>_</span></div>
             </div>
           </div>
@@ -213,7 +276,7 @@ class MyApp extends StatelessWidget {
           <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
             {chatLog.map((msg, idx) => (
               <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                <div style={{ padding: '16px', borderRadius: '16px', maxWidth: '85%', backgroundColor: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)', color: msg.role === 'user' ? '#fff' : 'var(--text-main)', borderTopRightRadius: msg.role === 'user' ? '4px' : '16px', borderTopLeftRadius: msg.role === 'user' ? '16px' : '4px', border: msg.role === 'user' ? 'none' : '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                <div style={{ padding: '16px', borderRadius: '16px', maxWidth: '90%', backgroundColor: msg.role === 'user' ? 'var(--primary)' : 'var(--bg-card)', color: msg.role === 'user' ? '#fff' : 'var(--text-main)', borderTopRightRadius: msg.role === 'user' ? '4px' : '16px', borderTopLeftRadius: msg.role === 'user' ? '16px' : '4px', border: msg.role === 'user' ? 'none' : '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
                   <div style={{ fontSize: '14px', lineHeight: '1.6' }}><ReactMarkdown>{msg.content}</ReactMarkdown></div>
                 </div>
               </div>
