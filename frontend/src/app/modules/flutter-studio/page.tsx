@@ -84,6 +84,7 @@ class MyApp extends StatelessWidget {
     URL.revokeObjectURL(url);
     
     setIsBuilding(false);
+    alert("ℹ️ SIMULATION MODE: The downloaded APK is a dummy 52-byte file.\n\nTo compile a REAL Android APK, we need to set up a dedicated Backend Build Server (AWS/Docker) with Android SDK and Gradle installed. Web browsers cannot compile Java/Kotlin natively.");
   };
 
   const handleRunAnalyzer = () => {
