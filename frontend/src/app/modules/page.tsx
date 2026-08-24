@@ -7,7 +7,7 @@ import {
   MessageSquare, Briefcase, TrendingUp, Cpu, 
   Terminal, Image as ImageIcon, Mic, FileText, 
   Share2, Brain, Newspaper, BookOpen, MonitorPlay, 
-  Network, KeyRound, Database, Activity, ShieldAlert
+  Network, KeyRound, Database, Activity, ShieldAlert, Smartphone
 } from "lucide-react";
 
 type Module = {

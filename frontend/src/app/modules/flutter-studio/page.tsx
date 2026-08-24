@@ -98,10 +98,10 @@ class MyApp extends StatelessWidget {
         {/* Center - Monaco/Code Area */}
         <div className="flex-1 flex flex-col">
           <div className="flex border-b border-gray-800 bg-[#0d1117]">
-            <button className={\`px-4 py-2 text-sm border-r border-gray-800 \${activeTab === 'editor' ? 'bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500' : 'text-gray-400 hover:bg-gray-800'}\`} onClick={() => setActiveTab('editor')}>
+            <button className={`px-4 py-2 text-sm border-r border-gray-800 ${activeTab === 'editor' ? 'bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500' : 'text-gray-400 hover:bg-gray-800'}`} onClick={() => setActiveTab('editor')}>
               main.dart
             </button>
-            <button className={\`px-4 py-2 text-sm border-r border-gray-800 \${activeTab === 'preview' ? 'bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500' : 'text-gray-400 hover:bg-gray-800'}\`} onClick={() => setActiveTab('preview')}>
+            <button className={`px-4 py-2 text-sm border-r border-gray-800 ${activeTab === 'preview' ? 'bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500' : 'text-gray-400 hover:bg-gray-800'}`} onClick={() => setActiveTab('preview')}>
               UI Preview
             </button>
           </div>
@@ -140,8 +140,8 @@ class MyApp extends StatelessWidget {
           
           <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-4 text-sm">
             {chatLog.map((msg, idx) => (
-              <div key={idx} className={\`p-3 rounded-lg \${msg.role === 'user' ? 'bg-blue-600/20 border border-blue-500/30 ml-4' : 'bg-gray-800/50 border border-gray-700 mr-4'}\`}>
-                <ReactMarkdown className="prose prose-invert max-w-none text-xs">{msg.content}</ReactMarkdown>
+              <div key={idx} className={`p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-600/20 border border-blue-500/30 ml-4' : 'bg-gray-800/50 border border-gray-700 mr-4'}`}>
+                <div className="prose prose-invert max-w-none text-xs"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
               </div>
             ))}
           </div>
