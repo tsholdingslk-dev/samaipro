@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
       formData.append("zip_file", zipBlob, "project.zip");
       
       // Hit our new real backend
-      const res = await fetch("http://localhost:8000/api/flutter-build/", {
+      const res = await fetch("/api/flutter-build/", {
         method: "POST",
         body: formData,
       });
@@ -328,10 +328,13 @@ class MyApp extends StatelessWidget {
           {/* Code / Preview Area */}
           <div style={{ flex: 1, padding: '24px', overflow: 'auto' }}>
             {activeTab === 'editor' ? (
-              <div className="glass-panel" style={{ minHeight: '100%', padding: '24px', backgroundColor: '#13131a', border: '1px solid var(--border)', borderRadius: '12px' }}>
-                <pre style={{ fontFamily: 'monospace', fontSize: '14px', lineHeight: '1.6', color: 'var(--text-main)', margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {projectFiles[activeFile]}
-                </pre>
+              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0', backgroundColor: '#13131a', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                <textarea 
+                  value={projectFiles[activeFile] || ''}
+                  onChange={(e) => setProjectFiles(prev => ({ ...prev, [activeFile]: e.target.value }))}
+                  spellCheck={false}
+                  style={{ flex: 1, width: '100%', height: '100%', padding: '24px', fontFamily: 'monospace', fontSize: '14px', lineHeight: '1.6', color: 'var(--text-main)', backgroundColor: 'transparent', border: 'none', outline: 'none', resize: 'none', whiteSpace: 'pre' }}
+                />
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '32px' }}>
