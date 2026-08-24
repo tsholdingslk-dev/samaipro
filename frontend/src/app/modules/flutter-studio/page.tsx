@@ -280,21 +280,101 @@ class MyApp extends StatelessWidget {
                 </pre>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                <div style={{ width: '375px', height: '812px', border: '12px solid #13131a', borderRadius: '48px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '32px' }}>
+                {/* Phone Mockup */}
+                <div style={{ width: '375px', minHeight: '700px', border: '12px solid #13131a', borderRadius: '48px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '24px', backgroundColor: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
                     <div style={{ width: '120px', height: '24px', backgroundColor: '#13131a', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}></div>
                   </div>
-                  {isPreviewActive ? (
-                    <iframe src="https://dartpad.dev/embed-flutter.html?theme=dark" style={{ width: '100%', height: '100%', border: 'none', paddingTop: '24px' }} title="Flutter Web Canvas" />
-                  ) : (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px', backgroundColor: '#f8fafc' }}>
-                      <div style={{ width: '64px', height: '64px', borderRadius: '16px', backgroundColor: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Box size={32} style={{ color: 'var(--primary)' }} />
-                      </div>
-                      <span style={{ color: '#64748b', fontWeight: 500 }}>Click Live Preview to Compile</span>
+                  
+                  {/* App Bar */}
+                  <div style={{ backgroundColor: '#6366f1', padding: '40px 16px 12px 16px', color: '#fff' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 600 }}>
+                      {(() => {
+                        // Try to extract app name from project files
+                        const manifest = Object.keys(projectFiles).find(p => p.includes('AndroidManifest.xml'));
+                        const pubspec = Object.keys(projectFiles).find(p => p.includes('pubspec.yaml'));
+                        if (pubspec && projectFiles[pubspec]) {
+                          const nameMatch = projectFiles[pubspec].match(/name:\s*(.+)/);
+                          if (nameMatch) return nameMatch[1].trim();
+                        }
+                        if (manifest && projectFiles[manifest]) {
+                          const labelMatch = projectFiles[manifest].match(/android:label="([^"]+)"/);
+                          if (labelMatch) return labelMatch[1];
+                        }
+                        return 'My App';
+                      })()}
                     </div>
-                  )}
+                  </div>
+
+                  {/* App Content - Show screens/activities found */}
+                  <div style={{ flex: 1, padding: '16px', backgroundColor: '#f8fafc', overflowY: 'auto' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px' }}>Detected Screens</div>
+                    {(() => {
+                      const screens: string[] = [];
+                      Object.keys(projectFiles).forEach(path => {
+                        // Find dart files with Screen/Page/Activity in name
+                        if (path.endsWith('.dart')) {
+                          const name = path.split('/').pop()?.replace('.dart', '') || '';
+                          if (name.includes('screen') || name.includes('page') || name.includes('home') || name.includes('main') || name.includes('login') || name.includes('splash') || name.includes('dashboard')) {
+                            screens.push(name);
+                          }
+                        }
+                        // Find Android activities from XML
+                        if (path.includes('AndroidManifest.xml') && projectFiles[path]) {
+                          const activityMatches = projectFiles[path].match(/android:name="([^"]*Activity[^"]*)"/g);
+                          if (activityMatches) {
+                            activityMatches.forEach(m => {
+                              const name = m.match(/android:name="([^"]+)"/);
+                              if (name) screens.push(name[1].split('.').pop() || '');
+                            });
+                          }
+                        }
+                      });
+                      const uniqueScreens = [...new Set(screens)].slice(0, 8);
+                      if (uniqueScreens.length === 0) {
+                        return <div style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', padding: '24px' }}>Upload a Flutter/Android project to detect screens</div>;
+                      }
+                      return uniqueScreens.map((screen, i) => (
+                        <div key={i} style={{ padding: '12px', marginBottom: '8px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                          <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: `hsl(${i * 45}, 70%, 95%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 600, color: `hsl(${i * 45}, 70%, 45%)` }}>
+                            {screen.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b' }}>{screen}</div>
+                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Screen Component</div>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                    
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginTop: '24px', marginBottom: '12px' }}>Project Stats</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#6366f1' }}>{Object.keys(projectFiles).filter(p => p.endsWith('.dart')).length}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>Dart Files</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#f59e0b' }}>{Object.keys(projectFiles).filter(p => p.endsWith('.xml')).length}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>XML Files</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>{Object.keys(projectFiles).length}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>Total Files</div>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                        <div style={{ fontSize: '20px', fontWeight: 700, color: '#ef4444' }}>{Object.keys(projectFiles).filter(p => p.endsWith('.json')).length}</div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>JSON Files</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Nav Bar */}
+                  <div style={{ display: 'flex', justifyContent: 'space-around', padding: '8px 0', borderTop: '1px solid #e2e8f0', backgroundColor: '#fff' }}>
+                    <div style={{ textAlign: 'center', padding: '4px' }}><div style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: '#6366f1', margin: '0 auto 2px' }}></div><div style={{ fontSize: '10px', color: '#94a3b8' }}>Home</div></div>
+                    <div style={{ textAlign: 'center', padding: '4px' }}><div style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: '#e2e8f0', margin: '0 auto 2px' }}></div><div style={{ fontSize: '10px', color: '#94a3b8' }}>Search</div></div>
+                    <div style={{ textAlign: 'center', padding: '4px' }}><div style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: '#e2e8f0', margin: '0 auto 2px' }}></div><div style={{ fontSize: '10px', color: '#94a3b8' }}>Profile</div></div>
+                  </div>
                 </div>
               </div>
             )}
