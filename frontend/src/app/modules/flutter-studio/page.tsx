@@ -67,14 +67,35 @@ class MyApp extends StatelessWidget {
       formData.append("zip_file", zipBlob, "project.zip");
       
       // Hit our new real backend
-      const res = await fetch("/api/flutter-build/", {
+      const res = await fetch("https://puny-pigs-yell.loca.lt/api/flutter-build/", {
         method: "POST",
+        headers: {
+            "Bypass-Tunnel-Reminder": "true"
+        },
         body: formData,
       });
       
       if (!res.ok) {
-        const err = await res.json();
-        setTerminalLogs(prev => [...prev, `[ERROR] Build failed: ${err.detail || 'Server error'}`]);
+        let errMessage = "Unknown Server Error";
+        try {
+          const err = await res.json();
+          errMessage = err.detail || err.message || err.error?.message || JSON.stringify(err);
+        } catch (e) {
+          errMessage = await res.text();
+        }
+        
+        if (res.status === 413) {
+           errMessage = "Project too large to upload! Vercel limits uploads to 4.5MB.";
+        }
+        
+        setTerminalLogs(prev => [...prev, `[ERROR] Build failed: ${errMessage}`]);
+        
+        // Check if it looks like a decompiled APK rather than a Flutter project
+        const isDecompiled = Object.keys(projectFiles).some(p => p.includes('apktool.yml') || p.includes('smali/'));
+        if (isDecompiled) {
+           setTerminalLogs(prev => [...prev, `[TIP] You cannot build a decompiled APK using 'flutter build'. You need the original Flutter source code (with pubspec.yaml) or you need 'apktool' to repackage it.`]);
+        }
+        
         setIsBuilding(false);
         return;
       }
