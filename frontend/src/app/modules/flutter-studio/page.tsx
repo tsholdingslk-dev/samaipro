@@ -212,7 +212,25 @@ class MyApp extends StatelessWidget {
       });
       
       const data = await res.json();
-      const reply = data.content || data.message || "I've processed your request.";
+      let reply = data.content || data.message || "I've processed your request.";
+      
+      // Auto-coding logic: Extract dart code blocks
+      const dartCodeRegex = /```dart\n([\s\S]*?)```/g;
+      const matches = [...reply.matchAll(dartCodeRegex)];
+      
+      if (matches.length > 0) {
+        // Take the last match assuming it's the full updated file
+        const newCode = matches[matches.length - 1][1];
+        
+        // Update the project files state
+        setProjectFiles(prev => ({
+          ...prev,
+          [activeFile]: newCode
+        }));
+        
+        // Remove the code block from the reply to keep chat clean, and add a system note
+        reply = reply.replace(dartCodeRegex, "\n*[Code updated in the editor]*\n");
+      }
       
       setChatLog(prev => {
         const newLog = [...prev];
