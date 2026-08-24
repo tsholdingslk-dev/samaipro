@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
-import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box, Upload, FolderUp } from 'lucide-react';
+import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box, Upload, FolderUp, Cpu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function FlutterStudioPage() {
@@ -47,6 +47,44 @@ class MyApp extends StatelessWidget {
   ]);
   
   const [isPreviewActive, setIsPreviewActive] = useState(false);
+  const [isBuilding, setIsBuilding] = useState(false);
+
+  const handleBuildApk = async () => {
+    setIsBuilding(true);
+    setTerminalLogs(prev => [...prev, '➜ ./gradlew assembleDebug', 'Starting a Gradle Daemon...']);
+    
+    const steps = [
+      'Checking dependencies (Gradle 8.0)...',
+      'Resolving SDK paths (Target SDK 34)...',
+      '> Task :app:preBuild UP-TO-DATE',
+      '> Task :app:compileDebugJavaWithJavac',
+      '> Task :app:mergeDebugNativeLibs',
+      'Dexing classes... (Building multidex)',
+      'Packaging resources...',
+      '> Task :app:assembleDebug',
+      'Signing APK with debug key...',
+      'BUILD SUCCESSFUL in 14s',
+      'Success: Generated app-debug.apk (24.5 MB). Check your downloads.'
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      await new Promise(r => setTimeout(r, 800));
+      setTerminalLogs(prev => [...prev, steps[i]]);
+    }
+    
+    // Trigger fake download
+    const blob = new Blob(["Simulated APK content - Compile locally for real APK"], { type: 'application/vnd.android.package-archive' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `app-debug.apk`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setIsBuilding(false);
+  };
 
   const handleRunAnalyzer = () => {
     setTerminalLogs(prev => [...prev, '➜ flutter analyze', 'Analyzing workspace...']);
@@ -205,6 +243,9 @@ class MyApp extends StatelessWidget {
           </button>
           <button onClick={handleLivePreview} style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)' }}>
             <Play size={16} /> Live Preview
+          </button>
+          <button onClick={handleBuildApk} disabled={isBuilding} style={{ padding: '8px 16px', fontSize: '14px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: isBuilding ? 'wait' : 'pointer', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)', opacity: isBuilding ? 0.7 : 1 }}>
+            <Cpu size={16} className={isBuilding ? "animate-pulse" : ""} /> {isBuilding ? "Building..." : "Build APK"}
           </button>
         </div>
       </div>
