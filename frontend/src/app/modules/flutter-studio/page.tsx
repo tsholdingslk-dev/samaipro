@@ -66,9 +66,12 @@ class MyApp extends StatelessWidget {
       const formData = new FormData();
       formData.append("zip_file", zipBlob, "project.zip");
       
-      // Hit our new real backend
-      const res = await fetch("/api/flutter-build/", {
+      // Hit our new real backend via localtunnel to bypass Vercel 4.5MB limit and use local Flutter SDK
+      const res = await fetch("https://loose-shirts-chew.loca.lt/api/flutter-build/", {
         method: "POST",
+        headers: {
+            "Bypass-Tunnel-Reminder": "true"
+        },
         body: formData,
       });
       
