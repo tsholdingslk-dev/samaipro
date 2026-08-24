@@ -32,13 +32,41 @@ class MyApp extends StatelessWidget {
   }
 }`;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!prompt.trim()) return;
-    setChatLog([...chatLog, { role: "user", content: prompt }]);
-    setTimeout(() => {
-      setChatLog(prev => [...prev, { role: "assistant", content: "I have analyzed your request. I will update the primary theme color to match modern Material 3 guidelines, restructure the Widget tree, and run the Dart formatter." }]);
-    }, 1000);
+    const userMessage = prompt;
     setPrompt("");
+    
+    setChatLog(prev => [...prev, { role: "user", content: userMessage }]);
+    setChatLog(prev => [...prev, { role: "assistant", content: "Thinking..." }]);
+
+    try {
+      const formData = new FormData();
+      formData.append("content", userMessage);
+      formData.append("mode", "flutter_studio");
+      
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch("/api/chat/default", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData
+      });
+      
+      const data = await res.json();
+      const reply = data.content || data.message || "I've processed your request.";
+      
+      setChatLog(prev => {
+        const newLog = [...prev];
+        newLog[newLog.length - 1] = { role: "assistant", content: reply };
+        return newLog;
+      });
+    } catch (error) {
+      setChatLog(prev => {
+        const newLog = [...prev];
+        newLog[newLog.length - 1] = { role: "assistant", content: "Error connecting to AI Backend." };
+        return newLog;
+      });
+    }
   };
 
   return (
