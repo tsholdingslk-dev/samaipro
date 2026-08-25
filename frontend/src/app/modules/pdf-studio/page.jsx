@@ -2,7 +2,8 @@
 import { useState, useRef } from 'react'
 import { Upload, Download, Type, Image as ImageIcon, MousePointer2, FileText, Eraser, Square, Circle, Crop } from 'lucide-react'
 import { PDFDocument, rgb } from 'pdf-lib'
-import PdfViewer from './components/PdfViewer'
+import dynamic from 'next/dynamic'
+const PdfViewer = dynamic(() => import('./components/PdfViewer'), { ssr: false })
 import './App.css'
 
 function App() {

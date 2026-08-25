@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
 import { 
+  Code, Globe,
   MessageSquare, Briefcase, TrendingUp, Cpu, 
   Terminal, Image as ImageIcon, Mic, FileText, 
   Share2, Brain, Newspaper, BookOpen, MonitorPlay, 
