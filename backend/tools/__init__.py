@@ -1,3 +1,4 @@
+from .lankalore import LankaLoreTool
 """
 SAM AI - Tools
 Reusable tools that agents can use to complete tasks.
@@ -432,7 +433,8 @@ TOOLS = {
     "file": FileTool(),
     "calculator": CalculatorTool(),
     "translator": TranslatorTool(),
-    "analyzer": AnalyzerTool()
+    "analyzer": AnalyzerTool(),
+    "lankalore_search": LankaLoreTool()
 }
 
 def get_tool(tool_name: str) -> Optional[Tool]:
