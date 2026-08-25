@@ -20,6 +20,13 @@ type Module = {
 };
 
 const modules: Module[] = [
+  { id: "media-voice-studio", title: "Media & Voice Studio", description: "OmniVoice AI TTS and Universal video/media downloaders.", icon: Mic, href: "/modules/media-voice-studio", color: "#8b5cf6" },
+  { id: "web-editor-ide", title: "Web Editor & IDE", description: "Cloud-based SAM Editor and Flutter Reconstruction environment.", icon: Code, href: "/modules/web-editor-ide", color: "#14b8a6" },
+  { id: "site-manager", title: "Websites & CMS Manager", description: "Manage PHP, WordPress, and Custom sites (3zero, AusLanka, Kannagi).", icon: Globe, href: "/modules/site-manager", color: "#f59e0b" },
+  { id: "automation-hub", title: "Automation & Bot Hub", description: "Central dashboard for Python AI Extractors and MT5 Trading Bots.", icon: Terminal, href: "/modules/automation-hub", color: "#3b82f6" },
+  { id: "labnova-portal", title: "LabNova Portal", description: "Enterprise dashboard and data portal.", icon: Database, href: "/modules/labnova-portal", color: "#10b981" },
+  { id: "astrology-studio", title: "Astrology Engine", description: "Enterprise-grade birth charts, horoscopes, and compatibility engine.", icon: Brain, href: "/modules/astrology-studio", color: "#8b5cf6" },
+  { id: "pdf-studio", title: "PDF Studio", description: "Advanced client-side PDF Editor to add text, images, and annotations.", icon: FileText, href: "/modules/pdf-studio", color: "#ec4899" },
   { id: "chat", title: "AI Chat Workspace", description: "Core conversational AI workspace with multi-file analysis & memory.", icon: MessageSquare, href: "/chat", color: "#3b82f6" },
   { id: "lead-gen", title: "Lead Generation", description: "Extract local business leads, auto-create demo sites & WhatsApp proposals.", icon: Briefcase, href: "/modules/lead-gen", color: "#ec4899" },
   { id: "crypto", title: "Crypto Market Research", description: "Real-time prices, 24h gainers/losers, crash risk prediction & AI coin research.", icon: TrendingUp, href: "/modules/crypto", color: "#f59e0b" },
