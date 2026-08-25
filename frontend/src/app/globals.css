@@ -375,3 +375,27 @@ a:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-main);
 }
+
+/* --- MOBILE RESPONSIVE STYLES --- */
+@media (max-width: 768px) {
+  .dashboard-container { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 0.5rem; display: none; }
+  .sidebar.mobile-open { display: flex; flex: none; max-height: 40vh; overflow-y: auto; }
+  .chat-main { flex: 1; height: 100%; overflow: hidden; }
+  .chat-messages { padding: 1rem; }
+  .message-bubble { max-width: 95%; padding: 1rem; }
+  .chat-input-container { padding: 1rem; padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+  .chat-input-wrapper { padding: 0.25rem; }
+  .glass-panel { padding: 1.5rem; }
+  .page-container { padding: 1rem; }
+  /* Hamburger menu button */
+  .mobile-menu-btn { display: block !important; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 2rem !important; }
+  .btn-primary { padding: 0.5rem 1rem; font-size: 0.9rem; }
+}
+
+/* Hide hamburger on desktop */
+.mobile-menu-btn { display: none; }

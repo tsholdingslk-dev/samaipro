@@ -39,10 +39,11 @@ async def run_agent_task(
 async def get_available_agents(
     current_user: dict = Depends(get_current_user)
 ):
-    """Get list of available agents"""
+    from agents import agent_executor
     return {
-        "agents": agent_router.get_available_agents(),
-        "count": len(agent_router.get_available_agents())
+        "agents": agent_executor.get_available_agents(),
+        "count": agent_executor.get_agent_count(),
+        "agent_info": agent_executor.get_agent_info(),
     }
 
 @router.get("/tools")

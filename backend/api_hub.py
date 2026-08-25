@@ -2,6 +2,13 @@
 SAM AI - Centralized API Hub
 All AI requests flow through this hub.
 Supports multiple providers with failover and load balancing.
+
+Now integrates the Provider Adapter Layer for unified multi-model support:
+- Text: OpenAI, Gemini, Claude, OpenRouter, Groq, InferX, HuggingFace, Local LLMs
+- Embedding: OpenAI, Gemini, OpenRouter, Local LLMs
+- Image: DALL-E, Stable Diffusion, Midjourney
+- Speech: Whisper (STT), OpenAI TTS, ElevenLabs TTS
+- Vision: GPT-4o, Gemini Pro, Claude
 """
 
 import os
@@ -10,6 +17,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+
+# Import the new provider infrastructure
+from providers.registry import provider_registry
+from providers.fallback_manager import fallback_manager, FallbackManager
+from providers.base import ProviderType
+
+# Re-export for backward compatibility
+__all__ = ["APIProvider", "APIHub", "api_hub", "provider_registry", "fallback_manager"]
 
 class APIProvider:
     def __init__(self, name: str, api_key: str, base_url: str, model: str, priority: int = 1, quota_limit: int = 1000):
@@ -107,6 +122,32 @@ class APIHub:
                     priority=2,
                     quota_limit=500
                 ))
+
+        # Claude / Anthropic (direct API, not OpenAI-compatible)
+        claude_keys_str = os.getenv("CLAUDE_API_KEY")
+        if claude_keys_str and claude_keys_str != "your_claude_api_key_here":
+            claude_keys = [k.strip() for k in claude_keys_str.split(",") if k.strip()]
+            for idx, key in enumerate(claude_keys):
+                self.providers.append(APIProvider(
+                    name=f"Claude_{idx+1}",
+                    api_key=key,
+                    base_url="https://api.anthropic.com",
+                    model="claude-3-5-sonnet-20241022",
+                    priority=1,
+                    quota_limit=1000
+                ))
+
+        # OpenAI (direct access for vision, image gen, TTS/STT)
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if openai_key and openai_key != "your_openai_api_key_here":
+            self.providers.append(APIProvider(
+                name="OpenAI",
+                api_key=openai_key,
+                base_url="https://api.openai.com/v1",
+                model="gpt-4o-mini",
+                priority=0,
+                quota_limit=2000
+            ))
 
         # Groq (supports multiple comma-separated keys)
         groq_keys_str = os.getenv("GROQ_API_KEY")
@@ -261,6 +302,124 @@ class APIHub:
                 continue
 
         raise Exception(f"All providers in the vault failed. Last error: {last_error}")
+
+    async def generate_image(self, prompt: str, model_override: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Generate an image using the first available image provider."""
+        from providers.base import ProviderType
+        image_providers = provider_registry.get_image_providers()
+        if not image_providers:
+            raise Exception("No image generation providers available. Please configure DALL-E, Stable Diffusion, or Midjourney.")
+
+        result = await fallback_manager.execute_image_with_fallback(image_providers, prompt, model=model_override, **kwargs)
+        if not result.success:
+            raise Exception(result.error or "Image generation failed")
+
+        self.model_selector_record_success = getattr(self, 'model_selector_record_success', None)
+        if self.model_selector_record_success:
+            self.model_selector_record_success(result.provider_name)
+
+        return {
+            "provider": result.provider_name,
+            "content": result.content,
+            "model": kwargs.get("model", "image-model"),
+            "attempts": result.attempts,
+            "latency_ms": result.total_latency_ms,
+        }
+
+    async def transcribe_audio(self, audio_data: bytes, model_override: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Transcribe audio using the first available STT provider."""
+        stt_providers = provider_registry.get_stt_providers()
+        if not stt_providers:
+            raise Exception("No speech-to-text providers available.")
+
+        result = await fallback_manager.execute_stt_with_fallback(stt_providers, audio_data, model=model_override, **kwargs)
+        if not result.success:
+            raise Exception(result.error or "Transcription failed")
+
+        return {
+            "provider": result.provider_name,
+            "content": result.content,
+            "attempts": result.attempts,
+            "latency_ms": result.total_latency_ms,
+        }
+
+    async def synthesize_speech(self, text: str, voice: str = "alloy", model_override: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Synthesize speech from text using the first available TTS provider."""
+        tts_providers = provider_registry.get_tts_providers()
+        if not tts_providers:
+            raise Exception("No text-to-speech providers available.")
+
+        result = await fallback_manager.execute_tts_with_fallback(
+            tts_providers, text, voice=voice, model=model_override, **kwargs
+        )
+        if not result.success:
+            raise Exception(result.error or "Speech synthesis failed")
+
+        return {
+            "provider": result.provider_name,
+            "audio_data": result.content,
+            "attempts": result.attempts,
+            "latency_ms": result.total_latency_ms,
+        }
+
+    async def analyze_image(self, image_data: str, prompt: str, model_override: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Analyze an image using vision-capable providers."""
+        vision_providers = [p for p in provider_registry.get_all_providers()
+                           if p.capabilities.image_analysis and p._is_available()]
+
+        # Also include OpenAI adapters with vision models
+        openai_providers = [p for p in provider_registry.get_chat_providers()
+                           if hasattr(p, 'capabilities') and p.capabilities.multimodal]
+        all_providers = vision_providers + openai_providers
+
+        if not all_providers:
+            raise Exception("No vision-capable providers available.")
+
+        async def _analyze(provider, attempt, **op_kwargs):
+            if hasattr(provider, 'analyze_image'):
+                res = await provider.analyze_image(image_data, prompt, **op_kwargs)
+                return {"success": res is not None, "content": res}
+            return {"success": False, "error": "Provider doesn't support image analysis"}
+
+        result = await fallback_manager.execute_with_fallback(
+            all_providers, _analyze, operation_name="image_analysis", **kwargs
+        )
+
+        if not result.success:
+            raise Exception(result.error or "Image analysis failed")
+
+        return {
+            "provider": result.provider_name,
+            "content": result.content,
+            "attempts": result.attempts,
+            "latency_ms": result.total_latency_ms,
+        }
+
+    def get_all_provider_status(self) -> List[Dict[str, Any]]:
+        """Get status of all providers including new adapter types."""
+        legacy_status = [p.get_info() for p in self.providers]
+        new_status = provider_registry.get_provider_status()
+
+        combined = {p["name"]: p for p in legacy_status}
+        for p in new_status:
+            if p["name"] not in combined:
+                combined[p["name"]] = p
+
+        return list(combined.values())
+
+    def get_providers_by_type(self, provider_type: str) -> List[Dict[str, Any]]:
+        """Get providers filtered by capability type."""
+        type_map = {
+            "text": ProviderType.TEXT,
+            "embedding": ProviderType.TEXT,
+            "image": ProviderType.IMAGE,
+            "speech_to_text": ProviderType.SPEECH_TO_TEXT,
+            "text_to_speech": ProviderType.TEXT_TO_SPEECH,
+            "local": ProviderType.LOCAL,
+        }
+        ptype = type_map.get(provider_type, ProviderType.TEXT)
+        providers = provider_registry.get_providers_by_type(ptype)
+        return [p.get_info() for p in providers]
 
     async def embed(self, text: str, model_override: Optional[str] = None) -> List[float]:
         """

@@ -54,12 +54,26 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
     if (pathname?.includes(id)) router.push("/chat");
   };
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const currentProjectId = getCurrentProjectId();
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   return (
     <div className="dashboard-container">
+      {/* Mobile Header (Hidden on Desktop) */}
+      <div className="mobile-menu-btn" style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-sidebar)" }}>
+        <h2 style={{ fontSize: "1.2rem", margin: 0 }}>Sam AI</h2>
+        <button onClick={toggleMobileMenu} style={{ background: "transparent", border: "none", color: "var(--text-main)", fontSize: "1.5rem", cursor: "pointer" }}>
+          ☰
+        </button>
+      </div>
+
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobileMenuOpen ? "mobile-open" : ""}`}>
         <button
           onClick={createNewProject}
           className="btn-primary"
@@ -83,7 +97,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
             <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>No chats yet.</p>
           ) : (
             projects.map(p => (
-              <Link href={`/chat?project=${p.id}`} key={p.id}>
+              <Link href={`/chat?project=${p.id}`} key={p.id} onClick={() => setIsMobileMenuOpen(false)}>
                 <div className={`project-item ${currentProjectId === p.id ? "active" : ""}`}>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                     {p.title}
@@ -104,12 +118,14 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <Link
             href="/modules"
+            onClick={() => setIsMobileMenuOpen(false)}
             style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", width: "100%", textAlign: "left", padding: "0.5rem", fontSize: "1rem" }}
           >
             Modules
           </Link>
           <Link
             href="/profile"
+            onClick={() => setIsMobileMenuOpen(false)}
             style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", width: "100%", textAlign: "left", padding: "0.5rem", fontSize: "1rem" }}
           >
             Profile

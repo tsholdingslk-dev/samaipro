@@ -19,3 +19,5 @@ SpeechRecognition
 moviepy
 pyswisseph
 python-dateutil
+httpx
+beautifulsoup4

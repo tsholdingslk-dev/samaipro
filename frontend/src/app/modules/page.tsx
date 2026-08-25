@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { motion, Variants } from "framer-motion";
+import AdminGate from "../../components/AdminGate";
 import { 
   Code, Globe,
   MessageSquare, Briefcase, TrendingUp, Cpu, 
@@ -65,8 +67,17 @@ const itemVariants: Variants = {
 
 export default function ModulesPage() {
   const router = useRouter();
+  const [role, setRole] = useState<string>("staff");
+
+  const adminOnlyModules = ['admin-keys', 'api-hub', 'auto-integrator', 'ai-intelligence', 'apk-decomp'];
+
+  const visibleModules = modules.filter(mod => {
+    if (role === "admin") return true;
+    return !adminOnlyModules.includes(mod.id);
+  });
 
   return (
+    <AdminGate onValidSession={setRole}>
     <div className="page-container" style={{ minHeight: "100vh", padding: "4rem 2rem", background: "linear-gradient(to bottom right, var(--bg-dark), #0f0f16)" }}>
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -101,7 +112,7 @@ export default function ModulesPage() {
             gap: "1.5rem"
           }}
         >
-          {modules.map((mod) => {
+          {visibleModules.map((mod) => {
             const Icon = mod.icon;
             return (
               <Link href={mod.href} key={mod.id} style={{ textDecoration: "none" }}>
@@ -207,5 +218,6 @@ export default function ModulesPage() {
         </motion.div>
       </motion.div>
     </div>
+    </AdminGate>
   );
 }

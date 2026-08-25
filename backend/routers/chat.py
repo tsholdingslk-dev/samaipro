@@ -157,8 +157,37 @@ async def send_message(
     if not full_content.strip():
         raise HTTPException(status_code=400, detail="Content or files are required")
     
+    # Check for Admin Training mode first
+    if mode == "admin_train" and current_user.get("role") == "admin":
+        from knowledge.admin_trainer import AdminTrainer
+        trainer = AdminTrainer()
+        trainer_resp = trainer.process_training_message(full_content, db, current_user.get("user_id", ""))
+        
+        # Save user message
+        user_chat = models.Chat(project_id=project_id, role="user", content=full_content)
+        db.add(user_chat)
+        db.commit()
+        
+        # Save and return AI response
+        ai_chat = models.Chat(project_id=project_id, role="assistant", content=trainer_resp)
+        db.add(ai_chat)
+        db.commit()
+        db.refresh(ai_chat)
+        return ai_chat
+
     # 5. Retrieve relevant context from Project Brain
     context = brain.get_context_for_prompt(full_content, top_k=3)
+    
+    # 5b. Retrieve from Global Knowledge Base
+    try:
+        from knowledge.knowledge_manager import KnowledgeManager
+        km = KnowledgeManager(db)
+        global_knowledge = km.search_knowledge(full_content, top_k=2)
+        if global_knowledge:
+            kb_text = "\n".join([f"- {k['content']}" for k in global_knowledge])
+            context = context + f"\n\n[Global Knowledge Base]\n{kb_text}" if context else f"[Global Knowledge Base]\n{kb_text}"
+    except Exception as e:
+        print(f"Knowledge search error: {e}")
     
     # 6. Save User's Message to Database
     user_chat = models.Chat(

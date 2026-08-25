@@ -150,3 +150,33 @@ class ProposalGenerateRequest(BaseModel):
     sender_name: Optional[str] = "SAM AI Automation Studio"
     sender_phone: Optional[str] = "9876543210"
 
+# --- Telegram Bot Schemas ---
+class TelegramWebhookSetup(BaseModel):
+    webhook_url: str
+
+class StaffKeyRequest(BaseModel):
+    duration: str = "7d"  # 24h, 7d, 14d, 30d
+    max_uses: Optional[int] = 100
+
+# --- Admin Key Rotation Schemas ---
+class AdminKeyRotationResponse(BaseModel):
+    id: str
+    rotated_by: str
+    rotated_at: datetime
+    class Config:
+        from_attributes = True
+
+# --- Staff Payment Schemas ---
+class PaymentVerificationCreate(BaseModel):
+    access_key_id: str
+    payment_slip_url: str
+
+class PaymentVerificationResponse(BaseModel):
+    id: str
+    access_key_id: str
+    payment_slip_url: str
+    verification_status: str
+    created_at: datetime
+    class Config:
+        from_attributes = True
+

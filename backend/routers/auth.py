@@ -1,11 +1,13 @@
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from database import get_db
 import models
 import schemas
 import security
+from security_ext.refresh_tokens import refresh_token_manager
+from security_ext.sessions import session_manager, fingerprinter
 
 router = APIRouter(
     prefix="/auth",
@@ -31,46 +33,94 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 import string
-import random
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 
 def generate_key_code():
-    parts = ["SAM", "".join(random.choices(string.ascii_uppercase + string.digits, k=4)), "".join(random.choices(string.ascii_uppercase + string.digits, k=4))]
+    parts = ["SAM", "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4)), "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))]
     return "-".join(parts)
 
 class UserLogin(BaseModel):
     email: str
     password: str
 
+login_attempts = {}
+
 @router.post("/login")
 def login_user(user_credentials: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
+    email = user_credentials.email
+    now = datetime.utcnow()
     
-    if not db_user and user_credentials.email == "sam@mail.com":
-        hashed_password = security.get_password_hash(user_credentials.password)
-        db_user = models.User(email="sam@mail.com", hashed_password=hashed_password, role="admin")
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-
+    # Check rate limit
+    if email in login_attempts:
+        attempts, lock_time = login_attempts[email]
+        if lock_time and now < lock_time:
+            raise HTTPException(status_code=429, detail="Too many failed attempts. Try again in 15 minutes.")
+        elif lock_time and now >= lock_time:
+            login_attempts[email] = [0, None]
+    else:
+        login_attempts[email] = [0, None]
+        
+    db_user = db.query(models.User).filter(models.User.email == email).first()
+    
     if not db_user:
-        raise HTTPException(status_code=400, detail="Admin User not found.")
+        login_attempts[email][0] += 1
+        if login_attempts[email][0] >= 5:
+            login_attempts[email][1] = now + timedelta(minutes=15)
+        raise HTTPException(status_code=400, detail="Incorrect Email or Password.")
         
     if not security.verify_password(user_credentials.password, db_user.hashed_password):
-        if user_credentials.email == "sam@mail.com":
-            db_user.hashed_password = security.get_password_hash(user_credentials.password)
-            db.commit()
-        else:
-            raise HTTPException(status_code=400, detail="Incorrect Password.")
+        login_attempts[email][0] += 1
+        if login_attempts[email][0] >= 5:
+            login_attempts[email][1] = now + timedelta(minutes=15)
+        raise HTTPException(status_code=400, detail="Incorrect Email or Password.")
     
-    access_token = security.create_access_token(data={"user_id": str(db_user.id), "role": db_user.role})
-    return {"access_token": access_token, "token_type": "bearer", "user": {"id": db_user.id, "email": db_user.email, "role": db_user.role}}
+    # Reset on success
+    login_attempts[email] = [0, None]
+    
+    # Short-lived access token (15 minutes)
+    from datetime import timedelta
+    access_token = security.create_access_token(
+        data={"user_id": str(db_user.id), "role": db_user.role},
+        expires_delta=timedelta(minutes=15),
+    )
+    
+    # Issue refresh token (rotation)
+    device_fp = fingerprinter.generate_fingerprint(request) if request else None
+    client_ip = None
+    if request:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (
+            getattr(request.client, "host", "unknown") if hasattr(request, "client") else "unknown"
+        )
+    
+    refresh_token = refresh_token_manager.generate_refresh_token(
+        db, str(db_user.id),
+        device_fingerprint=device_fp,
+        ip_address=client_ip,
+    )
+    
+    # Create session
+    session_id = session_manager.create_session(db, str(db_user.id), request, access_token) if request else None
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": 900,
+        "session_id": session_id,
+        "user": {"id": db_user.id, "email": db_user.email, "role": db_user.role}
+    }
 
 class KeyLoginRequest(BaseModel):
     key_code: str
 
 @router.post("/key-login")
-def key_login(request: KeyLoginRequest, db: Session = Depends(get_db)):
+async def key_login(
+    request: Request,
+    req: KeyLoginRequest,
+    db: Session = Depends(get_db),
+):
     if request.key_code == "SAM-MASTER-ADMIN":
         admin = db.query(models.User).filter(models.User.email == "sam@mail.com").first()
         if admin:
@@ -103,8 +153,29 @@ def key_login(request: KeyLoginRequest, db: Session = Depends(get_db)):
         db.commit()
         
     db_user = db.query(models.User).filter(models.User.id == key.user_id).first()
-    access_token = security.create_access_token(data={"user_id": str(db_user.id), "role": db_user.role})
-    return {"access_token": access_token, "token_type": "bearer", "user": {"id": db_user.id, "email": db_user.email, "role": db_user.role, "is_key_login": True}}
+    from datetime import timedelta
+    access_token = security.create_access_token(
+        data={"user_id": str(db_user.id), "role": db_user.role},
+        expires_delta=timedelta(minutes=15),
+    )
+    
+    device_fp = fingerprinter.generate_fingerprint(request) if request else None
+    client_ip = None
+    if request:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (
+            getattr(request.client, "host", "unknown") if hasattr(request, "client") else "unknown"
+        )
+    
+    refresh_token = refresh_token_manager.generate_refresh_token(
+        db, str(db_user.id),
+        device_fingerprint=device_fp,
+        ip_address=client_ip,
+    )
+    
+    session_id = session_manager.create_session(db, str(db_user.id), request, access_token)
+    
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "expires_in": 900, "session_id": session_id, "user": {"id": db_user.id, "email": db_user.email, "role": db_user.role, "is_key_login": True}}
 
 @router.post("/generate-key", response_model=schemas.AccessKeyResponse)
 def generate_access_key(key_data: schemas.AccessKeyCreate, current_user: dict = Depends(security.get_current_user), db: Session = Depends(get_db)):
@@ -143,3 +214,11 @@ def verify_system_master_key(payload: MasterKeyRequest):
         return {"valid": True, "message": "Master Key Access Granted"}
     raise HTTPException(status_code=401, detail="Invalid System Master Security Key")
 
+class AdminKeyRequest(BaseModel):
+    admin_key: str
+
+@router.post("/verify-admin-access")
+def verify_admin_access(payload: AdminKeyRequest):
+    if security.verify_master_key(payload.admin_key):
+        return {"valid": True, "role": "admin", "expires_in": 3600}
+    raise HTTPException(status_code=401, detail="Invalid admin master key")

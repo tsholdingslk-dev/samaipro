@@ -14,9 +14,9 @@ export const getApiBaseUrl = () => getBaseUrl();
 
 export const getToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || 'guest_master_token_2026';
+    return localStorage.getItem('token');
   }
-  return 'guest_master_token_2026';
+  return null;
 };
 
 export const setToken = (token: string) => {
