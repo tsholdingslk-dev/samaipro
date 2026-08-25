@@ -1,735 +1,1029 @@
-# SAM AI - User Manual
+# SAM AI Platform — User Manual
 
-## 📋 Overview
+## Table of Contents
 
-SAM AI is a **Personal AI Operating System** — not just a chatbot, but a unified workspace where every AI capability is controlled from one chat interface. Every project has its own isolated context, but the interface stays the same. The platform is built around your daily workflow, is private by default, modular by design, and powered by a centralized API hub that can route to any AI provider.
+1. [Overview](#overview)
+2. [Installation & Setup](#installation--setup)
+3. [Quick Start](#quick-start)
+4. [Authentication](#authentication)
+5. [Sam AI Core (Main API)](#sam-ai-core-main-api)
+6. [Agent System (35 Agents)](#agent-system-35-agents)
+7. [Multi-Model Gateway](#multi-model-gateway)
+8. [Knowledge Engine (RAG)](#knowledge-engine-rag)
+9. [Web Research](#web-research)
+10. [Permission System](#permission-system)
+11. [Security Features](#security-features)
+12. [Analytics & Cost Tracking](#analytics--cost-tracking)
+13. [Secret Management](#secret-management)
+14. [Validation Layer](#validation-layer)
+15. [Emergency Lockdown](#emergency-lockdown)
+16. [API Gateway](#api-gateway)
+17. [Code Examples](#code-examples)
 
 ---
 
-## 🚀 Getting Started
+## Overview
+
+SAM AI is an AI orchestration platform that transforms a chatbot into a full AI agent system. It provides:
+
+- **35 specialized AI agents** across 12 domains (content, technical, business, media, research, security, etc.)
+- **Multi-provider support** (OpenAI, Gemini, Claude, local LLMs) with automatic fallback
+- **Dynamic permission engine** (User → Role → Module → Action → Time/Usage Limit)
+- **Zero-trust security** (device fingerprinting, audit logging, TOTP 2FA, refresh tokens)
+- **RAG knowledge engine** with admin-approved trusted knowledge base
+- **Web research** with source reliability ranking
+- **Output validation** with automatic retry/repair
+- **Cost tracking** per user/provider/module
+- **Emergency lockdown** mode with key rotation
+
+---
+
+## Installation & Setup
 
 ### Prerequisites
+- Python 3.9+
+- pip
+- API keys for at least one provider (OpenAI, Gemini, Claude, or local LLM)
 
-1. **XAMPP** installed and running (MySQL service)
-2. **Python 3.8+** installed
-3. **Node.js 18+** installed
-4. **Git** (optional, for version control)
+### Steps
+
+1. **Install dependencies**
+   ```bash
+   cd backend
+   pip install -r requirements.py
+   ```
+
+2. **Configure environment**
+   Create `.env` in `backend/`:
+   ```env
+   # Database
+   DATABASE_URL=sqlite:///./samai.db
+
+   # JWT
+   SECRET_KEY=your-super-secret-key-change-this
+
+   # AI Providers (at least one required)
+   OPENAI_API_KEY=sk-...
+   GEMINI_API_KEY=...
+   CLAUDE_API_KEY=...
+
+   # Master secret for vault encryption
+   SAM_SECRET_MASTER_KEY=generate-a-random-32-char-string
+
+   # Optional: SerpAPI for web research
+   SERP_API_KEY=...
+
+   # Environment
+   ENVIRONMENT=development
+   DEBUG=true
+   ```
+
+3. **Initialize database**
+   ```bash
+   python init_db.py
+   ```
+
+4. **Start the server**
+   ```bash
+   uvicorn main:app --reload --port 8000
+   ```
+
+5. **Verify**
+   ```bash
+   curl http://localhost:8000/health
+   # Expected: {"status": "SAM AI Backend is Running"}
+   ```
 
 ---
 
-## ⚙️ Installation & Setup
+## Quick Start
 
-### Step 1: Database Setup
-
-1. Open **XAMPP Control Panel**
-2. Start **MySQL** service
-3. Open browser and go to `http://localhost/phpmyadmin`
-4. The database `samai_db` will be created automatically on first run
-5. Tables (`users`, `projects`, `chats`, `modules`, `api_providers`, `user_feedback`) are created automatically by SQLAlchemy
-
-### Step 2: Backend Setup
-
+### 1. Create an account
 ```bash
-cd C:\Users\ASUS\Desktop\xampp\htdocs\samai\backend
-
-# Activate virtual environment (already created)
-venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Edit .env and add your actual API keys:
-# - GEMINI_API_KEY
-# - INFERX_API_KEY
-# - SECRET_KEY
-
-# Run the backend server
-python -m uvicorn main:app --reload
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user1", "password": "securepass123", "email": "user@example.com"}'
 ```
 
-Backend will run on: **http://localhost:8000**
-
-### Step 3: Frontend Setup
-
+### 2. Login and get JWT token
 ```bash
-cd C:\Users\ASUS\Desktop\xampp\htdocs\samai\frontend
-
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
+curl -X POST http://localhost:8000/auth/login \
+  -d "username=user1&password=securepass123"
+# Returns: {"access_token": "...", "refresh_token": "...", "user": {...}}
 ```
 
-Frontend will run on: **http://localhost:3000**
+### 3. Process a task with Sam AI Core
+```bash
+curl -X POST http://localhost:8000/sam/process \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Write a professional email about project delay to a client",
+    "priority": "medium"
+  }'
+```
+
+### 4. List available agents
+```bash
+curl http://localhost:8000/agents/available \
+  -H "Authorization: Bearer <access_token>"
+```
 
 ---
 
-## 🎯 Core Features
+## Authentication
 
-### 1. User Authentication
-- **Register:** Create a new account with email and password
-- **Login:** Access your account with JWT authentication
-- **Profile:** View account info, role, and membership date
-- **Logout:** Securely log out from any device
+### Login (returns access + refresh tokens)
+```http
+POST /auth/login
+Content-Type: application/x-www-form-urlencoded
 
-### 2. Project Management
-- Create multiple chat projects
-- Organize chats by type:
-  - **General** - Everyday conversations
-  - **Education** - Learning and studying
-  - **Coding** - Programming and development
-  - **Creator** - Content creation assistance
-- Delete projects you no longer need
-- Switch between projects seamlessly
-- Each project has its own isolated context
+username=user1&password=securepass123
+```
 
-### 3. Contextual Chat OS
-- One main chat workspace for everything
-- Project-specific context auto-loads when you switch projects
-- Chat interface never changes — same UI for all tasks
-- Chat history saved per project
-- Voice input (Speech-to-Text) - Click the microphone icon
-- Text-to-Speech - Click "Read Aloud" on AI responses
+Response:
+```json
+{
+  "access_token": "eyJhbG... (15 minutes expiry)",
+  "refresh_token": "d2f3-4a5b...",
+  "user": {
+    "id": "uuid",
+    "username": "user1",
+    "role": "user",
+    "email": "user@example.com"
+  },
+  "expires_in": 900
+}
+```
 
-### 4. Multi-Modal File Upload
-- Upload **images** (JPG, PNG, GIF, WEBP)
-- Upload **documents** (PDF, DOCX, TXT) - text is extracted automatically
-- Upload **audio** (MP3, WAV, OGG) - transcribed to text
-- Upload **video** (MP4, AVI, MOV) - audio is extracted and transcribed
-- Multiple files can be uploaded at once
-- Preview attachments before sending
+### Refresh expired token
+```http
+POST /auth/refresh
+Content-Type: application/json
 
-### 5. Centralized API Hub
-- All AI requests flow through a single API Hub
-- Multi-provider support: InferX (DeepSeek), Gemini, OpenRouter, Groq
-- Automatic failover and load balancing
-- Per-provider quota tracking and status monitoring
-- Adding a new provider requires only a new connector in the Hub
+{"refresh_token": "d2f3-4a5b..."}
+```
 
----
+### Two-Factor Authentication (TOTP)
+```bash
+# Enable 2FA (requires authenticator app)
+curl -X POST http://localhost:8000/auth/2fa/enable \
+  -H "Authorization: Bearer <token>"
 
-## 📱 How to Use
+# Verify with TOTP code
+curl -X POST http://localhost:8000/auth/2fa/verify \
+  -H "Authorization: Bearer <token>" \
+  -d '{"code": "123456"}'
+```
 
-### First Time Setup
-
-1. **Open the app:** Go to `http://localhost:3000`
-2. **Register:** Click "Create Account" and fill in your details
-3. **Login:** Use your email and password to log in
-4. **Start Chatting:** You'll be redirected to the chat dashboard
-
-### Creating a New Chat Project
-
-1. Click **"+ New Chat"** button in the sidebar
-2. Enter a title for your project
-3. Select a project type (1-4):
-   - `1` - General
-   - `2` - Education
-   - `3` - Coding
-   - `4` - Creator
-4. Click OK - you'll be taken to the chat interface
-
-### Chatting with SAM AI
-
-1. Type your message in the input box at the bottom
-2. Press Enter or click the send button (➤)
-3. Wait for SAM AI to respond
-4. Use the **microphone** (🎙️) to speak instead of typing
-5. Click **"Read Aloud"** (🔊) to hear AI responses
-
-### Uploading Files in Chat
-
-1. Click the **📎 attachment icon** in the chat input area
-2. Select one or more files:
-   - **Images:** JPG, PNG, GIF, WEBP
-   - **Documents:** PDF, DOCX, TXT
-   - **Video:** MP4, AVI, MOV
-   - **Audio:** MP3, WAV, OGG
-3. Preview your attachments below the input box
-4. Click **×** to remove an attachment
-5. Type an optional message or just send the files
-6. SAM AI will analyze the content and respond
-
-**File Processing:**
-- **PDF/DOCX/TXT:** Text is extracted and analyzed
-- **Audio/Video:** Speech is transcribed to text using Google Speech Recognition
-- **Images:** Acknowledged in chat (current model is text-only)
-
-### Managing Projects
-
-- **Switch projects:** Click any project in the sidebar
-- **Delete project:** Click the **×** button next to the project name
-- **View profile:** Click "Profile" in the sidebar footer
-- **Toggle modules:** When inside a project, use the ON/OFF toggles in the sidebar
+### API Keys (for service-to-service)
+```bash
+# Create API key
+curl -X POST http://localhost:8000/auth/api-keys \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{"name": "my-service-key", "scopes": ["chat:*", "image:*"], "expires_days": 365}'
+```
 
 ---
 
-## 🧩 Modules
+## Sam AI Core (Main API)
 
-SAM AI has a plug-in modular architecture. Every capability is a standalone module. Access modules from the sidebar **Modules** link or from the chat layout.
+The `/sam/*` endpoints are the primary interface. They automatically route through intent classification, model selection, agent execution, validation, and cost tracking.
 
-### Available Modules
+### Process a Task
+```http
+POST /sam/process
+Authorization: Bearer <token>
+Content-Type: application/json
 
-| Module | Path | Description |
-|--------|------|-------------|
-| 🤖 Autonomous Agents | `/modules/agents` | Plan, research, code, and execute multi-step tasks automatically |
-| 🧠 Self Learning AI | `/modules/learning` | SAM AI learns from your feedback and adapts to your style |
-| 📄 PDF & Translation | `/modules/pdf-translate` | Extract text from PDFs, DOCX, TXT. Translate Tamil/Sinhala/English |
-| 💻 Coding Assistant | `/modules/coding` | Generate code, explain code, fix bugs, API connect guides, deploy help |
-| 🎙️ Voice Workspace | `/modules/voice` | Transcribe audio, voice commands, text-to-speech |
-| 🎬 Media & Content | `/modules/media` | Social media prompts, image/video prompts, resize guides |
-| 🖼️ Image Studio | `/modules/image` | Generate prompts, edit images, resize, apply filters, add text |
+{
+  "task": "Your task description here",
+  "context": {},           // Optional additional context
+  "priority": "medium",    // low | medium | high | urgent
+  "deadline": "2026-08-27T12:00:00Z",
+  "stream": false          // Enable for real-time streaming
+}
+```
 
-### How to Use Modules
+**Response:**
+```json
+{
+  "task_id": "uuid",
+  "status": "completed",
+  "result": "The generated response...",
+  "understanding": {
+    "intent_category": "chat",
+    "confidence": 0.95,
+    "module": "chat",
+    "model": {"provider": "openai", "model": "gpt-4o-mini", "tier": "standard"},
+    "requires_research": true,
+    "requires_code": false,
+    "requires_multimodal": false
+  },
+  "plan": {
+    "steps": [...],
+    "agents": ["Researcher", "Content Creator"],
+    "estimated_cost": 0.015,
+    "risk_level": "low"
+  },
+  "confidence": 0.92,
+  "citations": [],
+  "trace": ["Analyzing task...", "Executing by agent..."],
+  "metadata": {
+    "agent_used": "Content Creator",
+    "cost_usd": 0.005,
+    "validation": {"passed": true, "confidence": 0.95, "issues": 0}
+  },
+  "execution_time_ms": 1234
+}
+```
 
-1. **From Chat Layout:** Click **Modules** in the sidebar footer
-2. **Choose a module** from the dashboard grid
-3. **Use the module** - each has its own tabbed interface
-4. **Return to chat** - click "Back to Modules" or use sidebar
+### Understand Intent (Without Execution)
+```http
+POST /sam/understand
+Content-Type: application/json
 
-### Module Access Control
+{"task": "Explain quantum computing"}
+```
 
-- When you create a new project, all modules are auto-created and enabled
-- In the chat sidebar, you'll see an **"Active Modules"** section
-- Toggle modules ON/OFF per project
-- Disabled modules won't load their context for that project
+Returns the detected intent, selected model, and whether research/code/multimedia is needed.
 
----
+### Create Plan (Without Execution)
+```http
+POST /sam/plan
+Content-Type: application/json
 
-## 🤖 Autonomous Agents (Step 3)
+{"task": "Build a Flutter app for local food delivery"}
+```
 
-The Agent System transforms SAM AI from a chatbot into an autonomous assistant that can plan and execute complex tasks.
+Returns a step-by-step execution plan with agents, time/cost estimates, and risk level.
+
+### System Status
+```http
+GET /sam/status
+Authorization: Bearer <admin_token>
+```
+
+Returns operational status of all components.
 
 ### Available Agents
-
-| Agent | Description | Tools |
-|-------|-------------|-------|
-| 🧠 Planner | Breaks down complex tasks into actionable steps | analysis, decomposition, prioritization |
-| 🔍 Researcher | Gathers and analyzes information from multiple sources | web_search, document_analysis, data_extraction |
-| 💻 Coder | Generates, reviews, and fixes code in multiple languages | code_generation, code_review, debugging, documentation |
-| 📊 Business Analyst | Analyzes business problems and creates strategies | market_analysis, financial_calc, report_generation |
-| ✍️ Content Creator | Creates articles, scripts, and marketing content | writing, editing, seo_optimization, formatting |
-
-### How to Use Agents
-
-1. Go to **Modules → Autonomous Agents**
-2. Enter your **goal/task** in the text area
-3. Optionally add **context** as JSON (e.g., `{"language": "python"}`)
-4. Toggle **"Use Planner Agent"** on/off:
-   - **ON:** SAM AI creates a step-by-step plan, then executes each step
-   - **OFF:** Direct execution without planning
-5. Click **"Run Agent Task"**
-6. View results: plan, steps completed, final result, execution time
-
-### Example Tasks
-
-- "Create a YouTube marketing plan for my AI app"
-- "Write a Python script to scrape a website"
-- "Analyze the market for a new mobile app"
-- "Write a blog post about AI trends"
-
-### Agent Flow
-
-```
-User Goal
-    ↓
-Planner Agent (optional)
-    ↓
-Task Breakdown
-    ↓
-Specialist Agent Selection
-    ↓
-Tool Execution
-    ↓
-Result Check
-    ↓
-Final Answer
+```http
+GET /sam/agents
+Authorization: Bearer <token>
 ```
 
----
-
-## 🧠 Self Learning AI (Step 4)
-
-SAM AI learns from your feedback and adapts to your preferences over time.
-
-### How Learning Works
-
-1. **User Interaction** → SAM AI responds
-2. **Collect Feedback** → You rate the response (1-5 stars)
-3. **Analyze Performance** → System identifies patterns
-4. **Update Knowledge** → Preferences and knowledge base grow
-5. **Improve Responses** → Future responses are personalized
-
-### Features
-
-- **User Preference Learning** - SAM AI learns your preferred response style
-- **Knowledge Updates** - Your documents and conversations become part of the knowledge base
-- **Response Quality Analysis** - Tracks what makes responses good or bad
-- **Feedback Loop** - Continuous improvement based on your input
-- **Personalized Behavior** - Adapts to your workflow
-- **Workflow Optimization** - Learns which tools you use most
-
-### How to Use Learning Features
-
-1. Go to **Modules → Self Learning AI**
-2. **Submit Feedback:**
-   - Rate a response (1-5 stars)
-   - Select category (quality, speed, accuracy, relevance)
-   - Add feedback text
-   - Click "Submit Feedback"
-3. **Add Knowledge:**
-   - Enter source (e.g., `user_document`, `conversation`)
-   - Paste content
-   - Add optional metadata JSON
-   - Click "Add to Knowledge Base"
-4. **View Stats:**
-   - Average rating
-   - Total feedback count
-   - Learned preferences
-   - Active preference tags
-
-### Safety & Privacy
-
-- ✅ **Human Control** - You decide what feedback to give
-- ✅ **Memory Delete Option** - You can clear learned preferences
-- ✅ **Data Privacy** - All data stays in your account
-- ✅ **Approval Before Learning** - No automatic learning without your input
+Lists all 35 agents with descriptions and tools.
 
 ---
 
-## 📄 PDF & Translation Module
+## Agent System (35 Agents)
 
-### Extract Text
-1. Go to **Modules → PDF & Translation**
-2. Select **"Extract Text"** tab
-3. Upload a document (PDF, DOCX, TXT)
-4. Click **"Extract Text"**
-5. View extracted text in the output area
+SAM AI has 35 specialized agents grouped by domain:
 
-### Translate Text
-1. Select **"Translate"** tab
-2. Enter text to translate
-3. Select source language (Auto Detect, English, Tamil, Sinhala, Hindi)
-4. Select target language
-5. Click **"Translate"**
-6. View translation result
+### Content & Communication
+| Agent | Description | Keywords |
+|-------|-------------|----------|
+| Email Writer | Professional emails, subject lines | email, e-mail, mail, letter |
+| Content Creator | Blog posts, articles, creative writing | blog, article, content |
+| Resume Builder | Resumes, CVs, cover letters | resume, cv, cover letter |
+| Translator | Multilingual translation (Sinhala/Tamil/English) | translate, translation, tamil, sinhala |
+| Presentation Builder | Slide decks, speaker notes | presentation, slides, ppt |
+| Storytelling | Stories, narratives, fiction | story, tale, narrative |
+| Recipe Master | Recipes, meal plans, cooking | recipe, cook, food |
+| Entertainment Host | Jokes, trivia, games | joke, funny, comedy, game |
 
----
+### Technical
+| Agent | Description | Keywords |
+|-------|-------------|----------|
+| Coder | Code generation & debugging | code, programming, python, javascript |
+| Flutter Builder | Flutter apps, widgets | flutter, dart, mobile app |
+| Security Analyst | APK analysis, security audit | apk, android, security audit |
+| Automation Specialist | Workflows, scripts | automate, automation, workflow |
 
-## 💻 Coding Assistant Module
+### Business & Professional
+| Agent | Description | Keywords |
+|-------|-------------|----------|
+| Business Analyst | Business analysis, strategy | business, strategy, profit |
+| SEO Specialist | Keyword research, SEO | seo, keywords, ranking |
+| Legal Assistant | Legal documents, contracts | legal, contract, agreement |
+| Finance Agent | Budgeting, investment analysis | finance, budget, tax |
+| Lead Generator | Business leads, outreach | lead, leads, prospect |
+| Tourism Guide | Travel itineraries (Sri Lanka) | tourism, travel, itinerary |
 
-### Generate Code
-1. Go to **Modules → Coding**
-2. Select **"Generate"** tab
-3. Describe what you want to build
-4. Select language and optional framework
-5. Click **"Generate Code"**
-6. Copy the generated code
+### Media & Creative
+| Agent | Description | Keywords |
+|-------|-------------|----------|
+| Image Generator | AI image generation | image, art, illustration, logo |
+| Vision Analyst | Image analysis, OCR | analyze image, vision, ocr |
+| Video Creator | Video generation | video, animation, reel |
+| Voice Agent | Text-to-speech, transcription | voice, tts, speech to text |
 
-### Explain Code
-1. Select **"Explain"** tab
-2. Paste your code
-3. Select language
-4. Click **"Explain Code"**
+### Research & Knowledge
+| Agent | Description | Keywords |
+|-------|-------------|----------|
+| Researcher | Web research, fact-finding | research, find, investigate |
+| Knowledge Assistant | Knowledge base Q&A | knowledge, database, faq |
+| News Synthesizer | Current events aggregation | news, headlines, current |
+| Education Tutor | Teaching, tutoring | teach, learn, tutorial |
+| Sri Lanka Expert | Sri Lankan culture, laws, tourism | srilanka, sri lanka, colombo |
 
-### Fix Code
-1. Select **"Fix"** tab
-2. Paste your broken code
-3. Optionally paste the error message
-4. Select language
-5. Click **"Fix Code"**
+### Coordination
+| Agent | Description |
+|-------|-------------|
+| AI Council | Multi-agent consultation and conflict resolution |
+| Planner | Task decomposition and planning |
 
-### API Connect
-1. Select **"API Connect"** tab
-2. Describe what API you want to connect
-3. Select language
-4. Click **"Get API Connect Guide"**
+### Execute via Agent System
+```http
+POST /agents/execute
+Authorization: Bearer <token>
+Content-Type: application/json
 
-### Deploy Guide
-1. Select **"Deploy"** tab
-2. Select project type (React, PHP, Python, etc.)
-3. Select deployment platform (Vercel, Netlify, Heroku, Localhost, etc.)
-4. Click **"Get Deploy Guide"**
-
----
-
-## 🎙️ Voice Workspace Module
-
-### Voice Input
-1. Go to **Modules → Voice**
-2. Click the **microphone button** to start recording
-3. Speak your message
-4. Transcript appears automatically
-5. Click **"Translate to Tamil"** if needed
-
-### Audio File Transcription
-1. Click **"Or upload audio file"**
-2. Select an audio file (MP3, WAV, OGG)
-3. Wait for transcription
-
-### Text to Speech
-1. Enter text in the **Text to Speech** section
-2. Click **"Speak"**
-3. SAM AI will speak the text aloud
-
----
-
-## 🎬 Media & Content Module
-
-### Social Media Prompt
-1. Go to **Modules → Media**
-2. Select **"Social Prompt"** tab
-3. Choose platform (Facebook, Instagram, YouTube, Twitter)
-4. Choose content type (Post, Reel, Story, Thumbnail)
-5. Enter topic/description
-6. Select tone (Professional, Casual, Funny, Inspirational, Promotional)
-7. Click **"Generate Social Content"**
-
-### Image Prompt
-1. Select **"Image Prompt"** tab
-2. Describe the image you want
-3. Select style (Photorealistic, Digital Art, Anime, 3D Render, etc.)
-4. Click **"Generate Image Prompt"**
-5. Copy the prompt to use in Midjourney, DALL-E, or Stable Diffusion
-
-### Video Prompt
-1. Select **"Video Prompt"** tab
-2. Describe the video scene
-3. Select duration and style
-4. Click **"Generate Video Prompt"**
-
-### Resize Guide
-1. Select **"Resize Guide"** tab
-2. Select original and target aspect ratios
-3. Select platform
-4. Click **"Get Resize Guide"**
-
----
-
-## 🖼️ Image Studio Module
-
-### Generate Prompt
-1. Go to **Modules → Image**
-2. Select **"Generate Prompt"** tab
-3. Describe the image
-4. Select style
-5. Click **"Generate Prompt"**
-
-### Edit Instructions
-1. Select **"Edit"** tab
-2. Upload an image
-3. Describe what you want to do
-4. Click **"Get Edit Instructions"**
-
-### Resize Image
-1. Select **"Resize"** tab
-2. Upload an image
-3. Enter width and height
-4. Click **"Resize Image"**
-5. View and download the resized image
-
-### Apply Filter
-1. Select **"Filter"** tab
-2. Upload an image
-3. Select filter (Grayscale, Sepia, Blur, Brightness, Contrast)
-4. Click **"Apply Filter"**
-5. View the filtered image
-
-### Add Text to Image
-1. Select **"Add Text"** tab
-2. Upload an image
-3. Enter text, position, font size, and color
-4. Click **"Add Text to Image"**
-5. View the result
-
----
-
-## 🔧 Configuration
-
-### Backend Configuration (.env)
-
-```env
-# Database
-DATABASE_URL=mysql+pymysql://root:@localhost:3306/samai_db
-
-# AI API Keys
-GEMINI_API_KEY=your_actual_gemini_api_key
-INFERX_API_KEY=your_actual_inferx_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key  # Optional
-GROQ_API_KEY=your_groq_api_key  # Optional
-
-# JWT Secret (change this in production!)
-SECRET_KEY=your_random_secret_key_here
+{
+  "task": "Write a blog post about AI trends in Sri Lanka",
+  "agent_type": "blog",  // optional: specific agent override
+  "context": {
+    "target_audience": "Sinhala-speaking developers",
+    "language": "singlish",
+    "tone": "conversational"
+  }
+}
 ```
 
-### Getting API Keys
-
-1. **Gemini API Key:**
-   - Go to https://makersuite.google.com/app/apikey
-   - Create a new API key
-   - Copy and paste into `.env`
-
-2. **InferX API Key:**
-   - Go to https://inferx.net
-   - Sign up and get your API key
-   - Copy and paste into `.env`
-
-3. **OpenRouter API Key (Optional):**
-   - Go to https://openrouter.ai
-   - Sign up and get your API key
-   - Copy and paste into `.env`
-
-4. **Groq API Key (Optional):**
-   - Go to https://groq.com
-   - Sign up and get your API key
-   - Copy and paste into `.env`
-
 ---
 
-## 🛠️ Troubleshooting
+## Multi-Model Gateway
 
-### Backend Issues
+Routes requests to the best provider based on cost tier, complexity, and provider health.
 
-**Problem:** `ImportError: No module named 'fastapi'`
+### Providers
+| Provider | Models | Use Case |
+|----------|--------|----------|
+| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo | Premium quality |
+| Gemini | gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-pro | Fast + cost-effective |
+| Claude | claude-3-5-sonnet, claude-3-5-haiku, claude-3-opus | Long contexts |
+| Local LLMs | Custom OpenAI-format endpoints | Private/offline |
+
+### Provider Failover
+When a provider fails, the system automatically falls back:
+1. Primary model (selected by cost tier)
+2. Fallback 1 (cheaper/faster)
+3. Fallback 2 (different provider)
+
+### Cost Tiers
+| Tier | Use | Example Models |
+|------|-----|---------------|
+| cheap | Simple tasks | gpt-3.5-turbo, gemini-1.5-flash |
+| standard | General tasks | gpt-4o-mini, gemini-2.0-flash |
+| premium | Complex tasks | gpt-4o, claude-3-5-sonnet |
+
+### Multimodal Endpoints
 ```bash
-# Solution: Activate virtual environment first
-venv\Scripts\activate
-pip install -r requirements.txt
-```
+# Generate image
+POST /multimodel/image
+{"prompt": "A futuristic Colombo skyline at night", "size": "1024x1024"}
 
-**Problem:** `Can't connect to MySQL server`
-```bash
-# Solution: Start MySQL from XAMPP Control Panel
-# Ensure port 3306 is not blocked
-```
+# Transcribe audio
+POST /multimodel/audio/transcribe
+(content-type: multipart/form-data, file: audio.wav)
 
-**Problem:** `Database connection error`
-```bash
-# Solution: Verify DATABASE_URL in .env
-# Default: mysql+pymysql://root:@localhost:3306/samai_db
-```
+# Text-to-speech
+POST /multimodel/audio/tts
+{"text": "Hello, how are you?", "voice": "alloy"}
 
-**Problem:** `Module not found` for agents/learning
-```bash
-# Solution: Ensure backend directory is in Python path
-# The app runs from backend/ directory, so imports should work
-```
-
-### Frontend Issues
-
-**Problem:** `Port 3000 already in use`
-```bash
-# Solution: Kill the process or use different port
-npx next dev --port 3001
-```
-
-**Problem:** `Module not found`
-```bash
-# Solution: Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
-```
-
-**Problem:** Speech Recognition not working
-```bash
-# Solution: Use Chrome or Edge browser
-# Speech Recognition API is not supported in Firefox/Safari
+# Analyze image
+POST /multimodel/image/analyze
+{"image_data": "base64...", "prompt": "What objects are in this image?"}
 ```
 
 ---
 
-## 📂 Project Structure
+## Knowledge Engine (RAG)
 
-```
-samai/
-├── backend/
-│   ├── main.py                 # FastAPI app entry point
-│   ├── models.py               # Database models (User, Project, Chat, Module, APIProvider)
-│   ├── schemas.py              # Pydantic schemas for validation
-│   ├── database.py             # Database connection setup
-│   ├── security.py             # JWT authentication & password hashing
-│   ├── ai_engine.py            # AI model integration (Gemini/InferX)
-│   ├── api_hub.py              # Centralized API Hub with multi-provider failover
-│   ├── project_brain.py        # RAG-based knowledge base per project
-│   ├── agents/                 # Autonomous AI Agent System
-│   │   ├── base.py             # Base agent class
-│   │   ├── planner.py          # Task planning agent
-│   │   ├── researcher.py       # Research agent
-│   │   ├── coder.py            # Coding agent
-│   │   ├── business.py         # Business analysis agent
-│   │   ├── content.py          # Content creation agent
-│   │   ├── executor.py         # Agent executor
-│   │   └── router.py           # Agent router
-│   ├── tools/                  # Agent tools
-│   │   └── __init__.py         # Search, file, calculator, translator, analyzer
-│   ├── learning/               # Self Learning AI System
-│   │   ├── __init__.py         # Feedback, preferences, knowledge, analyzer
-│   ├── routers/
-│   │   ├── auth.py             # Authentication endpoints
-│   │   ├── project.py          # Project CRUD endpoints
-│   │   ├── chat.py             # Chat endpoints with file uploads
-│   │   ├── api_provider.py     # API provider management
-│   │   ├── module.py           # Module management
-│   │   ├── pdf_translate.py    # PDF extraction & translation
-│   │   ├── coding.py           # Coding assistant
-│   │   ├── voice.py            # Voice workspace
-│   │   ├── media.py            # Media & content
-│   │   ├── image.py            # Image studio
-│   │   └── agents.py           # Agent system endpoints
-│   ├── .env                    # Environment variables (SECRET!)
-│   ├── .env.example            # Environment template
-│   ├── .gitignore              # Git ignore rules
-│   └── requirements.txt        # Python dependencies
-│
-└── frontend/
-    ├── src/
-    │   ├── app/
-    │   │   ├── layout.tsx              # Root layout
-    │   │   ├── page.tsx                # Home page
-    │   │   ├── globals.css             # Global styles
-    │   │   ├── login/page.tsx          # Login page
-    │   │   ├── register/page.tsx       # Registration page
-    │   │   ├── profile/page.tsx        # User profile
-    │   │   ├── chat/
-    │   │   │   ├── layout.tsx          # Chat dashboard with sidebar
-    │   │   │   ├── page.tsx            # Empty chat state
-    │   │   │   └── [projectId]/page.tsx # Chat session
-    │   │   └── modules/                # Module pages
-    │   │       ├── page.tsx            # Modules dashboard
-    │   │       ├── agents/page.tsx     # Autonomous agents
-    │   │       ├── learning/page.tsx   # Self learning AI
-    │   │       ├── pdf-translate/page.tsx # PDF & translation
-    │   │       ├── coding/page.tsx     # Coding assistant
-    │   │       ├── voice/page.tsx      # Voice workspace
-    │   │       ├── media/page.tsx      # Media & content
-    │   │       └── image/page.tsx      # Image studio
-    │   └── utils/
-    │       └── api.ts                  # API client utilities
-    ├── package.json
-    └── tsconfig.json
+### 3-Tier Knowledge System
+
+1. **Trusted Knowledge Base** — Admin-approved, version-controlled entries with 5 trust levels:
+   - `admin_approved` (highest)
+   - `verified`
+   - `user_submitted`
+   - `web_crawled`
+   - `unverified` (lowest)
+
+2. **RAG with Chunking** — Documents are split into semantic chunks (by paragraphs or headings) before embedding.
+
+3. **Web Research** — Real-time research with source reliability ranking.
+
+### Managing Knowledge
+
+```bash
+# Add to trusted KB (admin)
+curl -X POST http://localhost:8000/knowledge/trusted/add \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{
+    "content": "Sri Lankan corporate tax rate is 24%",
+    "source": "Inland Revenue Department",
+    "category": "business",
+    "trust_level": "admin_approved"
+  }'
+
+# Search knowledge (all users)
+curl -X POST http://localhost:8000/knowledge/search \
+  -H "Authorization: Bearer <token>" \
+  -d '{"query": "Sri Lankan corporate tax"}'
+
+# Get pending approvals (admin)
+curl http://localhost:8000/knowledge/pending-approval \
+  -H "Authorization: Bearer <admin_token>"
+
+# Approve entry (admin)
+curl -X POST http://localhost:8000/knowledge/approve/{id} \
+  -H "Authorization: Bearer <admin_token>"
+
+# Knowledge stats (admin)
+curl http://localhost:8000/knowledge/stats \
+  -H "Authorization: Bearer <admin_token>"
 ```
 
 ---
 
-## 📊 API Endpoints
+## Web Research
+
+Uses DuckDuckGo + optional SerpAPI. Sources are ranked by reliability:
+
+| Tier | Reliability Score | Examples |
+|------|------------------|----------|
+| Government | 0.95 | .gov, .gov.lk, .gov.in |
+| Official | 0.90 | .org, .edu |
+| Primary | 0.85 | First-hand sources |
+| Trusted Media | 0.75 | Wikipedia, BBC, Reuters, Nature |
+| Other | 0.50 | Blogs, forums |
+
+Sri Lankan sources (.lk domains) are automatically boosted.
+
+```bash
+curl -X POST http://localhost:8000/knowledge/research \
+  -H "Authorization: Bearer <token>" \
+  -d '{"query": "AI adoption in Sri Lankan startups", "num_sources": 5}'
+```
+
+Response includes cited sources with reliability scores.
+
+---
+
+## Permission System
+
+### Architecture: User → Role → Module → Action → Time Limit → Usage Limit
+
+```bash
+# Check your permissions
+curl http://localhost:8000/permissions/my \
+  -H "Authorization: Bearer <token>"
+
+# Check a specific permission
+curl -X POST http://localhost:8000/permissions/check \
+  -H "Authorization: Bearer <token>" \
+  -d '{"module": "image", "action": "write"}'
+
+# List all permissions
+curl http://localhost:8000/permissions/permissions \
+  -H "Authorization: Bearer <token>"
+
+# List roles
+curl http://localhost:8000/permissions/roles \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+### Granting Permissions (Admin)
+```bash
+curl -X POST http://localhost:8000/permissions/grants \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{
+    "user_id": "target-user-uuid",
+    "module": "video",
+    "action": "write",
+    "usage_limit": 50,
+    "time_limit_hours": 0,
+    "expires_days": 7
+  }'
+```
+This grants 50 video generations per 7 days.
+
+### Usage Quotas
+```bash
+# Check daily quota
+curl -X POST http://localhost:8000/permissions/quota/check \
+  -H "Authorization: Bearer <token>" \
+  -d '{"module": "image", "action": "write"}'
+
+# Set quota limit (admin)
+curl -X POST http://localhost:8000/permissions/quota/set \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{"user_id": "...", "module": "image", "limit": 100, "days": 30}'
+```
+
+### Default Roles
+| Role | Permissions |
+|------|------------|
+| admin | Full access to all modules/actions |
+| staff | Core modules (chat, translate, knowledge, agents, analytics) |
+| student | Basic access (chat, translate, knowledge read, image read, voice read) |
+| teacher | Educational content access |
+| creator | Content creation tools (higher limits) |
+
+---
+
+## Security Features
+
+### Zero-Trust Middleware
+All requests are automatically:
+- Device fingerprinted
+- Rate-limited
+- Logged to audit trail
+- Checked for revoked sessions
+
+### Refresh Token Rotation
+- Access tokens: 15-minute expiry
+- Refresh tokens: 7-day expiry with rotation
+- **Reuse detection**: If you try to use a refresh token twice, the entire session is revoked
+
+### API Scopes
+Scopes use wildcard syntax: `chat:*`, `image:write`, `model:openai`
+
+### Audit Logging
+Every security event is logged with:
+- Event type (login, grant_created, secret_rotated, etc.)
+- User ID, IP, device fingerprint
+- Severity (info, warning, error, critical, emergency)
+- Risk score
+
+```bash
+# View audit logs (admin)
+curl http://localhost:8000/security/audit/logs?severity=warning&limit=100 \
+  -H "Authorization: Bearer <admin_token>"
+
+# Check risk score
+curl http://localhost:8000/security/risk-score \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Analytics & Cost Tracking
+
+### Cost Tracking
+```bash
+# Your cost summary
+curl http://localhost:8000/analytics/my/costs \
+  -H "Authorization: Bearer <token>"
+
+# System-wide costs (admin)
+curl http://localhost:8000/analytics/costs/system-wide?days=7 \
+  -H "Authorization: Bearer <admin_token>"
+
+# Provider breakdown (admin)
+curl http://localhost:8000/analytics/costs/providers \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+### Usage Analytics
+```bash
+# System dashboard (admin)
+curl http://localhost:8000/analytics/dashboard?days=7 \
+  -H "Authorization: Bearer <admin_token>"
+
+# Your activity
+curl http://localhost:8000/analytics/user/activity/me?days=7 \
+  -H "Authorization: Bearer <token>"
+
+# Real-time stats (admin)
+curl http://localhost:8000/analytics/realtime \
+  -H "Authorization: Bearer <admin_token>"
+
+# Submit feedback
+curl -X POST http://localhost:8000/analytics/feedback \
+  -H "Authorization: Bearer <token>" \
+  -d '{"module": "chat", "rating": 5, "feedback": "Great response!"}'
+```
+
+### Pricing Reference
+| Provider | Model | Input / 1M tokens | Output / 1M tokens |
+|----------|-------|-------------------|--------------------|
+| OpenAI | gpt-4o | $0.005 | $0.015 |
+| OpenAI | gpt-4o-mini | $0.00015 | $0.0006 |
+| OpenAI | gpt-3.5-turbo | $0.0005 | $0.0015 |
+| Gemini | gemini-2.5-flash | $0.00015 | $0.0006 |
+| Gemini | gemini-1.5-pro | $0.0035 | $0.0105 |
+| Claude | claude-3-5-sonnet | $0.003 | $0.015 |
+| Ollama/Local | any | Free | Free |
+
+---
+
+## Secret Management
+
+The secret vault stores encrypted API keys and credentials.
+
+```bash
+# Store a secret
+curl -X POST http://localhost:8000/secrets \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "name": "openai_api_key",
+    "value": "sk-...",
+    "secret_type": "api_key",
+    "provider": "openai",
+    "scope": "user"
+  }'
+
+# List your secrets (redacted)
+curl http://localhost:8000/secrets \
+  -H "Authorization: Bearer <token>"
+
+# Retrieve a secret value
+curl -X POST http://localhost:8000/secrets/{id}/retrieve \
+  -H "Authorization: Bearer <token>"
+
+# Rotate a secret (admin)
+curl -X POST http://localhost:8000/secrets/{id}/rotate \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{"new_value": "sk-new-key"}'
+
+# Check expiring secrets
+curl http://localhost:8000/secrets/expiring?days=7 \
+  -H "Authorization: Bearer <admin_token>"
+
+# Test redaction
+curl -X POST http://localhost:8000/secrets/redact \
+  -H "Authorization: Bearer <token>" \
+  -d '{"text": "My key is sk-abc123def456..."}'
+```
+
+**Features:**
+- AES-256 encryption at rest
+- Key rotation with version history
+- Access counting and audit trails
+- Auto-redaction in logs (sk-**, AKIA**, ghp_**, Bearer ***)
+
+---
+
+## Validation Layer
+
+All AI outputs are automatically validated through a 6-stage pipeline:
+
+| Stage | Check | Description |
+|-------|-------|-------------|
+| 1 | Safety | Blocks harmful content, checks disclaimers |
+| 2 | Length | Ensures output isn't empty or too short |
+| 3 | Completeness | Detects truncation, unbalanced braces/brackets |
+| 4 | Schema | Validates JSON structure against expected schema |
+| 5 | Fact Check | Verifies claims, checks Sri Lankan facts |
+| 6 | Format | Ensures code blocks, translation format, etc. |
+
+### Auto-Retry with Repair
+If validation fails, the system:
+1. Analyzes which checks failed
+2. Generates a targeted repair prompt
+3. Re-prompts the AI with instructions to fix
+4. Re-validates (up to 3 attempts)
+
+```bash
+# Validate output manually
+curl -X POST http://localhost:8000/validation/validate \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "output": "Your AI output here",
+    "intent_category": "knowledge",
+    "auto_repair": true
+  }'
+
+# Safe execution (runs task + validates + repairs)
+curl -X POST http://localhost:8000/validation/safe-execute \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "task": "Explain quantum computing",
+    "intent_category": "knowledge",
+    "max_repairs": 3
+  }'
+
+# Manual safety check
+curl -X POST http://localhost:8000/validation/safety-check \
+  -d '{"text": "Any text to check"}'
+
+# Fact check
+curl -X POST http://localhost:8000/validation/fact-check \
+  -d '{"text": "The population of Sri Lanka is 22 million"}'
+```
+
+---
+
+## Emergency Lockdown
+
+Emergency lockdown instantly blocks all non-admin access. Activated by admin.
+
+```bash
+# Enable lockdown (admin only)
+curl -X POST http://localhost:8000/security/lockdown/enable \
+  -H "Authorization: Bearer <admin_token>" \
+  -d '{"reason": "Security incident"}'
+
+# Disable lockdown
+curl -X POST http://localhost:8000/security/lockdown/disable \
+  -H "Authorization: Bearer <admin_token>"
+
+# Emergency access (with key rotation)
+curl -X POST http://localhost:8000/security/lockdown/emergency-access \
+  -d '{"emergency_key": "..." }'
+
+# Lockdown status
+curl http://localhost:8000/security/lockdown/status \
+  -H "Authorization: Bearer <token>"
+```
+
+During lockdown:
+- All non-admin endpoints return 403
+- Admin access requires emergency key
+- Emergency key is automatically rotated after use
+
+---
+
+## API Gateway
+
+Centralized API gateway with rate limiting and health monitoring.
+
+```bash
+# Gateway stats (admin)
+curl http://localhost:8000/gateway/stats \
+  -H "Authorization: Bearer <admin_token>"
+
+# Service discovery
+curl http://localhost:8000/gateway/services \
+  -H "Authorization: Bearer <token>"
+
+# Health check
+curl http://localhost:8000/gateway/health \
+  -H "Authorization: Bearer <admin_token>"
+```
+
+### Rate Limits
+| Role | Requests/Minute | Burst |
+|------|----------------|-------|
+| user | 100 | 150 |
+| staff | 200 | 300 |
+| admin | 500 | 1000 |
+
+Rate limits are enforced per user, per service, per endpoint using token bucket algorithm.
+
+---
+
+## Code Examples
+
+### Python Client
+```python
+import requests
+
+BASE = "http://localhost:8000"
+
+# Login
+resp = requests.post(f"{BASE}/auth/login", data={"username": "user1", "password": "pass"})
+token = resp.json()["access_token"]
+headers = {"Authorization": f"Bearer {token}"}
+
+# Process a task
+result = requests.post(
+    f"{BASE}/sam/process",
+    headers=headers,
+    json={
+        "task": "Write a blog post about AI in healthcare in Sri Lanka",
+        "priority": "medium",
+        "context": {"language": "english"}
+    }
+)
+print(result.json()["result"])
+
+# Check costs
+costs = requests.get(f"{BASE}/analytics/my/costs", headers=headers)
+print(costs.json())
+```
+
+### JavaScript/TypeScript Client
+```typescript
+import axios from 'axios';
+
+const BASE = 'http://localhost:8000';
+
+// Auth
+const resp = await axios.post(`${BASE}/auth/login`, {
+    username: 'user1',
+    password: 'pass'
+});
+const token = resp.data.access_token;
+
+// Process task
+const result = await axios.post(`${BASE}/sam/process`, {
+    task: 'Create a Flutter widget for a login page',
+    priority: 'high'
+}, {
+    headers: { Authorization: `Bearer ${token}` }
+});
+
+console.log(result.data.result);
+```
+
+### cURL Examples
+
+```bash
+# Chat
+curl -X POST http://localhost:8000/sam/process \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "What is the capital of Sri Lanka?"}'
+
+# Generate code
+curl -X POST http://localhost:8000/sam/process \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"task": "Write a Python function to calculate factorial"}'
+
+# Generate image
+curl -X POST http://localhost:8000/sam/process \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"task": "Generate an image of a traditional Sri Lankan mask"}'
+
+# Research
+curl -X POST http://localhost:8000/sam/process \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"task": "Research the latest AI developments and their impact on developing economies"}'
+```
+
+---
+
+## Environment Variables Reference
+
+### Required
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | JWT signing key (required) |
+| `OPENAI_API_KEY` | OpenAI API key (or alternative) |
+| `DATABASE_URL` | Database connection string |
+
+### Optional
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GEMINI_API_KEY` | - | Google Gemini API key |
+| `CLAUDE_API_KEY` | - | Anthropic Claude API key |
+| `SAM_SECRET_MASTER_KEY` | (random) | Master key for secret vault encryption |
+| `SERP_API_KEY` | - | SerpAPI key for enhanced web research |
+| `ENVIRONMENT` | `development` | `development` or `production` |
+| `DEBUG` | `true` | Enable debug mode |
+| `JWT_EXPIRE_MINUTES` | `15` | JWT token expiry |
+| `JWT_REFRESH_EXPIRE_DAYS` | `7` | Refresh token expiry |
+| `LOCAL_LLM_URL` | - | Local LLM endpoint URL |
+| `LOCAL_LLM_MODEL` | - | Local LLM model name |
+
+---
+
+## All API Endpoints
 
 ### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login and get JWT token
-- `GET /auth/me` - Get current user info
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login (returns JWT + refresh token) |
+| POST | `/auth/refresh` | Refresh expired access token |
+| POST | `/auth/2fa/enable` | Enable 2FA |
+| POST | `/auth/2fa/verify` | Verify 2FA code |
+| POST | `/auth/api-keys` | Create API key |
+| GET | `/auth/api-keys` | List API keys |
+| DELETE | `/auth/api-keys/{id}` | Revoke API key |
 
-### Projects
-- `POST /projects/` - Create new project
-- `GET /projects/` - List all user projects
-- `DELETE /projects/{id}` - Delete a project
-
-### Chat
-- `POST /chat/{project_id}` - Send message and get AI response (supports text + file uploads)
-- `GET /chat/{project_id}` - Get chat history
-
-### Modules
-- `POST /modules/` - Create module
-- `GET /modules/project/{project_id}` - Get project modules
-- `PUT /modules/{module_id}` - Update module
-- `DELETE /modules/{module_id}` - Delete module
-
-### PDF & Translation
-- `POST /pdf-translate/extract-text` - Extract text from documents
-- `POST /pdf-translate/translate` - Translate text
-
-### Coding
-- `POST /coding/generate` - Generate code
-- `POST /coding/explain` - Explain code
-- `POST /coding/fix` - Fix code
-- `POST /coding/api-connect` - API connection guide
-- `POST /coding/deploy` - Deployment guide
-
-### Voice
-- `POST /voice/transcribe` - Transcribe audio file
-- `POST /voice/text-to-speech` - Text to speech info
-- `POST /voice/process-voice-command` - Process voice command
-
-### Media
-- `POST /media/social-prompt` - Generate social media content
-- `POST /media/image-prompt` - Generate image prompt
-- `POST /media/video-prompt` - Generate video prompt
-- `POST /media/resize-guide` - Get resize guide
-
-### Image
-- `POST /image/generate-prompt` - Generate image prompt
-- `POST /image/edit` - Get image editing instructions
-- `POST /image/resize` - Resize image
-- `POST /image/filter` - Apply filter to image
-- `POST /image/add-text` - Add text to image
+### Sam AI Core
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/sam/process` | Full pipeline task processing |
+| POST | `/sam/understand` | Intent classification only |
+| POST | `/sam/plan` | Create execution plan |
+| GET | `/sam/status` | System status (admin) |
+| GET | `/sam/agents` | List all agents |
 
 ### Agents
-- `POST /agents/run` - Run agent task
-- `GET /agents/available` - Get available agents
-- `GET /agents/tools` - Get available tools
-- `GET /agents/history` - Get agent execution history
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/agents/execute` | Execute task via agent |
+| GET | `/agents/available` | List available agents |
+| GET | `/agents/tools` | List available tools |
+| GET | `/agents/history` | Execution history |
+| GET | `/agents/info` | Detailed agent info |
 
-### Self Learning
-- `POST /learning/feedback` - Submit feedback
-- `GET /learning/preferences` - Get learned preferences
-- `POST /learning/knowledge` - Add knowledge
-- `GET /learning/knowledge` - Get knowledge base
-- `POST /learning/analyze` - Analyze response quality
+### Multi-Model Gateway
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/multimodel/chat` | Chat completion |
+| POST | `/multimodel/image` | Generate image |
+| POST | `/multimodel/image/analyze` | Analyze image |
+| POST | `/multimodel/audio/transcribe` | Transcribe audio |
+| POST | `/multimodel/audio/tts` | Text-to-speech |
 
-### API Providers
-- `POST /api-providers/` - Create provider
-- `GET /api-providers/` - List providers
-- `PUT /api-providers/{id}` - Update provider
-- `DELETE /api-providers/{id}` - Delete provider
-- `GET /api-providers/status` - Get provider status
+### Knowledge Engine
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/knowledge/search` | Search knowledge base |
+| POST | `/knowledge/add` | Add knowledge entry |
+| POST | `/knowledge/research` | Web research with citations |
+| POST | `/knowledge/crawl` | Crawl URL → store |
+| POST | `/knowledge/train` | Admin training command |
+| GET | `/knowledge/stats` | Knowledge stats |
+| POST | `/knowledge/trusted/add` | Add to trusted KB |
+| GET | `/knowledge/pending-approval` | Pending approvals |
+| POST | `/knowledge/approve/{id}` | Approve entry |
 
-### Health
-- `GET /` - API info
-- `GET /health` - Health check
+### Permissions
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/permissions/my` | My permissions |
+| POST | `/permissions/check` | Check permission |
+| POST | `/permissions/check-user/{id}` | Admin check user |
+| GET | `/permissions/grants` | List grants |
+| POST | `/permissions/grants` | Create grant |
+| DELETE | `/permissions/grants/{id}` | Revoke grant |
+| GET | `/permissions/roles` | List roles |
+| GET | `/permissions/permissions` | List all permissions |
+| POST | `/permissions/quota/check` | Check quota |
+| POST | `/permissions/quota/set` | Set quota limit (admin) |
+
+### Security
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/security/2fa/setup` | Setup 2FA |
+| POST | `/security/2fa/verify` | Verify 2FA |
+| POST | `/security/lockdown/enable` | Enable lockdown (admin) |
+| POST | `/security/lockdown/disable` | Disable lockdown |
+| GET | `/security/lockdown/status` | Lockdown status |
+| GET | `/security/audit/logs` | Audit logs (admin) |
+| GET | `/security/risk-score` | Risk assessment |
+| POST | `/security/sign` | Sign request (HMAC) |
+
+### Analytics
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/analytics/dashboard` | System dashboard (admin) |
+| GET | `/analytics/my/costs` | My cost summary |
+| GET | `/analytics/costs/system-wide` | System costs (admin) |
+| GET | `/analytics/costs/providers` | Provider costs (admin) |
+| GET | `/analytics/user/activity/{id}` | User activity |
+| GET | `/analytics/realtime` | Real-time stats |
+| POST | `/analytics/feedback` | Submit feedback |
+| GET | `/analytics/top-users` | Top users (admin) |
+
+### Secrets
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/secrets/` | Store secret |
+| GET | `/secrets/` | List secrets |
+| POST | `/secrets/{id}/retrieve` | Retrieve secret value |
+| POST | `/secrets/{id}/rotate` | Rotate secret |
+| DELETE | `/secrets/{id}` | Delete secret |
+| GET | `/secrets/expiring` | Check expiring |
+| POST | `/secrets/redact` | Test redaction |
+
+### Validation
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/validation/validate` | Validate AI output |
+| POST | `/validation/safe-execute` | Execute with validation |
+| POST | `/validation/safety-check` | Safety check |
+| POST | `/validation/fact-check` | Fact check |
+| POST | `/validation/schema-detect` | Auto-detect schema |
+
+### Gateway
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/gateway/stats` | Gateway stats |
+| GET | `/gateway/services` | Service discovery |
+| GET | `/gateway/health` | Health checks |
 
 ---
 
-## 🔒 Security Notes
+## Troubleshooting
 
-1. **Never commit `.env` file** - It contains sensitive API keys
-2. **Change SECRET_KEY** in production - Use a strong random string
-3. **Use HTTPS** in production - JWT tokens should not be sent over HTTP
-4. **Restrict CORS** - Update `allow_origins` in `main.py` for production
-5. **Database credentials** - Use strong passwords in production
-6. **Private by Default** - All projects, API keys, and knowledge bases belong only to you
-7. **Module Control** - Disable modules you don't use per project
+### "No suitable agent found"
+The task description may need more specific keywords. Check `/agents/available` for the 35 agents and their keywords. Try adding more context.
 
----
+### "Permission denied"
+- Check your role with `/permissions/my`
+- Ask admin to check `/permissions/check-user/{your_id}` with specific module/action
+- Admin can grant via `/permissions/grants`
 
-## 🚢 Deployment
+### "Rate limit exceeded"
+- Wait for the reset period (shown in response headers)
+- Admin can check `/analytics/realtime` for usage patterns
 
-### Backend Deployment
+### Provider errors / fallback
+- Check provider API keys in `.env`
+- The system auto-falls-back to other providers
+- Check `/analytics/costs/providers` for provider health
 
-```bash
-# Install production dependencies
-pip install fastapi uvicorn sqlalchemy pydantic python-dotenv passlib[bcrypt] PyJWT
-
-# Run with production server
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Frontend Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-Or deploy to **Vercel**, **Netlify**, or any Node.js hosting service.
+### "Lockdown enabled"
+- The system is in emergency lockdown
+- Contact admin for emergency access key
 
 ---
 
-## 📝 License
-
-This project is developed for educational purposes.
-
----
-
-**Built with ❤️ using FastAPI, Next.js, and AI**
+*For support: check `/help` in the CLI, or report issues at the GitHub repository.*
