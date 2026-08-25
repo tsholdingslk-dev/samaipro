@@ -21,3 +21,15 @@ pyswisseph
 python-dateutil
 httpx
 beautifulsoup4
+google-generativeai
+
+
+anthropic
+numpy
+langchain
+langgraph
+ollama
+opentelemetry-api
+boto3
+azure-core
+firebase-admin
