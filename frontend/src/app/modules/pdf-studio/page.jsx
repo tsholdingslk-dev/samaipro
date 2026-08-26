@@ -1,6 +1,9 @@
 "use client";
 import { useState, useRef } from 'react'
-import { Upload, Download, Type, Image as ImageIcon, MousePointer2, FileText, Eraser, Square, Circle, Crop } from 'lucide-react'
+import { 
+  FileText, Upload, Download, Type, Square, Circle, Eraser, MousePointer2, Image as ImageIcon, Crop,
+  Sparkles, Bot, Wand2, FileSignature, Languages, MessagesSquare
+} from 'lucide-react'
 import { PDFDocument, rgb } from 'pdf-lib'
 import dynamic from 'next/dynamic'
 const PdfViewer = dynamic(() => import('./components/PdfViewer'), { ssr: false })
@@ -12,6 +15,7 @@ function App() {
   const [numPages, setNumPages] = useState(0)
   const [annotations, setAnnotations] = useState([])
   const [selectedColor, setSelectedColor] = useState('#ff0000')
+  const [aiTab, setAiTab] = useState('chat')
   const fileInputRef = useRef(null)
 
   const hexToRgbLib = (hex) => {
@@ -179,71 +183,8 @@ function App() {
         </aside>
 
         {/* Workspace */}
-        <section className="workspace">
-          {file && (
-            <div className="toolbar glass-panel animate-fade-in">
-              <button 
-                className={`btn-icon ${activeTool === 'select' ? 'active' : ''}`}
-                onClick={() => setActiveTool('select')}
-                title="Select"
-              >
-                <MousePointer2 size={20} />
-              </button>
-              <button 
-                className={`btn-icon ${activeTool === 'text' ? 'active' : ''}`}
-                onClick={() => setActiveTool('text')}
-                title="Add Text"
-              >
-                <Type size={20} />
-              </button>
-              <button 
-                className={`btn-icon ${activeTool === 'image' ? 'active' : ''}`}
-                onClick={() => setActiveTool('image')}
-                title="Add Image"
-              >
-                <ImageIcon size={20} />
-              </button>
-              <div style={{ width: '1px', background: 'var(--border-color)', margin: '0 4px' }}></div>
-              <button 
-                className={`btn-icon ${activeTool === 'eraser' ? 'active' : ''}`}
-                onClick={() => setActiveTool('eraser')}
-                title="Eraser / White-out"
-              >
-                <Eraser size={20} />
-              </button>
-              <button 
-                className={`btn-icon ${activeTool === 'rect' ? 'active' : ''}`}
-                onClick={() => setActiveTool('rect')}
-                title="Add Box"
-              >
-                <Square size={20} />
-              </button>
-              <button 
-                className={`btn-icon ${activeTool === 'circle' ? 'active' : ''}`}
-                onClick={() => setActiveTool('circle')}
-                title="Add Circle"
-              >
-                <Circle size={20} />
-              </button>
-              <button 
-                className={`btn-icon ${activeTool === 'crop' ? 'active' : ''}`}
-                onClick={() => setActiveTool('crop')}
-                title="Crop & Move"
-              >
-                <Crop size={20} />
-              </button>
-              <div style={{ width: '1px', background: 'var(--border-color)', margin: '0 4px' }}></div>
-              <input 
-                type="color" 
-                value={selectedColor} 
-                onChange={(e) => setSelectedColor(e.target.value)} 
-                style={{ width: '30px', height: '30px', padding: '0', border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
-                title="Select Color"
-              />
-            </div>
-          )}
-
-          <div className="pdf-viewer-container">
+        <section className="workspace" style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}>
+          <div className="pdf-viewer-container" style={{ flex: 1, padding: '24px', overflow: 'auto' }}>
             {file ? (
               <PdfViewer 
                 file={file} 
@@ -258,13 +199,112 @@ function App() {
                 <FileText size={48} opacity={0.5} />
                 <h2>No Document Opened</h2>
                 <p>Click "Open PDF" to start editing.</p>
-                <button className="btn btn-primary" onClick={triggerFileInput}>
+                <button className="btn btn-primary" onClick={triggerFileInput} style={{ background: '#8b5cf6', color: '#fff', padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>
                   Select File
                 </button>
               </div>
             )}
           </div>
+
+          {/* Bottom Toolbar */}
+          {file && (
+            <div className="bottom-toolbar animate-fade-in">
+              <div className="bottom-toolbar-group">
+                <button className={`btn-tool ${activeTool === 'select' ? 'active' : ''}`} onClick={() => setActiveTool('select')} title="Select">
+                  <MousePointer2 size={18} /><span>Select</span>
+                </button>
+              </div>
+              <div className="bottom-toolbar-group">
+                <button className={`btn-tool ${activeTool === 'text' ? 'active' : ''}`} onClick={() => setActiveTool('text')} title="Add Text">
+                  <Type size={18} /><span>Text</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'image' ? 'active' : ''}`} onClick={() => setActiveTool('image')} title="Add Image">
+                  <ImageIcon size={18} /><span>Image</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'draw' ? 'active' : ''}`} onClick={() => setActiveTool('draw')} title="Draw">
+                  <Wand2 size={18} /><span>Draw</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'sign' ? 'active' : ''}`} onClick={() => setActiveTool('sign')} title="Sign">
+                  <FileSignature size={18} /><span>Sign</span>
+                </button>
+              </div>
+              <div className="bottom-toolbar-group">
+                <button className={`btn-tool ${activeTool === 'rect' ? 'active' : ''}`} onClick={() => setActiveTool('rect')} title="Add Box">
+                  <Square size={18} /><span>Box</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'circle' ? 'active' : ''}`} onClick={() => setActiveTool('circle')} title="Add Circle">
+                  <Circle size={18} /><span>Circle</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'highlight' ? 'active' : ''}`} onClick={() => setActiveTool('highlight')} title="Highlight">
+                  <Sparkles size={18} /><span>Highlight</span>
+                </button>
+                <button className={`btn-tool ${activeTool === 'eraser' ? 'active' : ''}`} onClick={() => setActiveTool('eraser')} title="Redact / Eraser">
+                  <Eraser size={18} /><span>Redact</span>
+                </button>
+              </div>
+              <div className="bottom-toolbar-group">
+                <input 
+                  type="color" 
+                  value={selectedColor} 
+                  onChange={(e) => setSelectedColor(e.target.value)} 
+                  style={{ width: '24px', height: '24px', padding: '0', border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'transparent' }}
+                  title="Select Color"
+                />
+              </div>
+            </div>
+          )}
         </section>
+
+        {/* AI Assistant Right Sidebar */}
+        <aside className="ai-sidebar">
+          <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8b5cf6' }}>
+            <Bot size={18} />
+            AI Assistant
+          </div>
+          <div className="ai-tabs">
+            <div className={`ai-tab ${aiTab === 'chat' ? 'active' : ''}`} onClick={() => setAiTab('chat')}><MessagesSquare size={14} style={{marginBottom:'4px'}}/><br/>Ask AI</div>
+            <div className={`ai-tab ${aiTab === 'summary' ? 'active' : ''}`} onClick={() => setAiTab('summary')}><FileText size={14} style={{marginBottom:'4px'}}/><br/>Summary</div>
+            <div className={`ai-tab ${aiTab === 'rewrite' ? 'active' : ''}`} onClick={() => setAiTab('rewrite')}><Wand2 size={14} style={{marginBottom:'4px'}}/><br/>Rewrite</div>
+            <div className={`ai-tab ${aiTab === 'translate' ? 'active' : ''}`} onClick={() => setAiTab('translate')}><Languages size={14} style={{marginBottom:'4px'}}/><br/>Translate</div>
+          </div>
+          <div className="ai-content">
+            {aiTab === 'chat' && (
+              <div className="ai-message">
+                <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Document Chat</p>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Ask me anything about this PDF. I can extract points, find data, or answer questions.</p>
+                {/* Chat Input Placeholder */}
+                <input type="text" placeholder="e.g. What is the total amount?" style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} disabled={!file} />
+              </div>
+            )}
+            {aiTab === 'summary' && (
+              <div className="ai-message">
+                <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Summarizer</p>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Generate an executive summary, key points, and action items from this document.</p>
+                <button className="btn-primary" style={{ width: '100%', marginTop: '16px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '8px', borderRadius: '6px', cursor: file ? 'pointer' : 'not-allowed' }} disabled={!file}>Generate Summary</button>
+              </div>
+            )}
+            {aiTab === 'rewrite' && (
+              <div className="ai-message">
+                <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Rewrite</p>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Select text in the PDF to make it professional, shorten it, or fix grammar.</p>
+              </div>
+            )}
+            {aiTab === 'translate' && (
+              <div className="ai-message">
+                <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Translation</p>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Translate this document while preserving its layout.</p>
+                <select style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} disabled={!file}>
+                  <option>Tamil</option>
+                  <option>Sinhala</option>
+                  <option>English</option>
+                  <option>Hindi</option>
+                  <option>Arabic</option>
+                </select>
+                <button className="btn-primary" style={{ width: '100%', marginTop: '8px', background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: file ? 'pointer' : 'not-allowed' }} disabled={!file}>Translate PDF</button>
+              </div>
+            )}
+          </div>
+        </aside>
       </main>
     </div>
   )
