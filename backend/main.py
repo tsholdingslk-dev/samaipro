@@ -2,6 +2,7 @@ import os
 import traceback
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import models
 from database import engine
@@ -116,6 +117,9 @@ for r in routers:
     api_router.include_router(r)
 
 app.include_router(api_router)
+
+# Serve the central widget.js script
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # CORS Setup
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000")
