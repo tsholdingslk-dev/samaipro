@@ -21,6 +21,8 @@ function App() {
   const [chatInput, setChatInput] = useState('')
   const [chatResponse, setChatResponse] = useState('')
   const [summaryResponse, setSummaryResponse] = useState('')
+  const [translateLanguage, setTranslateLanguage] = useState('Tamil')
+  const [translateResponse, setTranslateResponse] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -62,6 +64,51 @@ function App() {
     } catch (e) {
       console.error(e);
       setSummaryResponse("Error generating summary.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  }
+
+  const handleTranslate = async () => {
+    if (!file) return;
+    setIsAiLoading(true);
+    setTranslateResponse("Extracting text and translating...");
+    try {
+      // First extract text
+      const formData = new FormData();
+      formData.append('file', file);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      
+      const extractRes = await fetch(`${API_URL}/api/pdf-translate/extract-text`, {
+        method: 'POST',
+        body: formData,
+      });
+      const extractData = await extractRes.json();
+      const extractedText = extractData.text;
+
+      if (!extractedText) {
+        setTranslateResponse("No text found in PDF to translate.");
+        setIsAiLoading(false);
+        return;
+      }
+
+      // Then translate
+      const langMap = { 'Tamil': 'ta', 'Sinhala': 'si', 'English': 'en', 'Hindi': 'hi', 'Arabic': 'ar' };
+      const translateFormData = new FormData();
+      // Only translate the first 1500 chars to avoid timeout for now
+      translateFormData.append('text', extractedText.substring(0, 1500));
+      translateFormData.append('source_lang', 'auto');
+      translateFormData.append('target_lang', langMap[translateLanguage] || 'ta');
+
+      const transRes = await fetch(`${API_URL}/api/pdf-translate/translate`, {
+        method: 'POST',
+        body: translateFormData,
+      });
+      const transData = await transRes.json();
+      setTranslateResponse(transData.translated_text || "Translation failed.");
+    } catch (e) {
+      console.error(e);
+      setTranslateResponse("Error during translation.");
     } finally {
       setIsAiLoading(false);
     }
@@ -384,15 +431,33 @@ function App() {
             {aiTab === 'translate' && (
               <div className="ai-message">
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Translation</p>
-                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Translate this document while preserving its layout.</p>
-                <select style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} disabled={!file}>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Translate this document text.</p>
+                <select 
+                  style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} 
+                  disabled={!file || isAiLoading}
+                  value={translateLanguage}
+                  onChange={(e) => setTranslateLanguage(e.target.value)}
+                >
                   <option>Tamil</option>
                   <option>Sinhala</option>
                   <option>English</option>
                   <option>Hindi</option>
                   <option>Arabic</option>
                 </select>
-                <button className="btn-primary" style={{ width: '100%', marginTop: '8px', background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: file ? 'pointer' : 'not-allowed' }} disabled={!file}>Translate PDF</button>
+                <button 
+                  className="btn-primary" 
+                  style={{ width: '100%', marginTop: '8px', background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: (file && !isAiLoading) ? 'pointer' : 'not-allowed', opacity: (file && !isAiLoading) ? 1 : 0.5 }} 
+                  disabled={!file || isAiLoading}
+                  onClick={handleTranslate}
+                >
+                  {isAiLoading ? 'Translating...' : 'Translate PDF'}
+                </button>
+
+                {translateResponse && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-primary)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-primary)', border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap' }}>
+                    {translateResponse}
+                  </div>
+                )}
               </div>
             )}
           </div>
