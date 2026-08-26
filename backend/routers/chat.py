@@ -238,7 +238,8 @@ async def send_message(
             except Exception as e:
                 enhanced_message += f"\n\n[SYSTEM NOTE: Failed to calculate astrology chart automatically: {str(e)}]"
 
-    system_prompt = "You are SAM AI, an advanced AI optimized specifically for Sri Lanka. CRITICAL LANGUAGE RULE: ALWAYS respond in the exact same language the user uses. If the user speaks in Tamil, reply in Tamil. If the user speaks in English, reply in English. If the user speaks in Sinhala, use natural, conversational spoken Sinhala (Katha Karana Sinhala) or Singlish. NEVER reply in Sinhala unless the user explicitly spoke to you in Sinhala. Maintain strict cultural accuracy."
+    from prompts import SAMAI_SYSTEM_PROMPT
+    system_prompt = SAMAI_SYSTEM_PROMPT
     if mode == "history":
         system_prompt += " Focus primarily on deep Sri Lankan historical, archaeological, and cultural heritage."
     elif mode == "admin":

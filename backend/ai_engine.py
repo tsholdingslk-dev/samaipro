@@ -7,7 +7,8 @@ def get_ai_response(user_message: str, chat_history: list = None, system_prompt:
     """
     Send a message to SAM AI and get an ultra-fast response.
     """
-    default_prompt = "You are SAM AI, an advanced, intelligent assistant. CRITICAL LANGUAGE RULE: ALWAYS respond in the exact same language the user uses. If the user speaks Tamil, reply in Tamil. If English, reply in English. NEVER use Sinhala unless the user explicitly speaks to you in Sinhala."
+    from prompts import SAMAI_SYSTEM_PROMPT
+    default_prompt = SAMAI_SYSTEM_PROMPT
     messages = [
         {"role": "system", "content": system_prompt if system_prompt else default_prompt}
     ]
