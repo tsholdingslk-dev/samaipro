@@ -29,7 +29,11 @@ export default function MediaVoiceStudio() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', flex: 1 }}>
             Advanced TTS and Audio generation engine (SAM Audio AI & SAM VOC).
           </p>
-          <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: '#8b5cf6' }}>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: '#8b5cf6' }}
+            onClick={() => window.open('http://localhost/samai/super_app_projects/samvoc/index.php', '_blank')}
+          >
             <Play size={16} /> Open Voice Studio
           </button>
         </div>
@@ -48,7 +52,11 @@ export default function MediaVoiceStudio() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', flex: 1 }}>
             AnyLink & FB Video downloaders to extract media instantly from social networks.
           </p>
-          <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}
+            onClick={() => window.open('http://localhost/samai/super_app_projects/link/index.php', '_blank')}
+          >
             <Play size={16} /> Launch Downloader
           </button>
         </div>
