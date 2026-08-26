@@ -347,6 +347,13 @@ When interacting with the user, provide actionable Flutter code snippets, clear 
     if not ai_text:
         ai_text = "Done! I have completed the requested actions."
 
+    # POST-PROCESS LANGUAGE NATURALNESS
+    try:
+        from validators.language_checker import post_process_language
+        ai_text = post_process_language(full_content, ai_text)
+    except Exception as e:
+        print(f"Language Checker failed: {e}")
+
     # 10. Save AI's Response to Database
     ai_chat = models.Chat(
         project_id=project_id,
