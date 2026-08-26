@@ -187,8 +187,34 @@ async def startup_event():
             db.close()
         except Exception as e:
             print(f"[Agent Error] {e}")
+
+    async def fifteen_minute_reminder():
+        print("[Agent] 15-minute check...")
+        try:
+            from database import SessionLocal
+            from ai_engine import get_ai_response
+            from tools.agent_tools import execute_retrieve_memory, execute_telegram_broadcast
+            db = SessionLocal()
+            import models
+            admin = db.query(models.User).filter(models.User.role == "admin").first()
+            if admin:
+                pending_tasks = execute_retrieve_memory("all", "pending", str(admin.id), db)
+                if "No records found" not in pending_tasks:
+                    prompt = f"You are SAM AI. This is a 15-minute interval check. The user has these pending items (tasks/finances):\n{pending_tasks}\n\nWrite a friendly, short update to remind them what is pending. Do not be annoying. Format as a TOOL call to TELEGRAM: `[TOOL: TELEGRAM] {{\"message\": \"...\"}}`"
+                    resp = get_ai_response(user_message=prompt, system_prompt="You are SAM AI's Proactive Agent.")
+                    
+                    import re, json
+                    match = re.search(r'\[TOOL:\s*TELEGRAM\]\s*({.*?})', resp, re.DOTALL)
+                    if match:
+                        payload = json.loads(match.group(1))
+                        execute_telegram_broadcast(payload.get("message", ""), db)
+                        print("[Agent] Successfully sent 15-min reminder!")
+            db.close()
+        except Exception as e:
+            print(f"[Agent 15-min Error] {e}")
             
     scheduler.add_job(proactive_agent_wakeup, 'cron', hour=8, minute=0)
+    scheduler.add_job(fifteen_minute_reminder, 'interval', minutes=15)
     scheduler.start()
     print("APScheduler started!")
 
