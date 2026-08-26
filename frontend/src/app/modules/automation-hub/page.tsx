@@ -11,18 +11,50 @@ export default function AutomationHub() {
   // Mock progress for UI demonstration
   const [progress, setProgress] = useState(0);
 
-  const startAutonomousTask = () => {
+  const startAutonomousTask = async () => {
     if (!goal) return;
     setIsRunning(true);
-    let p = 0;
-    const interval = setInterval(() => {
-      p += 2;
-      setProgress(p);
-      if (p >= 100) {
-        clearInterval(interval);
-        setIsRunning(false);
+    setProgress(0);
+    
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/api/autonomous/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal, context })
+      });
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.replace('data: ', ''));
+              setProgress(data.progress);
+              
+              if (data.status === 'COMPLETE' || data.progress >= 100 && data.agent === 'system') {
+                setIsRunning(false);
+              }
+            } catch (e) {
+              console.error("Parse error", e);
+            }
+          }
+        }
       }
-    }, 100);
+    } catch (e) {
+      console.error(e);
+      setIsRunning(false);
+    }
   };
 
   return (
