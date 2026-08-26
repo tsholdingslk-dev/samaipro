@@ -30,10 +30,18 @@ export default function AutomationHub() {
             MetaTrader 5 Expert Advisor for Opening Range Breakout strategy. Includes SMC Liquidity algorithms.
           </p>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="btn-primary" style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <button 
+              className="btn-primary" 
+              style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}
+              onClick={() => window.open('http://localhost/samai/super_app_projects/orb/orb_mt5_bot.py', '_blank')}
+            >
               <Download size={16} /> Source (.mq5)
             </button>
-            <button className="btn-primary" style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px', background: '#10b981' }}>
+            <button 
+              className="btn-primary" 
+              style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px', background: '#10b981' }}
+              onClick={() => alert('Compiled EA downloading not configured yet. Run the python script directly.')}
+            >
               <Download size={16} /> Compiled (.ex5)
             </button>
           </div>
@@ -53,7 +61,11 @@ export default function AutomationHub() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', flex: 1 }}>
             Python-based Gemini AI pipeline to extract MCQ questions from PDFs into structured Excel templates.
           </p>
-          <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: '#3b82f6' }}
+            onClick={() => window.open('http://localhost:5000', '_blank')}
+          >
             <Play size={16} /> Launch Extractor Engine
           </button>
         </div>
