@@ -29,7 +29,11 @@ export default function WebEditorIDE() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', flex: 1 }}>
             Full-stack web editor interface for editing HTML, JS, and backend templates.
           </p>
-          <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: '#14b8a6' }}>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: '#14b8a6' }}
+            onClick={() => window.open('http://localhost/samai/super_app_projects/sameditor/index.php', '_blank')}
+          >
             <MonitorPlay size={16} /> Open Editor
           </button>
         </div>
@@ -48,7 +52,11 @@ export default function WebEditorIDE() {
           <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', flex: 1 }}>
             Advanced IDE environment for Flutter Reconstruction (samvs project).
           </p>
-          <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}
+            onClick={() => window.open('http://localhost/samai/super_app_projects/samvs/index.php', '_blank')}
+          >
             <MonitorPlay size={16} /> Open IDE
           </button>
         </div>
