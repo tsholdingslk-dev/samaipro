@@ -134,8 +134,8 @@ function App() {
           <FileText size={24} color="var(--accent-primary)" />
           PDF Master Pro
         </div>
-        <div className="header-actions">
-          <button className="btn" onClick={triggerFileInput}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button className="btn" onClick={triggerFileInput} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', color: '#fff' }}>
             <Upload size={18} />
             Open PDF
           </button>
@@ -144,8 +144,9 @@ function App() {
             ref={fileInputRef} 
             onChange={handleFileUpload} 
             accept="application/pdf"
+            style={{ display: 'none' }}
           />
-          <button className="btn btn-primary" disabled={!file} onClick={handleExport}>
+          <button className="btn btn-primary" disabled={!file} onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#8b5cf6', border: 'none', borderRadius: '8px', cursor: file ? 'pointer' : 'not-allowed', color: '#fff', opacity: file ? 1 : 0.5 }}>
             <Download size={18} />
             Export
           </button>
