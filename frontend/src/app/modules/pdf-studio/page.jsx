@@ -16,7 +16,56 @@ function App() {
   const [annotations, setAnnotations] = useState([])
   const [selectedColor, setSelectedColor] = useState('#ff0000')
   const [aiTab, setAiTab] = useState('chat')
+  
+  // AI States
+  const [chatInput, setChatInput] = useState('')
+  const [chatResponse, setChatResponse] = useState('')
+  const [summaryResponse, setSummaryResponse] = useState('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
   const fileInputRef = useRef(null)
+
+  const handleAskAI = async () => {
+    if (!file || !chatInput.trim()) return;
+    setIsAiLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('prompt', chatInput);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/pdf-studio/chat`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      setChatResponse(data.response || "No response received.");
+    } catch (e) {
+      console.error(e);
+      setChatResponse("Error connecting to AI Assistant.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  }
+
+  const handleSummary = async () => {
+    if (!file) return;
+    setIsAiLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/pdf-studio/summary`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      setSummaryResponse(data.response || "No summary generated.");
+    } catch (e) {
+      console.error(e);
+      setSummaryResponse("Error generating summary.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  }
 
   const hexToRgbLib = (hex) => {
     if (!hex) return rgb(0,0,0);
@@ -272,23 +321,66 @@ function App() {
               <div className="ai-message">
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Document Chat</p>
                 <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Ask me anything about this PDF. I can extract points, find data, or answer questions.</p>
-                {/* Chat Input Placeholder */}
-                <input type="text" placeholder="e.g. What is the total amount?" style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} disabled={!file} />
+                
+                <input 
+                  type="text" 
+                  placeholder="e.g. What is the total amount?" 
+                  style={{ width: '100%', marginTop: '16px', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} 
+                  disabled={!file || isAiLoading}
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
+                />
+                
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', marginTop: '8px', background: '#8b5cf6', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', cursor: (file && !isAiLoading) ? 'pointer' : 'not-allowed', opacity: (file && !isAiLoading) ? 1 : 0.5 }} 
+                  disabled={!file || isAiLoading}
+                  onClick={handleAskAI}
+                >
+                  {isAiLoading ? 'Thinking...' : 'Ask AI'}
+                </button>
+
+                {chatResponse && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: '3px solid #8b5cf6' }}>
+                    {chatResponse}
+                  </div>
+                )}
               </div>
             )}
+            
             {aiTab === 'summary' && (
               <div className="ai-message">
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Summarizer</p>
                 <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Generate an executive summary, key points, and action items from this document.</p>
-                <button className="btn-primary" style={{ width: '100%', marginTop: '16px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '8px', borderRadius: '6px', cursor: file ? 'pointer' : 'not-allowed' }} disabled={!file}>Generate Summary</button>
+                
+                <button 
+                  className="btn-primary" 
+                  style={{ width: '100%', marginTop: '16px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '8px', borderRadius: '6px', cursor: (file && !isAiLoading) ? 'pointer' : 'not-allowed', opacity: (file && !isAiLoading) ? 1 : 0.5 }} 
+                  disabled={!file || isAiLoading}
+                  onClick={handleSummary}
+                >
+                  {isAiLoading ? 'Analyzing Document...' : 'Generate Summary'}
+                </button>
+
+                {summaryResponse && (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-primary)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-primary)', border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap' }}>
+                    {summaryResponse}
+                  </div>
+                )}
               </div>
             )}
+            
             {aiTab === 'rewrite' && (
               <div className="ai-message">
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Rewrite</p>
                 <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8 }}>Select text in the PDF to make it professional, shorten it, or fix grammar.</p>
+                <div style={{ padding: '12px', marginTop: '16px', background: 'var(--bg-primary)', border: '1px dashed var(--border-color)', borderRadius: '6px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Coming soon in Phase 4!
+                </div>
               </div>
             )}
+            
             {aiTab === 'translate' && (
               <div className="ai-message">
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--text-primary)' }}>AI Translation</p>
