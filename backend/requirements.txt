@@ -17,7 +17,6 @@ psycopg2-binary
 Pillow
 SpeechRecognition
 moviepy
-pyswisseph
 python-dateutil
 httpx
 beautifulsoup4

@@ -158,6 +158,39 @@ async def startup_event():
         _db.close()
     except Exception:
         pass
+        
+    # Start Agent Background Proactive Cron Job
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    scheduler = AsyncIOScheduler()
+    
+    async def proactive_agent_wakeup():
+        print("[Agent] Waking up for daily summary...")
+        try:
+            from database import SessionLocal
+            from ai_engine import get_ai_response
+            from tools.agent_tools import execute_retrieve_memory, execute_telegram_broadcast
+            db = SessionLocal()
+            import models
+            admin = db.query(models.User).filter(models.User.role == "admin").first()
+            if admin:
+                pending_tasks = execute_retrieve_memory("all", "pending", str(admin.id), db)
+                prompt = f"You are SAM AI. This is your automatic morning wakeup. Here are the user's pending tasks:\n{pending_tasks}\n\nPlease generate a morning briefing message for the user summarizing what they need to do today, and use the TELEGRAM tool to send it to them! Format the tool call correctly as JSON: `[TOOL: TELEGRAM] {{\"message\": \"...\"}}`"
+                
+                resp = get_ai_response(user_message=prompt, system_prompt="You are SAM AI's Proactive Agent.")
+                
+                import re, json
+                match = re.search(r'\[TOOL:\s*TELEGRAM\]\s*({.*?})', resp, re.DOTALL)
+                if match:
+                    payload = json.loads(match.group(1))
+                    execute_telegram_broadcast(payload.get("message", ""), db)
+                    print("[Agent] Successfully sent daily summary to Telegram!")
+            db.close()
+        except Exception as e:
+            print(f"[Agent Error] {e}")
+            
+    scheduler.add_job(proactive_agent_wakeup, 'cron', hour=8, minute=0)
+    scheduler.start()
+    print("APScheduler started!")
 
 @app.get("/health")
 def health_check():

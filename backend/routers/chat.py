@@ -289,9 +289,63 @@ Provide a brief explanation of your changes outside the code block.
 
 When interacting with the user, provide actionable Flutter code snippets, clear architectural advice, and professional guidance. Output your responses in clean Markdown."""
 
-    # 9. Generate AI Response
+    # 9. Generate AI Response and Handle Tool Calls
+    system_prompt += "\n\n[AUTONOMOUS AGENT TOOLS]\nYou have access to tools. To use a tool, output a JSON block exactly like this: `[TOOL: tool_name] {\"param\": \"value\"}`. Do not output anything else on that line.\n"
+    system_prompt += "Available Tools:\n"
+    system_prompt += "1. TELEGRAM: Send a message to user's Telegram. Payload: {\"message\": \"...\"}\n"
+    system_prompt += "2. SAVE_MEMORY: Save a task, reminder, or finance. Payload: {\"type\": \"task|finance|reminder\", \"content\": \"...\"}\n"
+    system_prompt += "3. RETRIEVE_MEMORY: Get saved tasks/finances. Payload: {\"type\": \"task|finance|reminder|all\", \"status\": \"pending|completed|all\"}\n"
+    system_prompt += "4. WEB_SEARCH: Search the live internet. Payload: {\"query\": \"...\"}\n"
+    
+    import json
+    import re
+    from tools.agent_tools import execute_telegram_broadcast, execute_save_memory, execute_retrieve_memory, execute_web_search
+
+    max_tool_iterations = 3
+    current_iteration = 0
+    
+    # Initial LLM call
     ai_text = get_ai_response(user_message=enhanced_message, chat_history=chat_history, system_prompt=system_prompt)
     
+    # Tool execution loop
+    while "[TOOL:" in ai_text and current_iteration < max_tool_iterations:
+        current_iteration += 1
+        
+        # Parse the tool call
+        tool_pattern = r'\[TOOL:\s*([A-Z_]+)\]\s*({.*?})'
+        match = re.search(tool_pattern, ai_text, re.DOTALL)
+        
+        if not match:
+            break # Malformed tool call
+            
+        tool_name = match.group(1)
+        tool_payload_str = match.group(2)
+        tool_result = f"[Tool {tool_name} Error: Could not parse payload]"
+        
+        try:
+            payload = json.loads(tool_payload_str)
+            if tool_name == "TELEGRAM":
+                tool_result = execute_telegram_broadcast(payload.get("message", ""), db)
+            elif tool_name == "SAVE_MEMORY":
+                tool_result = execute_save_memory(payload.get("type", "general"), payload.get("content", ""), current_user["user_id"], db)
+            elif tool_name == "RETRIEVE_MEMORY":
+                tool_result = execute_retrieve_memory(payload.get("type", "all"), payload.get("status", "pending"), current_user["user_id"], db)
+            elif tool_name == "WEB_SEARCH":
+                tool_result = execute_web_search(payload.get("query", ""))
+            else:
+                tool_result = f"[Tool {tool_name} not recognized]"
+        except Exception as e:
+            tool_result = f"[Tool {tool_name} Error: {str(e)}]"
+            
+        # Append the result and call AI again
+        feedback_message = f"{ai_text}\n\n[SYSTEM: Tool execution returned: {tool_result}]\nPlease continue or finalize your response based on this."
+        ai_text = get_ai_response(user_message=feedback_message, chat_history=chat_history, system_prompt=system_prompt)
+        
+    # Final cleanup to remove any lingering raw tool JSONs if the AI forgot to hide them
+    ai_text = re.sub(r'\[TOOL:.*?}.*?\n', '', ai_text, flags=re.DOTALL).strip()
+    if not ai_text:
+        ai_text = "Done! I have completed the requested actions."
+
     # 10. Save AI's Response to Database
     ai_chat = models.Chat(
         project_id=project_id,

@@ -370,3 +370,14 @@ class UsageQuota(Base):
     date = Column(DateTime, default=datetime.utcnow)
     count = Column(Integer, default=0)
     limit = Column(Integer, default=0)
+class AgentMemory(Base):
+    __tablename__ = "agent_memories"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), index=True)
+    memory_type = Column(String(50)) # task, finance, reminder, general
+    content = Column(Text)
+    status = Column(String(50), default="pending") # pending, completed
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    due_date = Column(DateTime(timezone=True), nullable=True)
+
