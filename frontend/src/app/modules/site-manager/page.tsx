@@ -4,9 +4,21 @@ import { Globe, Server, ExternalLink, Settings } from 'lucide-react';
 
 export default function SiteManager() {
   const sites = [
-    { name: "3zeronetwork.com", type: "PHP / Custom", status: "Active" },
-    { name: "AusLanka", type: "HTML / PHP", status: "Active" },
-    { name: "Kannagi Kalalayam", type: "WordPress", status: "Active" }
+    { 
+      name: "3zeronetwork.com", type: "PHP / Custom", status: "Active",
+      manageUrl: "http://localhost/samai/super_app_projects/3z/admin/index.php",
+      siteUrl: "http://localhost/samai/super_app_projects/3zeronetwork.com/index.php"
+    },
+    { 
+      name: "AusLanka", type: "HTML / PHP", status: "Active",
+      manageUrl: "http://localhost/samai/super_app_projects/auslanka/admin/dashboard.php",
+      siteUrl: "http://localhost/samai/super_app_projects/auslanka/index.php"
+    },
+    { 
+      name: "Kannagi Kalalayam", type: "WordPress", status: "Active",
+      manageUrl: "http://localhost/samai/super_app_projects/kannagi/wp-admin/index.php",
+      siteUrl: "http://localhost/samai/super_app_projects/kannagi/index.php"
+    }
   ];
 
   return (
@@ -39,10 +51,18 @@ export default function SiteManager() {
               <span style={{ padding: '4px 12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>
                 {site.status}
               </span>
-              <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}>
+              <button 
+                className="btn-primary" 
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', border: '1px solid var(--border)' }}
+                onClick={() => window.open(site.manageUrl, '_blank')}
+              >
                 <Settings size={16} /> Manage
               </button>
-              <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                className="btn-primary" 
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                onClick={() => window.open(site.siteUrl, '_blank')}
+              >
                 <ExternalLink size={16} /> Open Site
               </button>
             </div>
