@@ -8,6 +8,8 @@ from dotenv import set_key, load_dotenv
 
 import models
 import schemas
+from automations.news_processor import process_news_link
+from fastapi import BackgroundTasks
 from database import get_db
 import security
 
@@ -53,7 +55,7 @@ def get_status():
     }
 
 @router.post("/webhook")
-async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
+async def telegram_webhook(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     data = await request.json()
     
     if "message" not in data or "text" not in data["message"]:
@@ -177,6 +179,9 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
             
         send_telegram_message(chat_id, f"Master Key rotated successfully.\nNew Key:\n<code>{new_key}</code>")
         
+    elif text.startswith("http"):
+        background_tasks.add_task(process_news_link, text, chat_id)
+        send_telegram_message(chat_id, "? Link received! Placed in queue for processing...")
     else:
         send_telegram_message(chat_id, "Unknown command. Send /help for a list of commands.")
         

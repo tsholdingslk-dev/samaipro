@@ -12,7 +12,8 @@ from routers import (
     multimodel, security as security_router, permissions as permissions_router,
     validation as validation_router, analytics as analytics_router,
     gateway as gateway_router, sam_ai as sam_ai_router,
-    secrets as secrets_router
+    secrets as secrets_router,
+    developer
 )
 from routers.modules.module import router as module_router
 
@@ -101,7 +102,8 @@ routers = [
     media.router, image.router, agents.router, learning.router,
     api_proxy.router, lead_gen.router, crypto.router, auto_integrator.router,
     ai_intelligence.router, translate.router, social_news.router,
-    flutter_build.router, telegram_bot.router, knowledge.router, orchestrator.router, multimodel.router, security_router.router, permissions_router.router, validation_router.router, analytics_router.router, gateway_router.router, sam_ai_router.router, secrets_router.router
+    flutter_build.router, telegram_bot.router, knowledge.router, orchestrator.router, multimodel.router, security_router.router, permissions_router.router, validation_router.router, analytics_router.router, gateway_router.router, sam_ai_router.router, secrets_router.router,
+    developer.router
 ]
 
 # Mount under standard paths (/crypto/market, /chat, etc.)
