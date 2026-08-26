@@ -309,9 +309,9 @@ class TaskRouter:
             f"  Module: {module.module_name}\n"
             f"  Agent: {module.agent_name or 'None (direct)'}\n"
             f"  Capabilities: {', '.join(module.capabilities)}\n\n"
-            "CRITICAL LANGUAGE RULE: When speaking Sinhala, use natural conversational "
-            "spoken Sinhala (Katha Karana Sinhala) or Sinhala-English (Singlish). "
-            "Never use robot-like formal Sinhala. Use English if unsure.\n"
+            "CRITICAL LANGUAGE RULE: ALWAYS respond in the exact same language the user uses. "
+            "If they speak Tamil, reply in Tamil. If English, reply in English. "
+            "NEVER use Sinhala unless the user explicitly speaks to you in Sinhala.\n"
             "Focus on providing accurate, helpful, and culturally appropriate responses "
             "for Sri Lankan users."
         )
