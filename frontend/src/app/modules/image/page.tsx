@@ -1,668 +1,571 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { apiFetch } from "../../../utils/api";
+import { 
+  Sparkles, Image as ImageIcon, Wand2, Download, Copy, Check, 
+  ArrowLeft, RefreshCw, Sliders, Maximize2, Layers, Zap, 
+  Eye, Filter, Crop, Type, Share2, Compass, Shield, Palette,
+  Camera, Sun, Moon, Film, Terminal, Flame, Star
+} from "lucide-react";
 
-type Tab = "generate" | "prompt" | "edit" | "resize" | "filter" | "text";
+interface GeneratedImage {
+  id: string;
+  url: string;
+  prompt: string;
+  style: string;
+  model: string;
+  aspectRatio: string;
+  timestamp: string;
+}
+
+const STYLE_PRESETS = [
+  { id: "photorealistic", name: "Photorealism 8K", icon: "📸", promptAdd: "hyperrealistic 8k photo, highly detailed, raw photography, 85mm f/1.4 lens, natural lighting, masterpiece" },
+  { id: "cinematic", name: "Cinematic Film", icon: "🎬", promptAdd: "cinematic still, 35mm film, anamorphic lighting, blockbuster movie color grading, dramatic depth of field" },
+  { id: "anime", name: "Anime & Manga", icon: "🌸", promptAdd: "Makoto Shinkai aesthetic, studio ghibli anime style, vibrant colors, clean linework, atmospheric clouds" },
+  { id: "cyberpunk", name: "Cyberpunk Neon", icon: "🌆", promptAdd: "cyberpunk city, neon glow, wet reflections, holographic advertisements, futuristic octane render" },
+  { id: "3d-pixar", name: "3D Animation", icon: "🧸", promptAdd: "Pixar style 3d render, clay render, subsurface scattering, Disney animation character, Unreal Engine 5" },
+  { id: "concept-art", name: "Digital Art", icon: "🖌️", promptAdd: "trending on Artstation, epic digital painting, dynamic composition, master brush strokes, fantasy concept" },
+  { id: "isometric", name: "3D Isometric", icon: "📐", promptAdd: "isometric 3d diorama, blender 3d render, miniature tilt-shift, vibrant pastel palette, soft lighting" },
+  { id: "vintage-oil", name: "Oil Painting", icon: "🏛️", promptAdd: "classical renaissance oil painting, textured canvas, chiaroscuro lighting, Rembrandt masterpiece" },
+];
+
+const ASPECT_RATIOS = [
+  { id: "1:1", label: "Square (1:1)", width: 1024, height: 1024, desc: "Feed / Profile" },
+  { id: "9:16", label: "Portrait (9:16)", width: 720, height: 1280, desc: "Story / Reels" },
+  { id: "16:9", label: "Landscape (16:9)", width: 1280, height: 720, desc: "YouTube / Wallpaper" },
+  { id: "4:5", label: "Social (4:5)", width: 896, height: 1120, desc: "Instagram Post" },
+];
+
+const SAMPLE_INSPIRATIONS = [
+  "A majestic cybernetic lion roaring on a neon rooftop in futuristic Neo-Tokyo, rain reflections, volumetric lights",
+  "An ethereal floating island with ancient Greek temple and glowing waterfall cascading into galaxy stars",
+  "Close-up portrait of a fantasy elven princess with bioluminescent freckles and diamond crown, 85mm portrait",
+  "Cozy cyberpunk coffee shop inside a giant retro robot head, warm volumetric lighting, rain outside",
+  "A mystical crystal tree glowing with golden liquid energy in a foggy enchanted forest at twilight"
+];
 
 export default function ImagePage() {
-  const [activeTab, setActiveTab] = useState<Tab>("generate");
+  const [activeTab, setActiveTab] = useState<"studio" | "prompt-lab" | "editor">("studio");
+  
+  // Generation States
+  const [prompt, setPrompt] = useState("A majestic cybernetic lion with glowing neon circuits on a rainy Tokyo rooftop at night, 8k masterpiece");
+  const [negativePrompt, setNegativePrompt] = useState("blurry, low quality, distorted, extra limbs, bad anatomy, watermark");
+  const [selectedStyle, setSelectedStyle] = useState("photorealistic");
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [selectedModel, setSelectedModel] = useState("flux");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState("");
-  const [error, setError] = useState("");
+  const [currentImage, setCurrentImage] = useState<string>("https://image.pollinations.ai/prompt/majestic%20cybernetic%20lion%20glowing%20neon%20circuits%20rainy%20tokyo%20rooftop%20at%20night%20photorealistic%208k?width=1024&height=1024&model=flux");
+  const [gallery, setGallery] = useState<GeneratedImage[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [magicPrompting, setMagicPrompting] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
 
-  // Direct Generation state
-  const [genPrompt, setGenPrompt] = useState("");
-  const [genWidth, setGenWidth] = useState("1024");
-  const [genHeight, setGenHeight] = useState("1024");
-  const [genModel, setGenModel] = useState("flux-realism");
-  const [genImageUrl, setGenImageUrl] = useState("");
+  // Editor states
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState<string>("");
+  const [editInstruction, setEditInstruction] = useState("");
+  const [editOutput, setEditOutput] = useState<string>("");
+  const [editLoading, setEditLoading] = useState(false);
 
-  // Prompt state
-  const [promptDesc, setPromptDesc] = useState("");
-  const [promptStyle, setPromptStyle] = useState("photorealistic");
-  const [generatedPrompt, setGeneratedPrompt] = useState("");
+  // Prompt Lab state
+  const [simpleIdea, setSimpleIdea] = useState("");
+  const [expandedPrompt, setExpandedPrompt] = useState("");
+  const [promptLabLoading, setPromptLabLoading] = useState(false);
 
-  const handleDirectGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!genPrompt.trim()) return;
+  const getActiveDimensions = () => {
+    const found = ASPECT_RATIOS.find(a => a.id === aspectRatio);
+    return found ? { width: found.width, height: found.height } : { width: 1024, height: 1024 };
+  };
+
+  const handleGenerate = async (customPrompt?: string) => {
+    const finalPrompt = customPrompt || prompt;
+    if (!finalPrompt.trim()) return;
+
     setLoading(true);
-    setError("");
-    setResult("");
-    setGenImageUrl("");
+    const { width, height } = getActiveDimensions();
+    const styleObj = STYLE_PRESETS.find(s => s.id === selectedStyle);
+    const enrichedPrompt = styleObj ? `${finalPrompt}, ${styleObj.promptAdd}` : finalPrompt;
 
     try {
       const formData = new FormData();
-      formData.append("prompt", genPrompt);
-      formData.append("width", genWidth);
-      formData.append("height", genHeight);
-      formData.append("model", genModel);
-
-
+      formData.append("prompt", enrichedPrompt);
+      formData.append("width", String(width));
+      formData.append("height", String(height));
+      formData.append("model", selectedModel);
 
       const data = await apiFetch("/image/generate", {
         method: "POST",
         body: formData
       });
 
-      setGenImageUrl(data.image_url);
-      setResult("AI Image generated successfully!");
-    } catch (err: any) {
-      setError(err.message || "Generation failed");
+      const imgUrl = data.url || data.image_url;
+      if (imgUrl) {
+        setCurrentImage(imgUrl);
+        const newImg: GeneratedImage = {
+          id: String(Date.now()),
+          url: imgUrl,
+          prompt: finalPrompt,
+          style: selectedStyle,
+          model: selectedModel,
+          aspectRatio,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setGallery(prev => [newImg, ...prev.slice(0, 15)]);
+      }
+    } catch {
+      // Direct Pollinations fallback
+      const encoded = encodeURIComponent(enrichedPrompt.substring(0, 180));
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${width}&height=${height}&model=${selectedModel}&nologo=true`;
+      setCurrentImage(fallbackUrl);
+      setGallery(prev => [{
+        id: String(Date.now()),
+        url: fallbackUrl,
+        prompt: finalPrompt,
+        style: selectedStyle,
+        model: selectedModel,
+        aspectRatio,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }, ...prev.slice(0, 15)]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Edit state
-  const [editImage, setEditImage] = useState<File | null>(null);
-  const [editInstruction, setEditInstruction] = useState("");
-  const [editInstructions, setEditInstructions] = useState("");
-  const [editImagePreview, setEditImagePreview] = useState("");
-
-  // Resize state
-  const [resizeImage, setResizeImage] = useState<File | null>(null);
-  const [resizeWidth, setResizeWidth] = useState("512");
-  const [resizeHeight, setResizeHeight] = useState("512");
-  const [resizedImage, setResizedImage] = useState("");
-
-  // Filter state
-  const [filterImage, setFilterImage] = useState<File | null>(null);
-  const [filterType, setFilterType] = useState("grayscale");
-  const [filteredImage, setFilteredImage] = useState("");
-
-  // Text state
-  const [textImage, setTextImage] = useState<File | null>(null);
-  const [textContent, setTextContent] = useState("");
-  const [textX, setTextX] = useState("10");
-  const [textY, setTextY] = useState("10");
-  const [textSize, setTextSize] = useState("36");
-  const [textColor, setTextColor] = useState("#ffffff");
-  const [textResultImage, setTextResultImage] = useState("");
-
-  const handlePrompt = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setResult("");
-
+  const handleMagicEnhancePrompt = async () => {
+    if (!prompt.trim()) return;
+    setMagicPrompting(true);
     try {
       const formData = new FormData();
-      formData.append("description", promptDesc);
-      formData.append("style", promptStyle);
-      formData.append("project_id", "");
-
-      const data = await apiFetch("/image/generate-prompt", {
+      formData.append("description", prompt);
+      formData.append("style", selectedStyle);
+      const res = await apiFetch("/image/generate-prompt", {
         method: "POST",
-        body: formData,
+        body: formData
       });
-
-      setGeneratedPrompt(data.prompt);
-      setResult(`Generated image prompt using ${data.provider}`);
-    } catch (err: any) {
-      setError(err.message || "Prompt generation failed");
+      if (res && res.prompt) {
+        setPrompt(res.prompt);
+      }
+    } catch {
+      // Local enhancement
+      setPrompt(`${prompt}, ultra-detailed, cinematic lighting, volumetric shadows, octane render 8k, masterpiece, unreal engine 5`);
     } finally {
-      setLoading(false);
+      setMagicPrompting(false);
     }
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editImage) return;
-
-    setLoading(true);
-    setError("");
-    setResult("");
-
+  const handlePromptLabGenerate = async () => {
+    if (!simpleIdea.trim()) return;
+    setPromptLabLoading(true);
     try {
       const formData = new FormData();
-      formData.append("image", editImage);
-      formData.append("instruction", editInstruction);
-      formData.append("project_id", "");
-
-      const data = await apiFetch("/image/edit", {
+      formData.append("description", simpleIdea);
+      formData.append("style", selectedStyle);
+      const res = await apiFetch("/image/generate-prompt", {
         method: "POST",
-        body: formData,
+        body: formData
       });
-
-      setEditImagePreview(`data:image/png;base64,${data.image_base64}`);
-      setResult(`Edited image using ${data.provider}`);
-    } catch (err: any) {
-      setError(err.message || "Edit failed");
+      if (res && res.prompt) {
+        setExpandedPrompt(res.prompt);
+      }
+    } catch {
+      setExpandedPrompt(`${simpleIdea}, intricate details, award-winning photography, photorealistic 8k, volumetric rays, dramatic depth of field`);
     } finally {
-      setLoading(false);
+      setPromptLabLoading(false);
     }
   };
 
-  const handleResize = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resizeImage) return;
-
-    setLoading(true);
-    setError("");
-
+  const handleDownload = async (urlToDownload?: string) => {
+    const targetUrl = urlToDownload || currentImage;
+    if (!targetUrl) return;
     try {
-      const formData = new FormData();
-      formData.append("image", resizeImage);
-      formData.append("width", resizeWidth);
-      formData.append("height", resizeHeight);
-      formData.append("project_id", "");
-
-      const data = await apiFetch("/image/resize", {
-        method: "POST",
-        body: formData,
-      });
-
-      setResizedImage(`data:image/png;base64,${data.image_base64}`);
-      setResult(`Resized to ${data.new_size}`);
-    } catch (err: any) {
-      setError(err.message || "Resize failed");
-    } finally {
-      setLoading(false);
+      const res = await fetch(targetUrl);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `sam-ai-image-${Date.now()}.png`;
+      a.click();
+    } catch {
+      window.open(targetUrl, "_blank");
     }
   };
 
-  const handleFilter = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!filterImage) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("image", filterImage);
-      formData.append("filter_type", filterType);
-      formData.append("project_id", "");
-
-      const data = await apiFetch("/image/filter", {
-        method: "POST",
-        body: formData,
-      });
-
-      setFilteredImage(`data:image/png;base64,${data.image_base64}`);
-      setResult(`Applied ${data.filter_applied} filter`);
-    } catch (err: any) {
-      setError(err.message || "Filter failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddText = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!textImage) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("image", textImage);
-      formData.append("text", textContent);
-      formData.append("x", textX);
-      formData.append("y", textY);
-      formData.append("font_size", textSize);
-      formData.append("color", textColor);
-      formData.append("project_id", "");
-
-      const data = await apiFetch("/image/add-text", {
-        method: "POST",
-        body: formData,
-      });
-
-      setTextResultImage(`data:image/png;base64,${data.image_base64}`);
-      setResult("Added text overlay to image");
-    } catch (err: any) {
-      setError(err.message || "Text add failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setResult("Copied to clipboard!");
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="page-container">
-      <div className="glass-panel animate-fade-in" style={{ width: "100%", maxWidth: "1000px" }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🖼️ Image Module</h1>
-          <p style={{ color: "var(--text-muted)" }}>
-            Generate prompts, edit, resize, filter, and add text to images
-          </p>
-        </div>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(to bottom right, #090a12, #0d101a)", color: "#f3f4f6", padding: "2rem", fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ maxWidth: "1350px", margin: "0 auto" }}>
+        
+        {/* ── Top Header Navigation ── */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.8rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <Link href="/modules" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#9ca3af", textDecoration: "none", fontSize: "0.85rem", marginBottom: "0.5rem", padding: "4px 10px", borderRadius: "6px", background: "rgba(255,255,255,0.05)" }}>
+              <ArrowLeft size={14} /> Back to Modules
+            </Link>
+            <h1 style={{ fontSize: "2.3rem", fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: "0.8rem", background: "linear-gradient(135deg, #a855f7, #ec4899, #f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              <Sparkles size={34} color="#c084fc" />
+              SAM AI Image Studio Pro
+            </h1>
+          </div>
 
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
-          {[
-            { key: "generate", label: "🎨 Generate AI Image" },
-            { key: "prompt", label: "Generate Prompt" },
-            { key: "edit", label: "Edit" },
-            { key: "resize", label: "Resize" },
-            { key: "filter", label: "Filter" },
-            { key: "text", label: "Add Text" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as Tab)}
-              className="btn-primary"
-              style={{
-                background: activeTab === tab.key ? "var(--primary)" : "transparent",
-                border: `2px solid var(--primary)`,
-                color: activeTab === tab.key ? "white" : "var(--primary)",
-                padding: "0.5rem 1rem",
-                fontSize: "0.9rem"
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {error && <div className="error-message">{error}</div>}
-        {result && <div style={{ color: "var(--success)", marginBottom: "1rem", textAlign: "center" }}>{result}</div>}
-
-        {activeTab === "generate" && (
-          <form onSubmit={handleDirectGenerate}>
-            <div className="input-group">
-              <label>AI Prompt Description</label>
-              <textarea
-                className="input-field"
-                value={genPrompt}
-                onChange={(e) => setGenPrompt(e.target.value)}
-                placeholder="Cyberpunk futuristic city neon lights 8k masterpiece..."
-                rows={3}
-                required
-                style={{ resize: "vertical" }}
-              />
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div>
-                <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Model</label>
-                <select className="input-field" value={genModel} onChange={(e) => setGenModel(e.target.value)}>
-                  <option value="flux-realism">Flux Realism (Cinematic/Photo)</option>
-                  <option value="flux">Flux (High Quality)</option>
-                  <option value="flux-3d">Flux 3D (Render/Game)</option>
-                  <option value="flux-anime">Flux Anime (Illustration)</option>
-                  <option value="turbo">Turbo (Basic Fast)</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Width</label>
-                <select className="input-field" value={genWidth} onChange={(e) => setGenWidth(e.target.value)}>
-                  <option value="512">512 px</option>
-                  <option value="768">768 px</option>
-                  <option value="1024">1024 px</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", display: "block", marginBottom: "0.3rem" }}>Height</label>
-                <select className="input-field" value={genHeight} onChange={(e) => setGenHeight(e.target.value)}>
-                  <option value="512">512 px</option>
-                  <option value="768">768 px</option>
-                  <option value="1024">1024 px</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Generating Image..." : "✨ Generate Image"}
-            </button>
-
-            {genImageUrl && (
-              <div style={{ marginTop: "2rem", textAlign: "center" }}>
-                <h3 style={{ marginBottom: "1rem" }}>Generated Result:</h3>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={genImageUrl}
-                  alt="Generated AI Art"
-                  style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}
-                />
-                <div style={{ marginTop: "1rem" }}>
-                  <a href={genImageUrl} target="_blank" rel="noreferrer" className="btn-primary" style={{ textDecoration: "none", padding: "0.5rem 1.5rem" }}>
-                    ⬇ Open / Download High Res
-                  </a>
-                </div>
-              </div>
-            )}
-          </form>
-        )}
-
-        {activeTab === "prompt" && (
-          <form onSubmit={handlePrompt}>
-            <div className="input-group">
-              <label>Image Description</label>
-              <textarea
-                className="input-field"
-                value={promptDesc}
-                onChange={(e) => setPromptDesc(e.target.value)}
-                placeholder="Describe the image you want to generate..."
-                rows={4}
-                required
-                style={{ resize: "vertical" }}
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Style</label>
-              <select
-                className="input-field"
-                value={promptStyle}
-                onChange={(e) => setPromptStyle(e.target.value)}
-                style={{ color: "var(--text-main)" }}
+          {/* Navigation Tabs */}
+          <div style={{ display: "flex", gap: "6px", background: "rgba(255,255,255,0.04)", padding: "4px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)" }}>
+            {[
+              { id: 'studio', label: 'AI Generation Studio', icon: Palette },
+              { id: 'prompt-lab', label: 'Prompt Engineer Lab', icon: Wand2 },
+              { id: 'editor', label: 'AI Image Tools', icon: Sliders }
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id as any)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  background: activeTab === t.id ? "linear-gradient(135deg, #a855f7, #7c3aed)" : "transparent",
+                  color: activeTab === t.id ? "#fff" : "#9ca3af",
+                  border: "none", padding: "8px 16px", borderRadius: "8px",
+                  fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+                }}
               >
-                <option value="photorealistic">Photorealistic</option>
-                <option value="digital-art">Digital Art</option>
-                <option value="anime">Anime</option>
-                <option value="3d-render">3D Render</option>
-                <option value="painting">Painting</option>
-                <option value="cartoon">Cartoon</option>
-                <option value="cyberpunk">Cyberpunk</option>
-              </select>
-            </div>
+                <t.icon size={15} /> {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Generating..." : "Generate Prompt"}
-            </button>
-
-            {generatedPrompt && (
-              <div style={{ marginTop: "2rem" }}>
+        {/* ── TAB 1: MAIN STUDIO WORKSPACE ── */}
+        {activeTab === 'studio' && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.2fr", gap: "2rem", alignItems: "start" }}>
+            
+            {/* Left Column: Controls & Prompting */}
+            <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", borderRadius: "20px", padding: "1.8rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              
+              {/* Prompt Input Box */}
+              <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                  <label style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>Generated Prompt:</label>
+                  <label style={{ fontSize: "0.88rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Sparkles size={15} color="#c084fc" /> Master Prompt Description
+                  </label>
                   <button
-                    type="button"
-                    onClick={() => copyToClipboard(generatedPrompt)}
-                    className="btn-primary"
-                    style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem" }}
+                    onClick={handleMagicEnhancePrompt}
+                    disabled={magicPrompting}
+                    style={{ background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)", color: "#c084fc", padding: "3px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
                   >
-                    Copy
+                    <Wand2 size={12} /> {magicPrompting ? "Enhancing..." : "Magic Enhance"}
                   </button>
                 </div>
-                <div style={{
-                  padding: "1rem",
-                  background: "#1e1e1e",
-                  borderRadius: "8px",
-                  whiteSpace: "pre-wrap",
-                  lineHeight: "1.7",
-                  fontSize: "0.95rem"
-                }}>
-                  {generatedPrompt}
+                <textarea
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  rows={4}
+                  placeholder="Describe anything you can imagine in high detail..."
+                  style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "10px", padding: "0.9rem", color: "#fff", fontSize: "0.92rem", lineHeight: 1.5, resize: "vertical", outline: "none", boxSizing: "border-box" }}
+                />
+
+                {/* Quick Inspiration Chips */}
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "0.6rem" }}>
+                  {SAMPLE_INSPIRATIONS.slice(0, 3).map((insp, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPrompt(insp)}
+                      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "#9ca3af", padding: "3px 8px", borderRadius: "6px", fontSize: "0.72rem", cursor: "pointer", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={insp}
+                    >
+                      💡 {insp}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-          </form>
-        )}
 
-        {activeTab === "edit" && (
-          <form onSubmit={handleEdit}>
-            <div className="input-group">
-              <label>Upload Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setEditImage(file);
-                    setEditImagePreview(URL.createObjectURL(file));
-                  }
-                }}
-                required
-              />
-            </div>
-
-            {editImagePreview && (
-              <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-                <img
-                  src={editImagePreview}
-                  alt="Preview"
-                  style={{ maxWidth: "300px", maxHeight: "300px", borderRadius: "8px", border: "1px solid var(--border)" }}
-                />
-              </div>
-            )}
-
-            <div className="input-group">
-              <label>What do you want to do with this image?</label>
-              <textarea
-                className="input-field"
-                value={editInstruction}
-                onChange={(e) => setEditInstruction(e.target.value)}
-                placeholder="e.g., Remove the background, add a sunset, make it more colorful..."
-                rows={3}
-                required
-                style={{ resize: "vertical" }}
-              />
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Analyzing..." : "Get Edit Instructions"}
-            </button>
-
-            {editInstructions && (
-              <div style={{ marginTop: "2rem" }}>
-                <label style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "0.5rem", display: "block" }}>
-                  Editing Instructions:
+              {/* Art Styles Grid */}
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff", display: "block", marginBottom: "0.6rem" }}>
+                  🎨 Artistic Style & Aesthetic
                 </label>
-                <div style={{
-                  padding: "1rem",
-                  background: "rgba(0,0,0,0.2)",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  whiteSpace: "pre-wrap",
-                  lineHeight: "1.7"
-                }}>
-                  {editInstructions}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(135px, 1fr))", gap: "8px" }}>
+                  {STYLE_PRESETS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedStyle(s.id)}
+                      style={{
+                        background: selectedStyle === s.id ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.03)",
+                        border: selectedStyle === s.id ? "1px solid #a855f7" : "1px solid rgba(255,255,255,0.06)",
+                        color: selectedStyle === s.id ? "#fff" : "#9ca3af",
+                        padding: "8px", borderRadius: "10px", textAlign: "left", cursor: "pointer", transition: "all 0.15s"
+                      }}
+                    >
+                      <div style={{ fontSize: "1.1rem", marginBottom: "2px" }}>{s.icon}</div>
+                      <div style={{ fontSize: "0.78rem", fontWeight: 600 }}>{s.name}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-          </form>
-        )}
 
-        {activeTab === "resize" && (
-          <form onSubmit={handleResize}>
-            <div className="input-group">
-              <label>Upload Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setResizeImage(file);
+              {/* Aspect Ratio & Model Engine */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", color: "#9ca3af", display: "block", marginBottom: "0.4rem" }}>Aspect Ratio</label>
+                  <select
+                    value={aspectRatio}
+                    onChange={e => setAspectRatio(e.target.value)}
+                    style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.6rem", color: "#fff", fontSize: "0.85rem", outline: "none" }}
+                  >
+                    {ASPECT_RATIOS.map(a => (
+                      <option key={a.id} value={a.id}>{a.label} · {a.desc}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", color: "#9ca3af", display: "block", marginBottom: "0.4rem" }}>AI Model Engine</label>
+                  <select
+                    value={selectedModel}
+                    onChange={e => setSelectedModel(e.target.value)}
+                    style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.6rem", color: "#fff", fontSize: "0.85rem", outline: "none" }}
+                  >
+                    <option value="flux">Flux.1 Pro (Ultra Realistic)</option>
+                    <option value="flux-realism">Flux Realism (Cinematic)</option>
+                    <option value="turbo">Turbo Fast (Instant Engine)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <button
+                onClick={() => handleGenerate()}
+                disabled={loading || !prompt.trim()}
+                style={{
+                  width: "100%", padding: "1rem",
+                  background: "linear-gradient(135deg, #a855f7, #ec4899, #f59e0b)",
+                  color: "#fff", border: "none", borderRadius: "12px",
+                  fontSize: "1.05rem", fontWeight: 800, cursor: (loading || !prompt.trim()) ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  boxShadow: "0 6px 20px rgba(168,85,247,0.35)", transition: "transform 0.15s"
                 }}
-                required
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Width</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={resizeWidth}
-                  onChange={(e) => setResizeWidth(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Height</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={resizeHeight}
-                  onChange={(e) => setResizeHeight(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Resizing..." : "Resize Image"}
-            </button>
-
-            {resizedImage && (
-              <div style={{ marginTop: "2rem", textAlign: "center" }}>
-                <label style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "0.5rem", display: "block" }}>
-                  Resized Image:
-                </label>
-                <img
-                  src={resizedImage}
-                  alt="Resized"
-                  style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "8px", border: "1px solid var(--border)" }}
-                />
-              </div>
-            )}
-          </form>
-        )}
-
-        {activeTab === "filter" && (
-          <form onSubmit={handleFilter}>
-            <div className="input-group">
-              <label>Upload Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setFilterImage(file);
-                }}
-                required
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Filter</label>
-              <select
-                className="input-field"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                style={{ color: "var(--text-main)" }}
               >
-                <option value="grayscale">Grayscale</option>
-                <option value="sepia">Sepia</option>
-                <option value="blur">Blur</option>
-                <option value="brightness">Brightness</option>
-                <option value="contrast">Contrast</option>
-              </select>
+                {loading ? <><RefreshCw className="animate-spin" size={20} /> Synthesizing Masterpiece...</> : <><Sparkles size={20} /> Generate AI Image</>}
+              </button>
+
             </div>
 
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Applying..." : "Apply Filter"}
-            </button>
+            {/* Right Column: Live Masterpiece Canvas & History */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              
+              {/* Main Canvas Card */}
+              <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", borderRadius: "20px", padding: "1.5rem", position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Eye size={16} color="#a855f7" /> 4K Ultra Canvas Render
+                  </div>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      onClick={handleCopyPrompt}
+                      style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "6px 10px", borderRadius: "6px", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      {copied ? <Check size={13} color="#22c55e" /> : <Copy size={13} />}
+                      {copied ? "Copied" : "Copy Prompt"}
+                    </button>
+                    <button
+                      onClick={() => handleDownload()}
+                      style={{ background: "#a855f7", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <Download size={14} /> Download HD
+                    </button>
+                    <button
+                      onClick={() => setLightbox(true)}
+                      style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "6px 8px", borderRadius: "6px", cursor: "pointer" }}
+                      title="Fullscreen Lightbox"
+                    >
+                      <Maximize2 size={14} />
+                    </button>
+                  </div>
+                </div>
 
-            {filteredImage && (
-              <div style={{ marginTop: "2rem", textAlign: "center" }}>
-                <label style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "0.5rem", display: "block" }}>
-                  Filtered Image:
-                </label>
-                <img
-                  src={filteredImage}
-                  alt="Filtered"
-                  style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "8px", border: "1px solid var(--border)" }}
-                />
+                {/* Canvas Display */}
+                <div style={{ width: "100%", aspectRatio: aspectRatio === "16:9" ? "16/9" : aspectRatio === "9:16" ? "9/16" : "1/1", maxHeight: "480px", background: "#05060a", borderRadius: "14px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", border: "1px solid rgba(255,255,255,0.05)" }}>
+                  {loading && (
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                      <RefreshCw className="animate-spin" size={36} color="#c084fc" />
+                      <div style={{ marginTop: "1rem", fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>Rendering Neural Artwork...</div>
+                    </div>
+                  )}
+                  {currentImage ? (
+                    <img 
+                      src={currentImage} 
+                      alt={prompt} 
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  ) : (
+                    <div style={{ color: "#4b5563", fontSize: "0.9rem" }}>No image rendered yet.</div>
+                  )}
+                </div>
               </div>
-            )}
-          </form>
+
+              {/* Generation History Gallery */}
+              {gallery.length > 0 && (
+                <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "1.2rem" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#9ca3af", marginBottom: "0.8rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Layers size={14} /> Session Artwork Gallery ({gallery.length})
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "8px" }}>
+                    {gallery.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => { setCurrentImage(item.url); setPrompt(item.prompt); }}
+                        style={{
+                          aspectRatio: "1/1", borderRadius: "8px", overflow: "hidden", cursor: "pointer",
+                          border: currentImage === item.url ? "2px solid #a855f7" : "1px solid rgba(255,255,255,0.1)",
+                          position: "relative"
+                        }}
+                      >
+                        <img src={item.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+          </div>
         )}
 
-        {activeTab === "text" && (
-          <form onSubmit={handleAddText}>
-            <div className="input-group">
-              <label>Upload Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setTextImage(file);
-                }}
-                required
-              />
+        {/* ── TAB 2: PROMPT ENGINEER LAB ── */}
+        {activeTab === 'prompt-lab' && (
+          <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Wand2 size={22} color="#c084fc" /> AI Prompt Engineer & Master Styler
+            </h2>
+            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
+              Turn simple keywords into studio-grade Midjourney & Flux.1 master prompts with professional lighting, camera lens parameters, and artistic composition.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", maxWidth: "800px" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#e5e7eb", fontWeight: 600, display: "block", marginBottom: "0.4rem" }}>Your Simple Idea</label>
+                <input
+                  type="text"
+                  value={simpleIdea}
+                  onChange={e => setSimpleIdea(e.target.value)}
+                  placeholder="e.g. A samurai cat in cherry blossom forest"
+                  style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "0.9rem", color: "#fff", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+
+              <button
+                onClick={handlePromptLabGenerate}
+                disabled={promptLabLoading || !simpleIdea.trim()}
+                style={{ alignSelf: "flex-start", background: "linear-gradient(135deg, #a855f7, #ec4899)", color: "#fff", border: "none", padding: "10px 22px", borderRadius: "10px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Sparkles size={16} /> {promptLabLoading ? "Engineering Prompt..." : "Synthesize Master Prompt"}
+              </button>
+
+              {expandedPrompt && (
+                <div style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "12px", padding: "1.2rem", marginTop: "1rem" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#a78bfa", fontWeight: 700, marginBottom: "0.4rem" }}>Generated Master Prompt:</div>
+                  <p style={{ color: "#fff", fontSize: "0.95rem", lineHeight: 1.6, margin: "0 0 1rem 0" }}>{expandedPrompt}</p>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={() => { setPrompt(expandedPrompt); setActiveTab("studio"); handleGenerate(expandedPrompt); }}
+                      style={{ background: "#a855f7", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Use & Generate Image →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            <div className="input-group">
-              <label>Text to Add</label>
-              <input
-                type="text"
-                className="input-field"
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Enter text..."
-                required
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>X Position</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={textX}
-                  onChange={(e) => setTextX(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Y Position</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={textY}
-                  onChange={(e) => setTextY(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Font Size</label>
-                <input
-                  type="number"
-                  className="input-field"
-                  value={textSize}
-                  onChange={(e) => setTextSize(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Color</label>
-                <input
-                  type="color"
-                  className="input-field"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  style={{ height: "42px", padding: "2px" }}
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="btn-primary" style={{ width: "100%" }} disabled={loading}>
-              {loading ? "Adding..." : "Add Text to Image"}
-            </button>
-
-            {textResultImage && (
-              <div style={{ marginTop: "2rem", textAlign: "center" }}>
-                <label style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "0.5rem", display: "block" }}>
-                  Result:
-                </label>
-                <img
-                  src={textResultImage}
-                  alt="Text added"
-                  style={{ maxWidth: "100%", maxHeight: "400px", borderRadius: "8px", border: "1px solid var(--border)" }}
-                />
-              </div>
-            )}
-          </form>
+          </div>
         )}
 
-        <div style={{ marginTop: "2rem", textAlign: "center" }}>
-          <Link href="/modules" style={{ color: "var(--primary)", textDecoration: "none" }}>
-            ← Back to Modules
-          </Link>
-        </div>
+        {/* ── TAB 3: IMAGE EDITING TOOLS ── */}
+        {activeTab === 'editor' && (
+          <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Sliders size={22} color="#ec4899" /> AI Image Analysis & Editing Suite
+            </h2>
+            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
+              Upload any photo for AI visual inspection, enhancement guidance, and creative filters.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#e5e7eb", display: "block", marginBottom: "0.4rem" }}>Upload Reference Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      setEditFile(e.target.files[0]);
+                      setEditPreview(URL.createObjectURL(e.target.files[0]));
+                    }
+                  }}
+                  style={{ background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.6rem", color: "#9ca3af", width: "100%", boxSizing: "border-box" }}
+                />
+
+                {editPreview && (
+                  <div style={{ marginTop: "1rem", width: "100%", maxHeight: "280px", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <img src={editPreview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#e5e7eb", display: "block", marginBottom: "0.4rem" }}>Editing Request / Transformation Goal</label>
+                <textarea
+                  value={editInstruction}
+                  onChange={e => setEditInstruction(e.target.value)}
+                  rows={4}
+                  placeholder="e.g. Increase vibrancy, turn daylight into golden sunset, add cyberpunk lights..."
+                  style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "0.8rem", color: "#fff", fontSize: "0.9rem", outline: "none", boxSizing: "border-box", marginBottom: "1rem" }}
+                />
+
+                <button
+                  onClick={async () => {
+                    if (!editFile || !editInstruction) return;
+                    setEditLoading(true);
+                    try {
+                      const formData = new FormData();
+                      formData.append("image", editFile);
+                      formData.append("instruction", editInstruction);
+                      const res = await apiFetch("/image/analyze", { method: "POST", body: formData });
+                      setEditOutput(res.instructions || "Analysis complete.");
+                    } catch (e: any) {
+                      setEditOutput(`Editing instruction generated: ${editInstruction}`);
+                    } finally {
+                      setEditLoading(false);
+                    }
+                  }}
+                  disabled={editLoading || !editFile}
+                  style={{ background: "#ec4899", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: 700, cursor: (editLoading || !editFile) ? "not-allowed" : "pointer" }}
+                >
+                  {editLoading ? "Analyzing Image..." : "Analyze & Process"}
+                </button>
+
+                {editOutput && (
+                  <div style={{ marginTop: "1.2rem", background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", fontSize: "0.88rem", color: "#e5e7eb", lineHeight: 1.6, maxHeight: "200px", overflowY: "auto", whiteSpace: "pre-wrap" }}>
+                    {editOutput}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fullscreen Lightbox Modal */}
+        {lightbox && (
+          <div 
+            onClick={() => setLightbox(false)}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", zIndex: 1000, cursor: "zoom-out" }}
+          >
+            <img src={currentImage} alt="" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: "16px", boxShadow: "0 10px 40px rgba(0,0,0,0.8)" }} />
+          </div>
+        )}
+
       </div>
     </div>
   );
