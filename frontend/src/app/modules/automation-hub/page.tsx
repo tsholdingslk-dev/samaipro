@@ -17,7 +17,7 @@ export default function AutomationHub() {
     setProgress(0);
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${API_URL}/api/autonomous/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -33,7 +33,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('prompt', chatInput);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${API_URL}/api/pdf-studio/chat`, {
         method: 'POST',
         body: formData,
@@ -54,7 +54,7 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${API_URL}/api/pdf-studio/summary`, {
         method: 'POST',
         body: formData,
@@ -77,7 +77,7 @@ function App() {
       // First extract text
       const formData = new FormData();
       formData.append('file', file);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
       
       const extractRes = await fetch(`${API_URL}/api/pdf-translate/extract-text`, {
         method: 'POST',
