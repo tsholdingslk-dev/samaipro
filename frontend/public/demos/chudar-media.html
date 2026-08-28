@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>சுடர் மீடியா | Chudar Media - உடனுக்குடன் உண்மைச் செய்திகள்</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-dark: #991b1b;
+      --secondary: #1e293b;
+      --accent: #f59e0b;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Mukta Malar', 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Top Utility Bar */
+    .top-bar {
+      background: #090d16;
+      padding: 6px 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-bar .date-time {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    /* Main Header */
+    header {
+      background: linear-gradient(180deg, #182032 0%, #0f172a 100%);
+      padding: 15px 20px;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .header-container {
+      max-width: 1250px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .logo-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #dc2626, #f59e0b);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+    }
+
+    .logo-text h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .logo-text span {
+      color: var(--primary);
+    }
+
+    .logo-text p {
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* Breaking News Ticker */
+    .ticker-wrap {
+      background: #991b1b;
+      display: flex;
+      align-items: center;
+      height: 40px;
+      overflow: hidden;
+    }
+
+    .ticker-badge {
+      background: #dc2626;
+      color: #fff;
+      font-weight: 800;
+      padding: 0 16px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      z-index: 2;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+    }
+
+    .ticker-content {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: ticker 25s linear infinite;
+      font-size: 0.9rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    @keyframes ticker {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+
+    /* Navigation Bar */
+    nav {
+      background: #1e293b;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      max-width: 1250px;
+      margin: 0 auto;
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 0 15px;
+    }
+
+    .nav-link {
+      padding: 12px 18px;
+      color: #e2e8f0;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: all 0.2s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: #fff;
+      background: rgba(220, 38, 38, 0.15);
+      border-bottom-color: var(--primary);
+    }
+
+    /* Layout Grid */
+    .main-container {
+      max-width: 1250px;
+      margin: 25px auto;
+      padding: 0 15px;
+      display: grid;
+      grid-template-columns: 2.3fr 1fr;
+      gap: 25px;
+    }
+
+    /* Featured Lead News */
+    .featured-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+      margin-bottom: 25px;
+      transition: transform 0.3s ease;
+    }
+
+    .featured-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .featured-img-wrap {
+      width: 100%;
+      height: 380px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(15,23,42,0.95) 100%), url('https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80') center/cover;
+      display: flex;
+      align-items: flex-end;
+      padding: 25px;
+    }
+
+    .tag {
+      background: var(--primary);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .featured-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* News Grid */
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .news-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s;
+    }
+
+    .news-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .news-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .news-content {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
+    }
+
+    .news-content h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .news-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Sidebar */
+    .sidebar-widget {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      margin-bottom: 25px;
+    }
+
+    .widget-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .trending-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .trending-item:last-child {
+      border-bottom: none;
+    }
+
+    .trending-num {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .trending-text h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.3;
+    }
+
+    /* Video Section */
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #000;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* Footer */
+    footer {
+      background: #090d16;
+      border-top: 1px solid var(--border);
+      padding: 40px 20px 20px;
+      margin-top: 40px;
+    }
+
+    .footer-container {
+      max-width: 1250px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .footer-col h4 {
+      color: #fff;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      border-left: 3px solid var(--primary);
+      padding-left: 8px;
+    }
+
+    .footer-col p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 850px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+      .featured-img-wrap {
+        height: 260px;
+      }
+      .featured-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="date-time">
+      <span>📅 <span id="current-date">சனிக்கிழமை, 29 ஆகஸ்ட் 2026</span></span>
+      <span>📍 இலங்கை & சர்வதேச பதிப்பு</span>
+    </div>
+    <div>
+      <span>⚡ சுடர் மீடியா பிரத்யேக டிஜிட்டல் செய்தி தளம்</span>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header>
+    <div class="header-container">
+      <a href="#" class="logo-box">
+        <div class="logo-icon">🔥</div>
+        <div class="logo-text">
+          <h1>சுடர் <span>மீடியா</span></h1>
+          <p>CHUDAR MEDIA • 24/7 LIVE NEWS</p>
+        </div>
+      </a>
+
+      <!-- Live Weather & Exchange widget -->
+      <div style="display: flex; gap: 15px; font-size: 0.8rem; color: #cbd5e1;">
+        <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          ☀️ கொழும்பு: <strong>31°C</strong>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          💵 USD/LKR: <strong>302.50</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breaking News Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker-badge">🔴 முக்கிய செய்திகள்</div>
+    <div class="ticker-content">
+      இலங்கையில் புதிய பொருளாதார மறுசீரமைப்பு திட்டங்களுக்கு பாராளுமன்றத்தில் அனுமதி • மத்திய வங்கியின் புதிய வட்டி விகித அறிவிப்பு வெளியானது • உலக சந்தையில் தங்கத்தின் விலையில் அதிரடி மாற்றம் • உலகக் கிண்ண கிரிக்கெட் தகுதிச் சுற்றுப் போட்டியில் இலங்கை அணி அபார வெற்றி!
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav>
+    <div class="nav-container">
+      <a href="#" class="nav-link active">முகப்பு</a>
+      <a href="#" class="nav-link">இலங்கை</a>
+      <a href="#" class="nav-link">சர்வதேசம்</a>
+      <a href="#" class="nav-link">அரசியல்</a>
+      <a href="#" class="nav-link">வணிகம் & பொருளாதாரம்</a>
+      <a href="#" class="nav-link">சினிமா & கலை</a>
+      <a href="#" class="nav-link">விளையாட்டு</a>
+      <a href="#" class="nav-link">தொழில்நுட்பம்</a>
+      <a href="#" class="nav-link">விசேட கட்டுரைகள்</a>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <div class="main-container">
+    
+    <!-- Left: Main News Stream -->
+    <main>
+      
+      <!-- Lead Featured Story -->
+      <article class="featured-card">
+        <div class="featured-img-wrap">
+          <div>
+            <span class="tag">🔴 விசேட செய்தி</span>
+            <h2 class="featured-title">இலங்கை பொருளாதார மீட்சி மற்றும் புதிய வெளிநாட்டு நேரடி முதலீடுகளுக்கான சர்வதேச ஒப்பந்தம் கையெழுத்தானது!</h2>
+            <div style="font-size: 0.85rem; color: #cbd5e1;">
+              ✍️ சுடர் செய்திப் பிரிவு • ⏱️ 15 நிமிடங்களுக்கு முன் • 👁️ 4.2k பார்வைகள்
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Category News Grid -->
+      <div class="news-grid">
+        
+        <div class="news-card">
+          <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=600&q=80" alt="Finance">
+          <div class="news-content">
+            <span class="tag" style="background: #2563eb; align-self: flex-start;">பொருளாதாரம்</span>
+            <h3>மத்திய வங்கி அறிவித்த புதிய பணவீக்கக் கட்டுப்பாட்டு நடைமுறைகள்: வர்த்தகர்கள் வரவேற்பு</h3>
+            <div class="news-meta">
+              <span>⏱️ 1 மணி நேரத்திற்கு முன்</span>
+              <span>💬 18 கருத்துக்கள்</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="news-card">
+          <img src="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=600&q=80" alt="Parliament">
+          <div class="news-content">
+            <span class="tag" style="background: #7c3aed; align-self: flex-start;">அரசியல்</span>
+            <h3>பாராளுமன்றத்தில் அடுத்த வார விவாதத்திற்கு வரவுள்ள புதிய தேசிய கொள்கை வரைவு</h3>
+            <div class="news-meta">
+              <span>⏱️ 2 மணி நேரத்திற்கு முன்</span>
+              <span>💬 24 கருத்துக்கள்</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="news-card">
+          <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80" alt="Technology">
+          <div class="news-content">
+            <span class="tag" style="background: #059669; align-self: flex-start;">தொழில்நுட்பம்</span>
+            <h3>இலங்கையில் அறிமுகமாகியுள்ள அதிநவீன AI தொழில்நுட்ப செயலிகள்: புதிய புரட்சி</h3>
+            <div class="news-meta">
+              <span>⏱️ 3 மணி நேரத்திற்கு முன்</span>
+              <span>💬 42 கருத்துக்கள்</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="news-card">
+          <img src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=600&q=80" alt="Cricket">
+          <div class="news-content">
+            <span class="tag" style="background: #ea580c; align-self: flex-start;">விளையாட்டு</span>
+            <h3>இலங்கை - அவுஸ்திரேலியா மோதும் இறுதிப் போட்டி: அணியில் அதிரடி மாற்றங்கள்</h3>
+            <div class="news-meta">
+              <span>⏱️ 4 மணி நேரத்திற்கு முன்</span>
+              <span>💬 85 கருத்துக்கள்</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside>
+      
+      <!-- Trending News Widget -->
+      <div class="sidebar-widget">
+        <div class="widget-title">
+          <span>🔥 அதிகம்பேர் படித்தவை</span>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-num">01</div>
+          <div class="trending-text">
+            <h4>காலி மற்றும் கொழும்பில் விசேட பாதுகாப்பு சோதனைகள் தீவிரம்</h4>
+          </div>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-num">02</div>
+          <div class="trending-text">
+            <h4>தங்கத்தின் விலை கிராமிற்கு ரூ. 1,200 குறைவடைந்தது: நகைக்கடைகளில் கூட்டம்</h4>
+          </div>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-num">03</div>
+          <div class="trending-text">
+            <h4>வெளிநாட்டு வேலைவாய்ப்புகளுக்கான புதிய அரசு பதிவுத் திட்டம் ஆரம்பம்</h4>
+          </div>
+        </div>
+
+        <div class="trending-item">
+          <div class="trending-num">04</div>
+          <div class="trending-text">
+            <h4>பிரபல திரைப்பட இயக்குனரின் புதிய மெகா பட்ஜெட் திரைப்படம் வெளியீடு</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Video News Stream -->
+      <div class="sidebar-widget">
+        <div class="widget-title">
+          <span>📺 சுடர் நேரலை ஒளிபரப்பு</span>
+        </div>
+        <div class="video-container">
+          <iframe src="https://www.youtube.com/embed/live_stream?channel=UCexample" allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- Social Media & Telegram Widget -->
+      <div class="sidebar-widget" style="background: linear-gradient(135deg, rgba(220,38,38,0.2), rgba(30,41,59,0.9)); border-color: rgba(220,38,38,0.3);">
+        <h4 style="color: #fff; font-size: 1rem; margin-bottom: 8px;">📲 எமது Telegram சனலில் இணையுங்கள்</h4>
+        <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 12px;">உடனுக்குடன் முக்கிய பிரேக்கிங் செய்திகளை உங்கள் போனில் பெற சுடர் மீடியாவுடன் இணையுங்கள்.</p>
+        <a href="https://t.me/chudarmedia" style="display: block; text-align: center; background: #dc2626; color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">இப்போதே இணையுங்கள் ➔</a>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-col">
+        <h4>சுடர் மீடியா பற்றி</h4>
+        <p>சுடர் மீடியா (Chudar Media) இலங்கையிலும் உலகெங்கிலும் வாழும் தமிழ் பேசும் மக்களுக்கான 24/7 நம்பகமான, நடுநிலையான உண்மைச் செய்தித் தளமாகும்.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>முக்கிய பிரிவுகள்</h4>
+        <p>• இலங்கை செய்திகள்<br>• சர்வதேச அரசியல்<br>• வணிகம் மற்றும் பொருளாதாரம்<br>• சினிமா மற்றும் விசேட கட்டுரைகள்</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>தொடர்புகளுக்கு</h4>
+        <p>📧 news@chudarmedia.com<br>📞 +94 77 123 4567<br>📍 கொழும்பு, இலங்கை</p>
+      </div>
+    </div>
+
+    <div class="copyright">
+      © 2026 சுடர் மீடியா (Chudar Media). அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை. | Powered by SAM AI Autonomous Web Engine
+    </div>
+  </footer>
+
+  <script>
+    // Live Clock & Date Script
+    const dateElem = document.getElementById('current-date');
+    if (dateElem) {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      dateElem.textContent = now.toLocaleDateString('ta-LK', options);
+    }
+  </script>
+
+</body>
+</html>

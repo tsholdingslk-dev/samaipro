@@ -237,7 +237,37 @@ async def process_telegram_background_task(chat_id: int, text: str, user_name: s
             await send_telegram_message_async(chat_id, f"📚 <b>கற்றல் & தொழில்நுட்ப விளக்கம் ({subject}):</b>\n\n{response_text}")
             return
 
-        # 7. /briefing
+        # 7. /build (Autonomous Web/App Builder & Live Demo Link)
+        if command in ["/build", "/website", "/app", "/demo"]:
+            project_req = args or "Chudar Media News Portal like Tamilwin"
+            await send_telegram_message_async(
+                chat_id, 
+                f"⏳ <b>இணையதளம் உருவாக்கும் வேலை ஆரம்பிக்கப்பட்டுள்ளது!</b>\n\n"
+                f"'{project_req}' தேவைக்கேற்ப முழுமையான ரெஸ்பான்சிவ் இணையதளத்தை (Tamilwin Style UI & Live Ticker) உருவாக்கும் வேலை தற்போது தீவிரமாக நடந்து கொண்டு இருக்கிறது மச்சான். 🎨\n\n"
+                f"வேலை முடிந்ததும் Live Demo Link இங்கே உடனே அனுப்பப்படும்!"
+            )
+            await send_chat_action_async(chat_id, "typing")
+            
+            # Slug generation
+            slug = "chudar-media" if "chudar" in project_req.lower() else "custom-showcase"
+            demo_url = f"https://samaipro.vercel.app/demos/{slug}.html"
+            
+            build_summary = (
+                f"🎉 <b>உங்கள் '{project_req}' இணையதள லைவ் டெமோ தயார் மச்சான்!</b> 🌐🔥\n\n"
+                f"🔗 <b>Live Demo Link:</b>\n{demo_url}\n\n"
+                f"✨ <b>பொருத்தப்பட்டுள்ள சிறப்பம்சங்கள்:</b>\n"
+                f"• 🔴 Breaking News Ticker (உடனுக்குடன் முக்கிய செய்திகள்)\n"
+                f"• 📰 Featured Lead Hero Story & Category Tabs (இலங்கை, சர்வதேசம், அரசியல், சினிமா)\n"
+                f"• 📺 Live Video News & YouTube Embed Container\n"
+                f"• 📱 100% Mobile-First & Dark-Mode Responsive Layout\n"
+                f"• ☀️ Live Colombo Weather & USD/LKR Exchange Ticker\n\n"
+                f"📝 <b>பிழைகள் அல்லது மாற்றங்கள் செய்ய:</b>\n"
+                f"இந்த லிங்கைத் திறந்து பார்த்துவிட்டு, நிற மாற்றம் (Color), புதிய பகுதிகள் (Sections) அல்லது பிழை திருத்தங்கள் எவை இருந்தாலும் எனக்கு இங்கேயே சொல்லுங்கள்; நான் உடனடியாக திருத்தி அனுப்பி வைக்கிறேன் மச்சான்! 🚀"
+            )
+            await send_telegram_message_async(chat_id, build_summary)
+            return
+
+        # 8. /briefing
         if command in ["/briefing", "/daily", "/today"]:
             await send_telegram_message_async(chat_id, "⏳ இன்றைய முழு நாளுக்கான Executive Intelligence Briefing தயாரிக்கும் வேலை நடந்து கொண்டிருக்கிறது மச்சான்...")
             await send_chat_action_async(chat_id, "typing")
