@@ -249,8 +249,8 @@ async def process_telegram_background_task(chat_id: int, text: str, user_name: s
             await send_chat_action_async(chat_id, "typing")
             
             # Slug generation
-            slug = "chudar-media" if "chudar" in project_req.lower() else "custom-showcase"
-            demo_url = f"https://samaipro.vercel.app/demos/{slug}.html"
+            slug = "chudar-media" if "chudar" in project_req.lower() else "default"
+            demo_url = f"https://samaipro.vercel.app/demo/{slug}"
             
             build_summary = (
                 f"🎉 <b>உங்கள் '{project_req}' இணையதள லைவ் டெமோ தயார் மச்சான்!</b> 🌐🔥\n\n"
