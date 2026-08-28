@@ -184,8 +184,9 @@ export default function AutomationHub() {
       </div>
 
       {/* Mission Modes */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.8rem', marginBottom: '2rem' }}>
         {[
+          { id: 'telegram', icon: <Bot size={16} />, title: 'Telegram Assistant', desc: 'Direct 24/7 Mobile Bridge' },
           { id: 'quick', icon: <Zap size={16} />, title: 'Quick Mode', desc: 'Fast answer/task' },
           { id: 'deep', icon: <Brain size={16} />, title: 'Deep Mode', desc: 'Research + planning' },
           { id: 'autonomous', icon: <Bot size={16} />, title: 'Autonomous', desc: 'End-to-end execution' },
@@ -209,6 +210,100 @@ export default function AutomationHub() {
         ))}
       </div>
 
+      {mode === 'telegram' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2rem' }}>
+          {/* Left Column: Telegram Bot Simulator & Commands */}
+          <div style={{ background: 'rgba(25, 25, 35, 0.5)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '18px', padding: '1.8rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>
+                <Bot size={20} color="#8b5cf6" /> Sam AI Assistant Telegram Bridge
+              </h3>
+              <span style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: '12px', background: 'rgba(16,185,129,0.15)', color: '#10b981', fontWeight: 700 }}>
+                ● Bot Active
+              </span>
+            </div>
+
+            <p style={{ color: '#9ca3af', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+              Use these commands on your Telegram Bot or type directly in natural Tamil/English. Sam AI Assistant gathers live Sri Lankan news and executes 25-year historical research.
+            </p>
+
+            {/* Quick Command Buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[
+                { cmd: "/slnews", label: "🇱🇰 Sri Lanka News" },
+                { cmd: "/worldnews", label: "🌐 Global News" },
+                { cmd: "/research Ramesh Pathirana", label: "🔍 Research: Ramesh Pathirana" },
+                { cmd: "/learn Quantum AI", label: "📚 Learn Topic" },
+                { cmd: "/briefing", label: "📊 Daily Briefing" },
+              ].map(c => (
+                <button
+                  key={c.cmd}
+                  onClick={() => setGoal(c.cmd)}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#d1d5db', padding: '6px 12px', borderRadius: '8px', fontSize: '0.78rem', cursor: 'pointer' }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <label style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Test Message / Command</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  placeholder="e.g. /research Ramesh Pathirana or /slnews"
+                  style={{ flex: 1, background: '#0a0b12', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.75rem 1rem', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
+                />
+                <button
+                  onClick={startAutonomousTask}
+                  disabled={isRunning || !goal.trim()}
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', color: '#fff', border: 'none', borderRadius: '10px', padding: '0 20px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {isRunning ? 'Processing...' : 'Send'}
+                </button>
+              </div>
+            </div>
+
+            {/* Telegram Messages Stream Output */}
+            <div style={{ background: '#0a0c16', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '1rem', height: '220px', overflowY: 'auto' }}>
+              <div style={{ fontSize: '0.75rem', color: '#818cf8', fontWeight: 700, marginBottom: '6px' }}>🤖 Sam AI Telegram Response Feed:</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '0.82rem', color: '#e5e7eb', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {logs.length > 0 ? logs.join('\n') : "Send /research Ramesh Pathirana or /slnews to see real-time output..."}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Webhook & Telegram Setup Guide */}
+          <div style={{ background: 'rgba(25, 25, 35, 0.5)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '1.8rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#eab308', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Settings size={18} /> Telegram Bot Connection Guide
+            </h3>
+
+            <div style={{ fontSize: '0.82rem', color: '#d1d5db', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong>1. Create Bot in Telegram:</strong>
+                <div style={{ color: '#9ca3af', marginTop: '2px' }}>Open Telegram ➔ Search for <code>@BotFather</code> ➔ Send <code>/newbot</code> ➔ Copy your Bot API Token.</div>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong>2. Set Token in Environment:</strong>
+                <div style={{ color: '#9ca3af', marginTop: '2px' }}>Add <code>TELEGRAM_BOT_TOKEN=your_token</code> in Railway or <code>.env</code> file.</div>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <strong>3. Automatic Webhook Endpoint:</strong>
+                <div style={{ color: '#9ca3af', marginTop: '2px' }}><code>https://samaipro.vercel.app/api/telegram/webhook</code> (All requests automatically handled by FastAPI).</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', padding: '12px', borderRadius: '10px', fontSize: '0.8rem', color: '#a7f3d0' }}>
+              ✅ <strong>25-Year Research Engine Active:</strong> Ramesh Pathirana, Sri Lankan politics, global affairs, and daily briefings are directly accessible anytime from your phone!
+            </div>
+          </div>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
         
         {/* Left Column: Input, Activity & Generated Artifacts */}
@@ -361,6 +456,7 @@ export default function AutomationHub() {
         </div>
 
       </div>
+      )}
     </div>
   );
 }
