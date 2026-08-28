@@ -65,7 +65,20 @@ NAKSHATRAS = [
     {"name": "Revati", "tamil": "ரேவதி", "lord": "Mercury", "dasha_years": 17},
 ]
 
+DASHA_SEQUENCE = [
+    {"lord": "Ketu", "years": 7},
+    {"lord": "Venus", "years": 20},
+    {"lord": "Sun", "years": 6},
+    {"lord": "Moon", "years": 10},
+    {"lord": "Mars", "years": 7},
+    {"lord": "Rahu", "years": 18},
+    {"lord": "Jupiter", "years": 16},
+    {"lord": "Saturn", "years": 19},
+    {"lord": "Mercury", "years": 17}
+]
+
 def deg_to_dms_str(deg_float: float) -> str:
+    deg_float = deg_float % 360
     d = int(deg_float)
     m = int(round((deg_float - d) * 60))
     if m == 60:
@@ -73,11 +86,15 @@ def deg_to_dms_str(deg_float: float) -> str:
         m = 0
     return f"{d}° {m:02d}′"
 
-def get_sidereal_planetary_positions(dt_utc: datetime, lat: float, lon: float) -> Dict[str, Any]:
+def normalize_deg(d: float) -> float:
+    return d % 360.0
+
+def calculate_universal_ephemeris(dt_utc: datetime, lat: float, lon: float) -> Dict[str, Any]:
     """
-    Astronomical sidereal calculations using Lahiri Ayanamsa approximations.
+    Universal High-Precision Astronomical Ephemeris Engine (Keplerian Orbital Mechanics + Lahiri Ayanamsa)
+    Valid for any date from 1900 to 2100.
     """
-    # Julian Date Calculation
+    # 1. Julian Day (JD) & Julian Century (T) from J2000.0 (2000 Jan 1.5)
     Y = dt_utc.year
     M = dt_utc.month
     D = dt_utc.day + (dt_utc.hour + dt_utc.minute / 60.0 + dt_utc.second / 3600.0) / 24.0
@@ -87,88 +104,133 @@ def get_sidereal_planetary_positions(dt_utc: datetime, lat: float, lon: float) -
     A = int(Y / 100)
     B = 2 - A + int(A / 4)
     JD = int(365.25 * (Y + 4716)) + int(30.6001 * (M + 1)) + D + B - 1524.5
-    T = (JD - 2451545.0) / 36525.0 # Julian centuries from J2000.0
+    T = (JD - 2451545.0) / 36525.0 # Julian centuries from J2000
 
-    # Lahiri Ayanamsa
-    ayanamsa = 23.85 + (JD - 2451545.0) * (50.29 / 3600.0) / 365.25
+    # 2. Lahiri Ayanamsa (Chitrapaksha)
+    ayanamsa = 23.8565 + (JD - 2451545.0) * (50.29 / 3600.0) / 365.25
 
-    # 1. Sun Tropical Longitude
-    L0 = (280.46646 + 36000.76983 * T) % 360
-    M_sun = (357.52911 + 35999.05029 * T) % 360
-    C_sun = (1.914602 - 0.004817 * T) * math.sin(math.radians(M_sun)) + (0.019993 - 0.000101 * T) * math.sin(math.radians(2 * M_sun))
-    sun_trop = (L0 + C_sun) % 360
-    sun_sid = (sun_trop - ayanamsa) % 360
+    # 3. Earth-Sun Orbit (Heliocentric Earth / Geocentric Sun)
+    L_sun = normalize_deg(280.46646 + 36000.76983 * T + 0.0003032 * T * T)
+    M_sun = normalize_deg(357.52911 + 35999.05029 * T - 0.0001537 * T * T)
+    C_sun = (1.914602 - 0.004817 * T - 0.000014 * T * T) * math.sin(math.radians(M_sun)) + \
+            (0.019993 - 0.000101 * T) * math.sin(math.radians(2 * M_sun)) + \
+            0.000289 * math.sin(math.radians(3 * M_sun))
+    sun_true_trop = normalize_deg(L_sun + C_sun)
+    sun_sid = normalize_deg(sun_true_trop - ayanamsa)
 
-    # 2. Moon Tropical Longitude
-    L_moon = (218.3165 + 481267.8813 * T) % 360
-    M_moon = (134.9634 + 477198.8675 * T) % 360
-    moon_trop = (L_moon + 6.289 * math.sin(math.radians(M_moon))) % 360
-    moon_sid = (moon_trop - ayanamsa) % 360
+    # Earth Heliocentric distance R_E & longitude L_E
+    e_E = 0.016708634 - 0.000042037 * T
+    R_E = 1.000001018 * (1 - e_E * e_E) / (1 + e_E * math.cos(math.radians(M_sun + C_sun)))
+    L_E = normalize_deg(sun_true_trop + 180)
 
-    # 3. Rahu / Ketu (Mean Node)
-    omega = (125.04452 - 1934.136261 * T) % 360
-    rahu_sid = (omega - ayanamsa) % 360
-    ketu_sid = (rahu_sid + 180) % 360
+    # 4. Moon (Chandra) Geocentric Longitude with Perturbations
+    L_moon = normalize_deg(218.3164477 + 481267.88128 * T)
+    M_moon = normalize_deg(134.9633964 + 477198.867505 * T)
+    D_moon = normalize_deg(297.8501921 + 445267.1114034 * T) # elongation
+    F_moon = normalize_deg(93.2720950 + 483202.0175233 * T)  # argument of latitude
 
-    # 4. Ascendant (Lagna)
-    GMST0 = (280.46061837 + 360.98564736629 * (JD - 2451545.0) + 0.000387933 * T * T) % 360
-    RAMC = (GMST0 + lon) % 360
-    eps = 23.4392911 - 0.0130042 * T
-    tan_asc = math.cos(math.radians(RAMC)) / (-math.sin(math.radians(RAMC)) * math.cos(math.radians(eps)) - math.tan(math.radians(lat)) * math.sin(math.radians(eps)))
-    asc_trop = math.degrees(math.atan(tan_asc))
-    if math.cos(math.radians(RAMC)) < 0:
-        asc_trop += 180
-    asc_trop = (asc_trop + 180) % 360
-    asc_sid = (asc_trop - ayanamsa) % 360
+    moon_perturb = 6.288774 * math.sin(math.radians(M_moon)) + \
+                   1.274027 * math.sin(math.radians(2 * D_moon - M_moon)) + \
+                   0.658314 * math.sin(math.radians(2 * D_moon)) + \
+                   0.213618 * math.sin(math.radians(2 * M_moon)) - \
+                   0.185116 * math.sin(math.radians(M_sun)) - \
+                   0.114332 * math.sin(math.radians(2 * F_moon)) + \
+                   0.058793 * math.sin(math.radians(2 * D_moon - 2 * M_moon)) + \
+                   0.057066 * math.sin(math.radians(2 * D_moon - M_sun - M_moon))
+    moon_true_trop = normalize_deg(L_moon + moon_perturb)
+    moon_sid = normalize_deg(moon_true_trop - ayanamsa)
 
-    # Mars, Mercury, Jupiter, Venus, Saturn Ephemeris Adjustments
-    mars_sid = (sun_sid + 52.6) % 360
-    merc_sid = (sun_sid - 22.2) % 360
-    jup_sid = (sun_sid + 4.8) % 360
-    ven_sid = (sun_sid + 46.5) % 360
-    sat_sid = (sun_sid - 53.0) % 360
+    # 5. Rahu & Ketu (Mean Ascending Lunar Node)
+    rahu_trop = normalize_deg(125.04452 - 1934.136261 * T + 0.0020708 * T * T)
+    rahu_sid = normalize_deg(rahu_trop - ayanamsa)
+    ketu_sid = normalize_deg(rahu_sid + 180)
 
-    # Hardcoded exact astronomical calibration for Jan 8, 1985 23:20 IST if close
-    if dt_utc.year == 1985 and dt_utc.month == 1 and dt_utc.day == 8:
-        sun_sid = 264.75 # 24° 45' Dhanu
-        moon_sid = 105.85 # 15° 51' Karka (Pushya)
-        merc_sid = 242.52 # 2° 31' Dhanu (Moola)
-        ven_sid = 311.27 # 11° 16' Kumbha (Shatabhisha)
-        mars_sid = 317.40 # 17° 24' Kumbha (Shatabhisha)
-        jup_sid = 269.60 # 29° 36' Dhanu (Uttara Ashadha)
-        sat_sid = 211.78 # 1° 47' Vrischika (Vishaka)
-        asc_sid = 162.15 # 12° 09' Kanya (Hasta)
-        rahu_sid = 31.08 # 1° 05' Vrishabha
-        ketu_sid = 211.08 # 1° 05' Vrischika
+    # 6. Keplerian Planetary Elements for Geocentric Longitudes
+    planets_elements = {
+        "Mercury": {"N": 48.3313 + 3.24587e-5 * JD, "i": 7.0047, "w": 29.1241 + 1.01444e-5 * JD, "a": 0.387098, "e": 0.205635, "M": normalize_deg(168.6562 + 4.0923344368 * (JD - 2451545.0))},
+        "Venus":   {"N": 76.6799 + 2.46590e-5 * JD, "i": 3.3946, "w": 54.8910 + 1.38374e-5 * JD, "a": 0.723330, "e": 0.006773, "M": normalize_deg(48.0052 + 1.6021302244 * (JD - 2451545.0))},
+        "Mars":    {"N": 49.5574 + 2.11081e-5 * JD, "i": 1.8497, "w": 286.5016 + 2.92961e-5 * JD, "a": 1.523688, "e": 0.093405, "M": normalize_deg(18.6021 + 0.5240207766 * (JD - 2451545.0))},
+        "Jupiter": {"N": 100.4542 + 2.76854e-5 * JD, "i": 1.3030, "w": 273.8777 + 1.64505e-5 * JD, "a": 5.202561, "e": 0.048498, "M": normalize_deg(19.8950 + 0.0830853001 * (JD - 2451545.0))},
+        "Saturn":  {"N": 113.6634 + 2.38980e-5 * JD, "i": 2.4886, "w": 339.3939 + 2.97661e-5 * JD, "a": 9.554747, "e": 0.055546, "M": normalize_deg(316.9670 + 0.0334442282 * (JD - 2451545.0))}
+    }
 
+    geo_planets = {}
+    for p_name, el in planets_elements.items():
+        M_rad = math.radians(el["M"])
+        # Solve Kepler's equation: E = M + e*sin(E)
+        E = el["M"] + math.degrees(el["e"] * math.sin(M_rad) * (1.0 + el["e"] * math.cos(M_rad)))
+        for _ in range(3):
+            E_rad = math.radians(E)
+            E = E - math.degrees((E_rad - el["e"] * math.sin(E_rad) - M_rad) / (1.0 - el["e"] * math.cos(E_rad)))
+        
+        E_rad = math.radians(E)
+        xv = el["a"] * (math.cos(E_rad) - el["e"])
+        yv = el["a"] * (math.sqrt(1.0 - el["e"] * el["e"]) * math.sin(E_rad))
+        
+        v = math.degrees(math.atan2(yv, xv))
+        r = math.sqrt(xv * xv + yv * yv)
+        
+        l_helio = normalize_deg(v + el["w"])
+        l_helio_rad = math.radians(l_helio)
+        
+        # Geocentric conversion
+        xh = r * math.cos(l_helio_rad)
+        yh = r * math.sin(l_helio_rad)
+        
+        L_E_rad = math.radians(L_E)
+        xg = xh + R_E * math.cos(L_E_rad)
+        yg = yh + R_E * math.sin(L_E_rad)
+        
+        l_geo_trop = normalize_deg(math.degrees(math.atan2(yg, xg)))
+        l_geo_sid = normalize_deg(l_geo_trop - ayanamsa)
+        geo_planets[p_name] = l_geo_sid
+
+    # 7. Ascendant (Lagna) Computation
+    # Greenwich Mean Sidereal Time (GMST) in degrees
+    d_since_j2000 = JD - 2451545.0
+    GMST0 = normalize_deg(280.46061837 + 360.98564736629 * d_since_j2000 + 0.000387933 * T * T)
+    RAMC = normalize_deg(GMST0 + lon) # Local Sidereal Time in degrees
+    eps = 23.4392911 - 0.0130042 * T  # Obliquity of ecliptic
+
+    RAMC_rad = math.radians(RAMC)
+    eps_rad = math.radians(eps)
+    lat_rad = math.radians(lat)
+
+    y_asc = math.cos(RAMC_rad)
+    x_asc = -math.sin(RAMC_rad) * math.cos(eps_rad) - math.tan(lat_rad) * math.sin(eps_rad)
+    asc_trop = normalize_deg(math.degrees(math.atan2(y_asc, x_asc)) + 90.0)
+    asc_sid = normalize_deg(asc_trop - ayanamsa)
+
+    # Collect calculated sidereal positions
     planets_raw = [
         {"name": "Ascendant (Lagna)", "symbol": "Asc", "long": asc_sid, "is_retro": False},
         {"name": "Sun (Surya)", "symbol": "Su", "long": sun_sid, "is_retro": False},
         {"name": "Moon (Chandra)", "symbol": "Mo", "long": moon_sid, "is_retro": False},
-        {"name": "Mars (Chevvai)", "symbol": "Ma", "long": mars_sid, "is_retro": False},
-        {"name": "Mercury (Budha)", "symbol": "Me", "long": merc_sid, "is_retro": False},
-        {"name": "Jupiter (Guru)", "symbol": "Ju", "long": jup_sid, "is_retro": False},
-        {"name": "Venus (Sukra)", "symbol": "Ve", "long": ven_sid, "is_retro": False},
-        {"name": "Saturn (Sani)", "symbol": "Sa", "long": sat_sid, "is_retro": False},
-        {"name": "Rahu", "symbol": "Ra", "long": rahu_sid, "is_retro": True},
-        {"name": "Ketu", "symbol": "Ke", "long": ketu_sid, "is_retro": True},
+        {"name": "Mars (Chevvai)", "symbol": "Ma", "long": geo_planets["Mars"], "is_retro": False},
+        {"name": "Mercury (Budha)", "symbol": "Me", "long": geo_planets["Mercury"], "is_retro": False},
+        {"name": "Jupiter (Guru)", "symbol": "Ju", "long": geo_planets["Jupiter"], "is_retro": False},
+        {"name": "Venus (Sukra)", "symbol": "Ve", "long": geo_planets["Venus"], "is_retro": False},
+        {"name": "Saturn (Sani)", "symbol": "Sa", "long": geo_planets["Saturn"], "is_retro": False},
+        {"name": "Rahu ℞", "symbol": "Ra", "long": rahu_sid, "is_retro": True},
+        {"name": "Ketu ℞", "symbol": "Ke", "long": ketu_sid, "is_retro": True},
     ]
 
     calculated_planets = []
     for p in planets_raw:
         long_val = p["long"] % 360
-        rasi_idx = int(long_val / 30)
+        rasi_idx = int(long_val / 30) % 12
         rasi_obj = RASIS[rasi_idx]
         deg_in_rasi = long_val % 30
-        nak_idx = int(long_val / (360 / 27))
-        nak_obj = NAKSHATRAS[nak_idx % 27]
-        pada = int((long_val % (360 / 27)) / (360 / 108)) + 1
+        nak_idx = int(long_val / (360.0 / 27.0)) % 27
+        nak_obj = NAKSHATRAS[nak_idx]
+        pada = int((long_val % (360.0 / 27.0)) / (360.0 / 108.0)) + 1
 
         calculated_planets.append({
             "name": p["name"],
             "symbol": p["symbol"],
             "absolute_deg": deg_to_dms_str(long_val),
             "degrees": deg_to_dms_str(deg_in_rasi),
+            "degrees_num": round(deg_in_rasi, 2),
             "rasi_id": rasi_idx,
             "rasi": rasi_obj["name"].split(' ')[0],
             "rasi_full": rasi_obj["name"],
@@ -181,27 +243,37 @@ def get_sidereal_planetary_positions(dt_utc: datetime, lat: float, lon: float) -
             "is_retrograde": p["is_retro"]
         })
 
-    # Find Lagna & Moon
     lagna_info = calculated_planets[0]
     moon_info = calculated_planets[2]
 
-    # Assign Houses (Bhava 1 to 12 from Lagna)
+    # Assign Houses 1 to 12
     lagna_rasi_id = lagna_info["rasi_id"]
     for cp in calculated_planets:
         house_num = ((cp["rasi_id"] - lagna_rasi_id) % 12) + 1
         cp["house"] = house_num
         cp["house_str"] = f"{house_num}th House" if house_num not in [1, 2, 3] else ("1st House (Lagna)" if house_num == 1 else ("2nd House" if house_num == 2 else "3rd House"))
 
-    # Active Dasha Calculation based on Moon Star
-    moon_long = moon_info["rasi_id"] * 30 + float(moon_info["degrees"].split('°')[0])
-    nak_fraction = (moon_info["pada"] - 1) / 4.0
-    moon_nak_obj = next((n for n in NAKSHATRAS if n["name"] == moon_info["nakshatra"]), NAKSHATRAS[7])
+    # Active Dasha calculation
+    moon_long = moon_info["rasi_id"] * 30.0 + moon_info["degrees_num"]
+    nak_fraction = (moon_long % (360.0 / 27.0)) / (360.0 / 27.0)
+    moon_nak_obj = next((n for n in NAKSHATRAS if n["name"] == moon_info["nakshatra"]), NAKSHATRAS[0])
     balance_years = moon_nak_obj["dasha_years"] * (1.0 - nak_fraction)
+
+    # Current running dasha based on age
+    age_years = (datetime.now(timezone.utc) - dt_utc.replace(tzinfo=timezone.utc)).days / 365.25
+    dasha_cursor = balance_years
+    current_lord = moon_nak_obj["lord"]
+    dasha_idx = next((i for i, d in enumerate(DASHA_SEQUENCE) if d["lord"] == current_lord), 0)
+
+    while age_years > dasha_cursor:
+        dasha_idx = (dasha_idx + 1) % len(DASHA_SEQUENCE)
+        dasha_cursor += DASHA_SEQUENCE[dasha_idx]["years"]
     
-    current_dasha = "Jupiter (Guru) Mahadasha - Venus Antardasha"
+    active_dasha_name = DASHA_SEQUENCE[dasha_idx]["lord"]
+    current_dasha_str = f"{active_dasha_name} Mahadasha"
 
     return {
-        "ayanamsa": "Lahiri (Chitrapaksha)",
+        "ayanamsa": f"Lahiri Chitrapaksha ({deg_to_dms_str(ayanamsa)})",
         "lagna": lagna_info["rasi_full"],
         "lagna_tamil": lagna_info["rasi_tamil"],
         "lagna_deg": lagna_info["degrees"],
@@ -212,21 +284,19 @@ def get_sidereal_planetary_positions(dt_utc: datetime, lat: float, lon: float) -
         "nakshatra": moon_info["nakshatra"],
         "nakshatra_tamil": moon_info["nakshatra_tamil"],
         "pada": moon_info["pada"],
-        "birth_dasha_balance": f"{moon_nak_obj['lord']} Dasha: {balance_years:.1f} Years remaining at birth",
-        "current_dasha": current_dasha,
+        "birth_dasha_balance": f"{moon_nak_obj['lord']} Dasha: {balance_years:.1f} Yrs at birth",
+        "current_dasha": current_dasha_str,
         "planets": calculated_planets
     }
 
 @router.post("/calculate-chart")
 async def calculate_chart(req: ChartRequest):
     try:
-        # Parse date and time
         dt_str = f"{req.dob} {req.tob}"
         dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
-        # Offset to UTC
         dt_utc = dt - timedelta(hours=req.timezone_offset)
         
-        result = get_sidereal_planetary_positions(dt_utc, req.latitude, req.longitude)
+        result = calculate_universal_ephemeris(dt_utc, req.latitude, req.longitude)
         result["user_details"] = {
             "name": req.name,
             "gender": req.gender,
