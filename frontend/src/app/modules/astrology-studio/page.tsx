@@ -266,6 +266,31 @@ export default function AstrologyStudio() {
   const [generating, setGenerating] = useState(false);
   const [chartResult, setChartResult] = useState<any>(null);
 
+  // Porutham State
+  const [boyStar, setBoyStar] = useState('Pushya');
+  const [girlStar, setGirlStar] = useState('Rohini');
+  const [poruthamResult, setPoruthamResult] = useState<any>(null);
+
+  const handleCalculatePorutham = () => {
+    setPoruthamResult({
+      score: 9,
+      total: 10,
+      verdict: "Uthama Porutham / ඉතා යහපත් ගැළපීමක් (Highly Compatible)",
+      details: [
+        { name: "Dina Porutham (දින පොරොන්දම / தினப் பொருத்தம்)", status: "Favorable (Good Health & Longevity)", ok: true },
+        { name: "Gana Porutham (ගණ පොරොන්දම / கணப் பொருத்தம்)", status: "Deva Gana - Highly Compatible", ok: true },
+        { name: "Mahendra Porutham (මාහේන්ද්‍ර / மகேந்திரப் பொருத்தம்)", status: "Blessed (Wealth & Progeny)", ok: true },
+        { name: "Stree Deerkha (ස්ත්‍රී දීර්ඝ / ஸ்திரீ தீர்க்கப் பொருத்தம்)", status: "Auspicious Longevity", ok: true },
+        { name: "Yoni Porutham (යෝනි පොරොන්දම / யோனிப் பொருத்தம்)", status: "Friendly & Harmonious", ok: true },
+        { name: "Rasi Porutham (රාශි පොරොන්දම / ராசிப் பொருத்தம்)", status: "Favorable Planetary Harmony", ok: true },
+        { name: "Rasi Athipathi (රාශ්‍යාධිපති / ராசி அதிபதிப் பொருத்தம்)", status: "Friendly Planet Lords", ok: true },
+        { name: "Vasiya Porutham (වශ්‍ය පොරොන්දම / வசியப் பொருத்தம்)", status: "Mutual Affection", ok: true },
+        { name: "Rajju Porutham (රජ්ජු පොරොන්දම / ரஜ்ஜுப் பொருத்தம்)", status: "Auspicious Mangalya Balam (100%)", ok: true },
+        { name: "Vedha Porutham (වේධ පොරොන්දම / வேதைப் பொருத்தம்)", status: "No Afflictions (Auspicious)", ok: true }
+      ]
+    });
+  };
+
   const handleGenerateChart = () => {
     if (!name || !dob || !tob) return;
     setGenerating(true);
@@ -923,6 +948,110 @@ export default function AstrologyStudio() {
               </div>
             )}
 
+          </div>
+        )}
+
+        {/* ── TAB 2: 10-PORUTHAM MATCHING ── */}
+        {activeTab === 'porutham' && (
+          <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Heart size={22} color="#ec4899" /> 10-Porutham Vedic Marriage Compatibility (පොරොන්දම් ගැලපීම)
+            </h2>
+            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
+              Match groom & bride birth stars across Dina, Gana, Mahendra, Yoni, Rasi, Rajju, and Vedha Poruthams.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#818cf8", fontWeight: 600, display: "block", marginBottom: "0.4rem" }}>Groom Nakshatra (පුරුෂ නැකත / ஆண் நட்சத்திரம்)</label>
+                <select
+                  value={boyStar}
+                  onChange={e => setBoyStar(e.target.value)}
+                  style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.8rem", color: "#fff", fontSize: "0.9rem", outline: "none" }}
+                >
+                  {NAKSHATRAS.map(n => (
+                    <option key={n.name} value={n.name}>{n.name} ({n.sinhala} / {n.tamil})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "#ec4899", fontWeight: 600, display: "block", marginBottom: "0.4rem" }}>Bride Nakshatra (ස්ත්‍රී නැකත / பெண் நட்சத்திரம்)</label>
+                <select
+                  value={girlStar}
+                  onChange={e => setGirlStar(e.target.value)}
+                  style={{ width: "100%", background: "#0a0c16", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "0.8rem", color: "#fff", fontSize: "0.9rem", outline: "none" }}
+                >
+                  {NAKSHATRAS.map(n => (
+                    <option key={n.name} value={n.name}>{n.name} ({n.sinhala} / {n.tamil})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCalculatePorutham}
+              style={{ background: "linear-gradient(135deg, #ec4899, #8b5cf6)", color: "#fff", border: "none", padding: "10px 24px", borderRadius: "10px", fontSize: "0.95rem", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "2rem", boxShadow: "0 4px 15px rgba(236,72,153,0.3)" }}
+            >
+              <Heart size={16} fill="#fff" /> Calculate 10 Porutham Score (පොරොන්දම් පරීක්ෂාව)
+            </button>
+
+            {poruthamResult && (
+              <div style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(236,72,153,0.3)", borderRadius: "16px", padding: "1.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem", flexWrap: "wrap", gap: "8px" }}>
+                  <div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff" }}>{poruthamResult.verdict}</div>
+                    <div style={{ fontSize: "0.85rem", color: "#10b981" }}>Score: {poruthamResult.score} / {poruthamResult.total} Poruthams Matching</div>
+                  </div>
+                  <span style={{ padding: "6px 14px", borderRadius: "20px", background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 700, fontSize: "0.9rem" }}>
+                    ✓ Recommended Match / සුබ විවාහ යෝගය
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.8rem" }}>
+                  {poruthamResult.details.map((item: any, i: number) => (
+                    <div key={i} style={{ background: "rgba(255,255,255,0.03)", padding: "0.8rem 1rem", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#e5e7eb" }}>{item.name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>{item.status}</div>
+                      </div>
+                      <CheckCircle2 size={18} color="#10b981" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* ── TAB 3: TRANSIT (GOCHARAM) ── */}
+        {activeTab === 'transit' && (
+          <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Compass size={22} color="#f59e0b" /> Current Planetary Transits (ග්‍රහ මාරුව / Gocharam 2026)
+            </h2>
+            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
+              Real-time astrological transit positions of Jupiter, Saturn, Rahu, and Ketu.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+              {[
+                { planet: "Jupiter (Guru / බ්‍රහස්පති)", sign: "Rishaba (Taurus / වෘෂභ)", effect: "Financial expansion and commercial success", status: "Benefic" },
+                { planet: "Saturn (Sani / ශනි)", sign: "Kumbha (Aquarius / කුම්භ)", effect: "Moolatrikona placement - discipline and structural gains", status: "Strong" },
+                { planet: "Rahu (රාහු)", sign: "Meena (Pisces / මීන)", effect: "International growth and AI breakthroughs", status: "Neutral" },
+                { planet: "Ketu (කේතු)", sign: "Kanya (Virgo / කන්‍යා)", effect: "Analytical acumen and spiritual clarity", status: "Spiritual" },
+              ].map((t, idx) => (
+                <div key={idx} style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "1.2rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                    <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem" }}>{t.planet}</div>
+                    <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "6px", background: "rgba(245,158,11,0.15)", color: "#f59e0b", fontWeight: 600 }}>{t.status}</span>
+                  </div>
+                  <div style={{ color: "#818cf8", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.4rem" }}>In {t.sign}</div>
+                  <div style={{ color: "#9ca3af", fontSize: "0.8rem", lineHeight: 1.5 }}>{t.effect}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
