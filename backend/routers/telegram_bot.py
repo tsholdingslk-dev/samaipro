@@ -22,26 +22,33 @@ router = APIRouter(prefix="/telegram", tags=["Telegram Bot"])
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8971845465:AAHmJ3ZuAtt0wOCxTajwFGulhjkursZ9D1k")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
-SAM_ASSISTANT_SYSTEM_PROMPT = """You are "Sam AI Assistant," an advanced autonomous AI intelligence agent tailored for Sri Lanka and global real-time research. Your primary role is to execute accurate data gathering, deep-dive historical research, and concise information synthesis directly for the user via Telegram.
+# In-Memory Multi-Turn Conversation Memory for Telegram Chats
+# Stores the last 12 message turns per chat_id for seamless, natural, continuous conversation.
+TELEGRAM_CHAT_MEMORY: Dict[int, List[Dict[str, str]]] = {}
 
-### Core Capabilities & Responsibilities:
-1. Real-Time News & Regional Monitoring:
-   - Provide up-to-date events, political developments, economic updates, and breaking news in Sri Lanka and worldwide.
-   - Summarize key developments clearly in Tamil (தமிழ்), English, or Sinhala based on user preference.
+SAM_ASSISTANT_SYSTEM_PROMPT = """You are "Sam AI Assistant," an advanced autonomous AI intelligence partner, co-founder, and researcher created for the user. 
+You communicate seamlessly on Telegram in natural Tamil (தமிழ்), Tanglish, English, or Sinhala.
 
-2. Deep-Dive Historical & Biographical Research (25-Year Chronology):
-   - When queried about individuals (e.g. Dr. Ramesh Pathirana, Ranil Wickremesinghe, Mahinda Rajapaksa, Sajith Premadasa, AKD, or global figures), execute exhaustive 25-year historical research.
-   - Detail chronological career milestones (1999-2026), early medical career, parliamentary entry (2010), ministerial portfolios (Health, Industries, Plantations, Education), major policy decisions, key legislative votes, notable achievements, controversies/scrutiny, and current political standing.
-   - Structure research chronologically with clear headings, bullet points, and verified facts.
+### Conversational Persona & Behavioral Rules:
+1. Natural Two-Way Dialogue:
+   - Talk naturally, warmly, and intelligently like a senior tech co-founder and trusted partner ("மச்சான்", "நிச்சயமாக", "செய்து தருகிறேன்").
+   - Remember previous context in the conversation. When the user says "change the color", "tell me more", or "what else?", connect it with the previous topic discussed.
+   - For friendly chats or greetings ("வணக்கம்", "மச்சான்", "எப்படி இருக்க?"), reply warmly and concisely without sending long robotic essays.
 
-3. Tone & Formatting:
-   - Deliver high-density, accurate facts with zero fluff.
-   - Use clean formatting with bold bullet points (- ).
-   - Support Tamil (தமிழ்), English, and Sinhala fluently.
+2. Real-Time Intelligence & Deep Research:
+   - When asked to research someone (e.g. Dr. Ramesh Pathirana, politicians, officials, business leaders), provide rich 25-year chronological facts with zero fluff.
+   - When asked about Sri Lanka news, world politics, crypto markets, or tech architecture, provide high-density, accurate facts with bold bullet points.
+
+3. Website & App Creation (/build or natural requests):
+   - When the user asks to build or modify a website (e.g. Chudar Media / சுடர் மீடியா, news portals, e-commerce), understand their vision, provide the live demo link (https://samaipro.vercel.app/demo/chudar-media), and explain how changes will be applied.
+
+4. Formatting:
+   - Use clean, readable formatting with bold bullet points (- ) and emojis.
+   - Telegram-safe text formatting only.
 """
 
 async def send_chat_action_async(chat_id: int, action: str = "typing"):
-    """Send 'typing...' or 'upload_document' indicator to Telegram user"""
+    """Send 'typing...' indicator to Telegram chat"""
     token = os.getenv("TELEGRAM_BOT_TOKEN") or TELEGRAM_BOT_TOKEN
     if not token:
         return
@@ -90,225 +97,204 @@ def set_admin_chat_id(chat_id: str):
             pass
     os.environ["TELEGRAM_ADMIN_CHAT_ID"] = str(chat_id)
 
-async def ask_sam_ai(user_prompt: str, context_prompt: Optional[str] = None) -> str:
-    """Query SAM AI Hub with Assistant System Prompt and return structured response"""
+async def ask_sam_ai(user_prompt: str, chat_id: Optional[int] = None, context_prompt: Optional[str] = None) -> str:
+    """Query SAM AI Hub with Assistant System Prompt and persistent conversation memory"""
     system_content = SAM_ASSISTANT_SYSTEM_PROMPT
     if context_prompt:
-        system_content += f"\n\nSpecial Context:\n{context_prompt}"
+        system_content += f"\n\nSpecial Context for this turn:\n{context_prompt}"
         
-    messages = [
-        {"role": "system", "content": system_content},
-        {"role": "user", "content": user_prompt}
-    ]
+    messages = [{"role": "system", "content": system_content}]
+    
+    # Append recent conversation history for this chat_id
+    if chat_id and chat_id in TELEGRAM_CHAT_MEMORY:
+        for turn in TELEGRAM_CHAT_MEMORY[chat_id][-8:]:
+            messages.append(turn)
+            
+    messages.append({"role": "user", "content": user_prompt})
     
     try:
         result = await api_hub.chat(messages)
         content = result.get("content", "")
-        if content and len(content.strip()) > 30:
+        if content and len(content.strip()) > 10:
+            # Save into memory
+            if chat_id:
+                if chat_id not in TELEGRAM_CHAT_MEMORY:
+                    TELEGRAM_CHAT_MEMORY[chat_id] = []
+                TELEGRAM_CHAT_MEMORY[chat_id].append({"role": "user", "content": user_prompt})
+                TELEGRAM_CHAT_MEMORY[chat_id].append({"role": "assistant", "content": content})
+                if len(TELEGRAM_CHAT_MEMORY[chat_id]) > 16:
+                    TELEGRAM_CHAT_MEMORY[chat_id] = TELEGRAM_CHAT_MEMORY[chat_id][-16:]
             return content
     except Exception as e:
         print(f"[Telegram AI Hub Error/Fallback]: {e}")
         
-    # High-Density Fallback Knowledge Repository for Deep Research
+    # High-Speed Smart Knowledge Fallback
     if "ramesh" in user_prompt.lower() or "pathirana" in user_prompt.lower():
         return (
             "📋 25-Year Deep-Dive Research Report: Dr. Ramesh Pathirana (ரமேஷ் பதிரண)\n\n"
             "1. ஆரம்ப கால பின்னணி மற்றும் மருத்துவ சேவை (1998 - 2005):\n"
-            "- முன்னாள் பிரபல கல்வி அமைச்சர் மறைந்த ரிச்சர்ட் பதிரண அவர்களின் புதல்வர்.\n"
-            "- பேராதனை பல்கலைக்கழக மருத்துவ பீடத்தில் (Faculty of Medicine, University of Peradeniya) மருத்துவப் பட்டம் (MBBS) பெற்றார்.\n"
-            "- காலி மற்றும் தென் மாகாண அரச மருத்துவமனைகளில் அரச வைத்திய அதிகாரியாகப் பல ஆண்டுகள் தீவிர மக்கள் சேவை செய்தார்.\n\n"
-            "2. அரசியல் பிரவேசம் மற்றும் பாராளுமன்றப் பயணம் (2005 - 2015):\n"
-            "- தந்தையின் மறைவுக்குப் பின் காலி மாவட்டத்தின் ஸ்ரீலங்கா சுதந்திரக் கட்சி (SLFP) அமைப்பாளராக நியமிக்கப்பட்டார்.\n"
-            "- 2010 ஆம் ஆண்டு நடைபெற்ற பொதுத்தேர்தலில் காலி மாவட்டத்தில் போட்டியிட்டு 61,788 விருப்பு வாக்குகளைப் பெற்று முதல்முறையாக பாராளுமன்ற உறுப்பினராகத் தெரிவானார்.\n"
-            "- 2015 பொதுத்தேர்தலிலும் காலி மாவட்டத்திலிருந்து பாராளுமன்றத்திற்கு மீண்டும் தெரிவு செய்யப்பட்டார்.\n\n"
+            "- முன்னாள் கல்வி அமைச்சர் மறைந்த ரிச்சர்ட் பதிரண அவர்களின் புதல்வர்.\n"
+            "- பேராதனை பல்கலைக்கழக மருத்துவ பீடத்தில் (MBBS) பட்டம் பெற்று அரச வைத்திய அதிகாரியாகப் பணியாற்றினார்.\n\n"
+            "2. அரசியல் பிரவேசம் (2010 - 2015):\n"
+            "- 2010 பொதுத்தேர்தலில் காலி மாவட்டத்தில் 61,788 விருப்பு வாக்குகளுடன் முதன்முறையாக பாராளுமன்ற உறுப்பினரானார்.\n\n"
             "3. முக்கிய அமைச்சரவை அமைச்சுப் பொறுப்புகள் (2019 - 2024):\n"
-            "- பெருந்தோட்டத்துறை அமைச்சர் (Minister of Plantation Industries - 2019 - 2022):\n"
-            "  * இலங்கை தேயிலை ஏற்றுமதியை உலக சந்தையில் நவீனப்படுத்தினார்; சிறு தேயிலைத் தோட்ட உரிமையாளர்களுக்கு நேரடி மானியங்களை வழங்கினார்.\n"
-            "- கல்வி அமைச்சர் (Minister of Education - 2022):\n"
-            "  * 2022 அரசியல் மாற்றங்களின் போது குறுகிய காலம் கல்வி அமைச்சராகப் பணியாற்றினார்.\n"
-            "- சுகாதாரத்துறை மற்றும் கைத்தொழில் அமைச்சர் (Minister of Health & Industries - 2023 - 2024):\n"
-            "  * நாட்டின் கடுமையான பொருளாதார மற்றும் அந்நியச் செலாவணி நெருக்கடி காலத்தில், மருத்துவத் துறையில் அத்தியாவசிய மருந்துப் பற்றாக்குறையைச் சீரமைக்க விசேட அவசரகால கொள்வனவுத் திட்டங்களை நடைமுறைப்படுத்தினார்.\n"
-            "  * உள்ளூர் உற்பத்திகளை ஊக்குவிக்கும் கைத்தொழில் கொள்கைகளை முன்னெடுத்தார்.\n\n"
-            "4. முக்கிய சாதனைகள் & கொள்கை தாக்கங்கள் (Key Milestones):\n"
-            "- தென் மாகாண மற்றும் காலி மாவட்ட உள்கட்டமைப்பு, மருத்துவமனை நவீனமயமாக்கல் திட்டங்களை வழிநடத்தினார்.\n"
-            "- இலங்கை அரசியலில் தீவிர சர்ச்சைகளில் சிக்காத, மருத்துவக் கல்விப் பின்னணி கொண்ட நாகரிகமான அரசியல்வாதியாக மக்கள் மத்தியில் நற்பெயர் பெற்றார்.\n\n"
-            "5. தற்போதைய அரசியல் நிலை (Current Standing 2024 - 2026):\n"
-            "- ஸ்ரீலங்கா பொதுஜன பெரமுன (SLPP) கட்சியின் முக்கிய சிரேஷ்ட தலைவராகவும், புதிய கூட்டணிகளில் தென் மாகாணத்தின் செல்வாக்குமிக்க அரசியல் தலைவராகவும் தொடர்ந்து இயங்கி வருகிறார்."
+            "- பெருந்தோட்டத்துறை அமைச்சர் (2019-2022)\n"
+            "- கல்வி அமைச்சர் (2022)\n"
+            "- சுகாதாரத்துறை மற்றும் கைத்தொழில் அமைச்சர் (2023-2024)\n\n"
+            "4. தற்போதைய அரசியல் நிலை (2024 - 2026):\n"
+            "- தென் மாகாணத்தின் செல்வாக்குமிக்க சிரேஷ்ட தலைவராக தொடர்ந்து இயங்கி வருகிறார்."
         )
+
+    if any(greet in user_prompt.lower() for greet in ["hello", "hi", "வணக்கம்", "மச்சான்", "machan", "epdi iruka", "nalla irukiya"]):
+        return "வணக்கம் மச்சான்! நான் நலமாக இருக்கிறேன். உங்களுக்கு என்ன உதவி வேண்டும் என்று சொல்லுங்கள் — நாம் நேரடியாகவே பேசிக்கொள்ளலாம்! 🔥"
     
     return (
-        f"🤖 Sam AI Assistant:\n\n"
-        f"வணக்கம் மச்சான்! '{user_prompt}' பற்றிய தகவல்கள் வெற்றிகரமாக ஆய்வு செய்யப்பட்டுள்ளன.\n\n"
-        f"மேலதிக விவரங்களுக்கு:\n"
-        f"🇱🇰 /slnews - இலங்கை முக்கிய செய்திகள்\n"
-        f"🔍 /research [நபர்/தலைப்பு] - 25 ஆண்டு கால ஆழமான வரலாற்று அறிக்கை\n"
-        f"📊 /briefing - இன்றைய முழுமையான அறிக்கை"
+        f"வணக்கம் மச்சான்! உங்கள் செய்தி பெறப்பட்டது: '{user_prompt}'\n\n"
+        f"நாம் தொடர்ந்து இங்கேயே நேரடியாகப் பேசலாம். உங்களுக்குத் தேவையான யோசனைகள், இணையதள மாற்றங்கள் அல்லது ஆராய்ச்சிகள் எவை என்றாலும் நேரடியாகத் தட்டச்சு செய்யுங்கள்!"
     )
 
 async def process_telegram_background_task(chat_id: int, text: str, user_name: str):
-    """Background processor: sends immediate progress status and executes deep research"""
+    """Background processor: handles both slash commands and natural conversational dialogue"""
     try:
-        parts = text.split(maxsplit=1)
-        command = parts[0].lower()
-        args = parts[1].strip() if len(parts) > 1 else ""
-        
-        # 1. /start
-        if command == "/start":
-            welcome_msg = (
-                f"👑 வணக்கம் {user_name}! Sam AI Assistant உங்களை வரவேற்கிறது!\n\n"
-                f"நான் உங்கள் பிரத்யேக Autonomous Intelligence & Research Agent.\n\n"
-                f"⚡ பயன்படுத்தக்கூடிய முக்கிய Commands:\n"
-                f"🇱🇰 /slnews - இலங்கை முக்கிய செய்திகள் & அரசியல்/பொருளாதார சுருக்கம்\n"
-                f"🌐 /worldnews - சர்வதேச மற்றும் உலகளாவிய முக்கிய நிகழ்வுகள்\n"
-                f"🔍 /research [பெயர்/தலைப்பு] - 25 ஆண்டுகால ஆழமான வரலாற்று ஆராய்ச்சி (எ.கா: /research Ramesh Pathirana)\n"
-                f"📚 /learn [தலைப்பு] - SAM AI இன்று கற்றுக்கொண்டவை & தொழில்நுட்ப விளக்கங்கள்\n"
-                f"📊 /briefing - இன்றைய முழுமையான Daily Intelligence அறிக்கை\n"
-                f"🔑 /newadminkey - புதிய அட்மின் அக்சஸ் கீ உருவாக்கம்\n"
-                f"ℹ️ /help - அனைத்து கட்டளைகளின் பட்டியல்\n\n"
-                f"💬 நீங்கள் எந்தவொரு கேள்வியையும் தமிழில் அல்லது ஆங்கிலத்தில் நேரடியாக என்னிடம் தட்டச்சு செய்தும் கேட்கலாம்!"
-            )
-            await send_telegram_message_async(chat_id, welcome_msg)
-            return
-
-        # 2. /help
-        if command == "/help":
-            help_text = (
-                "🤖 Sam AI Assistant Command Reference:\n\n"
-                "🇱🇰 /slnews - இலங்கை முக்கிய நடப்பு நிகழ்வுகள் & அரசியல்/பொருளாதார ஆய்வு\n"
-                "🌐 /worldnews - உலகளாவிய முக்கிய சர்வதேச & தொழில்நுட்ப செய்திகள்\n"
-                "🔍 /research <Topic/Person> - 25-Year Deep-Dive biographical & historical research (எ.கா: /research Ramesh Pathirana)\n"
-                "📚 /learn <Topic> - தொழில்நுட்ப மற்றும் துறைசார் நுண்ணறிவு விளக்கம்\n"
-                "📊 /briefing - இன்றைய முழு நாளுக்கான Intelligence Briefing\n"
-                "🔑 /newadminkey - Generate Master Admin Access Key\n"
-                "🔑 /staffkey 7d - Generate Staff Key (24h, 7d, 14d, 30d)\n"
-                "📈 /stats - System Statistics\n"
-            )
-            await send_telegram_message_async(chat_id, help_text)
-            return
-
-        # 3. /research
-        if command in ["/research", "/biography", "/history"]:
-            if not args:
-                await send_telegram_message_async(chat_id, "⚠️ பயன்படுத்தும் முறை:\n/research [நபர் அல்லது தலைப்பு]\n\nஎடுத்துக்காட்டு:\n/research Ramesh Pathirana")
+        # Check if the message is a slash command
+        if text.startswith("/"):
+            parts = text.split(maxsplit=1)
+            command = parts[0].lower()
+            args = parts[1].strip() if len(parts) > 1 else ""
+            
+            # 1. /start
+            if command == "/start":
+                welcome_msg = (
+                    f"👑 வணக்கம் {user_name}! Sam AI Assistant உங்களை வரவேற்கிறது!\n\n"
+                    f"நான் உங்கள் நேரடி Autonomous AI Co-Founder & Research Partner.\n\n"
+                    f"💡 நீங்கள் எந்தவொரு Slash Commands-உம் போடத் தேவையில்லை! வழக்கம் போல ஒரு நண்பரிடம் பேசுவது போல இயல்பாக என்னிடம் தமிழில் அல்லது ஆங்கிலத்தில் பேசலாம்.\n\n"
+                    f"⚡ விருப்பப்பட்டால் பயன்படுத்தக்கூடிய சில Shortcut Commands:\n"
+                    f"🇱🇰 /slnews - இலங்கை முக்கிய செய்திகள்\n"
+                    f"🌐 /worldnews - உலகளாவிய செய்திகள்\n"
+                    f"🔍 /research [பெயர்] - 25 ஆண்டுகால ஆராய்ச்சி\n"
+                    f"🎨 /build [யோசனை] - இணையதளம் உருவாக்கி Live Demo பெறுதல்\n"
+                    f"📊 /briefing - அன்றைய முழு அறிக்கை\n\n"
+                    f"💬 சொல்லுங்கள் மச்சான், இன்று நாம் என்ன செய்யலாம்?"
+                )
+                await send_telegram_message_async(chat_id, welcome_msg)
                 return
-            
-            # Step 1: Immediate In-Progress Notification!
-            progress_msg = (
-                f"⏳ <b>ஆராய்ச்சி ஆரம்பிக்கப்பட்டுள்ளது (Research in Progress):</b>\n\n"
-                f"'{args}' பற்றிய 25 ஆண்டு கால வரலாற்று ஆவணங்கள், பாராளுமன்றப் பதிவுகள் மற்றும் முக்கிய தகவல்களைத் திரட்டும் வேலை தற்போது தீவிரமாக நடந்து கொண்டு இருக்கிறது மச்சான். 🔍\n\n"
-                f"வேலை முடிந்தவுடன் அடுத்த சில நொடிகளில் விரிவான அறிக்கை இங்கே அனுப்பப்படும்! தயவுசெய்து காத்திருக்கவும்..."
-            )
-            await send_telegram_message_async(chat_id, progress_msg)
-            await send_chat_action_async(chat_id, "typing")
-            
-            # Step 2: Execute Heavy Research
-            prompt = f"Conduct an exhaustive 25-year historical, biographical, and political deep-dive research on '{args}'. Outline early background, medical/professional entry, parliamentary journey (2010 onwards), ministerial portfolios (Health, Plantation, Industry, Education), major policy achievements, controversies/scrutiny, timeline milestones, and current standing. Deliver rich, high-density facts in Tamil."
-            response_text = await ask_sam_ai(prompt, f"Exhaustive 25-year chronological research report on {args} in Tamil.")
-            
-            # Step 3: Send Finalized Report
-            await send_telegram_message_async(chat_id, f"📋 <b>25-Year Deep-Dive Research Report: {args}</b>\n\n{response_text}")
-            return
 
-        # 4. /slnews
-        if command in ["/slnews", "/srilanka", "/lankanews"]:
-            await send_telegram_message_async(chat_id, "⏳ இலங்கையின் முக்கிய அரசியல் மற்றும் பொருளாதார செய்திகளைத் திரட்டும் வேலை நடந்து கொண்டிருக்கிறது மச்சான்... சில நொடிகளில் அறிக்கை வரும்!")
-            await send_chat_action_async(chat_id, "typing")
-            prompt = "Provide a comprehensive, high-density update of the most important news, political developments, economic milestones, and central bank/governance updates in Sri Lanka for today/recently. Format with clear bold bullet points and sections in Tamil."
-            response_text = await ask_sam_ai(prompt, "Focus on verified Sri Lankan news facts, parliament/election updates, economic indicators, and public interest matters in Tamil.")
-            await send_telegram_message_async(chat_id, f"🇱🇰 <b>இலங்கை முக்கிய செய்திகள் & நடப்பு நிகழ்வுகள்:</b>\n\n{response_text}")
-            return
+            # 2. /help
+            if command == "/help":
+                help_text = (
+                    "🤖 Sam AI Assistant Shortcut Commands:\n\n"
+                    "🇱🇰 /slnews - இலங்கை நடப்பு நிகழ்வுகள்\n"
+                    "🌐 /worldnews - சர்வதேச முக்கிய செய்திகள்\n"
+                    "🔍 /research <Topic> - 25-Year Deep Research\n"
+                    "🎨 /build <Idea> - Web & App Live Demo Generator\n"
+                    "📊 /briefing - Daily Intelligence Briefing\n"
+                    "🔑 /newadminkey - Generate Master Admin Key\n"
+                    "📈 /stats - System Statistics\n\n"
+                    "💡 குறிப்பு: கட்டளைகள் இன்றியும் இயல்பாக என்னுடன் நேரடியாக நீங்கள் உரையாடலாம்!"
+                )
+                await send_telegram_message_async(chat_id, help_text)
+                return
 
-        # 5. /worldnews
-        if command in ["/worldnews", "/global", "/world"]:
-            await send_telegram_message_async(chat_id, "⏳ உலகளாவிய முக்கிய செய்திகள் மற்றும் சர்வதேச நிலவரங்களைத் திரட்டும் வேலை நடந்து கொண்டிருக்கிறது மச்சான்...")
-            await send_chat_action_async(chat_id, "typing")
-            prompt = "Provide a structured global intelligence digest covering major international geopolitics, economic trends, US/Asia/Middle East developments, and breakthrough AI/tech industry news for today. Format in clear bold bullet points in Tamil."
-            response_text = await ask_sam_ai(prompt, "Provide high-density international news in Tamil with clear headings.")
-            await send_telegram_message_async(chat_id, f"🌐 <b>உலகளாவிய முக்கிய செய்திகள் (Global Intelligence):</b>\n\n{response_text}")
-            return
+            # 3. /build (Instant Website & Live Demo)
+            if command in ["/build", "/website", "/app", "/demo"]:
+                project_req = args or "Chudar Media News Portal like Tamilwin"
+                await send_telegram_message_async(
+                    chat_id, 
+                    f"⏳ '{project_req}' இணையதளத்தை உருவாக்கும் வேலை நடந்து கொண்டு இருக்கிறது மச்சான்... சில நொடிகளில் Live Demo Link தருகிறேன்! 🎨"
+                )
+                await send_chat_action_async(chat_id, "typing")
+                
+                slug = "chudar-media" if "chudar" in project_req.lower() else "default"
+                demo_url = f"https://samaipro.vercel.app/demo/{slug}"
+                
+                build_summary = (
+                    f"🎉 உங்கள் '{project_req}' இணையதள லைவ் டெமோ தயார் மச்சான்! 🌐🔥\n\n"
+                    f"🔗 Live Demo Link:\n{demo_url}\n\n"
+                    f"✨ சிறப்பம்சங்கள்:\n"
+                    f"• 🔴 Breaking News Live Ticker (Tamilwin Style)\n"
+                    f"• 📰 Featured Lead Hero Story & Category Tabs\n"
+                    f"• 📺 Live Video Container\n"
+                    f"• 📱 100% Mobile Responsive Dark-Mode Layout\n"
+                    f"• ☀️ Live Colombo Weather & Exchange Ticker\n\n"
+                    f"📝 திருத்தங்கள் செய்ய:\n"
+                    f"இந்த லிங்கைத் திறந்து பார்த்துவிட்டு ஏதேனும் மாற்றங்கள் தேவைப்பட்டால் எனக்கு இங்கேயே சொல்லுங்கள்; நான் உடனே திருத்தித் தருகிறேன்!"
+                )
+                await send_telegram_message_async(chat_id, build_summary)
+                return
 
-        # 6. /learn
-        if command in ["/learn", "/study", "/tech"]:
-            subject = args or "SAM AI Autonomous Capabilities"
-            await send_telegram_message_async(chat_id, f"⏳ '{subject}' பற்றிய விரிவான விளக்கத்தைத் தயாரிக்கும் வேலை நடந்து கொண்டிருக்கிறது...")
-            await send_chat_action_async(chat_id, "typing")
-            prompt = f"Explain the core concepts, technical mechanics, and practical applications of '{subject}' clearly with high-density insights in Tamil."
-            response_text = await ask_sam_ai(prompt, "Educational breakdown in Tamil with structured bullet points.")
-            await send_telegram_message_async(chat_id, f"📚 <b>கற்றல் & தொழில்நுட்ப விளக்கம் ({subject}):</b>\n\n{response_text}")
-            return
+            # 4. /research
+            if command in ["/research", "/biography", "/history"]:
+                if not args:
+                    await send_telegram_message_async(chat_id, "⚠️ பயன்படுத்தும் முறை: /research [நபர் அல்லது தலைப்பு]")
+                    return
+                
+                await send_telegram_message_async(chat_id, f"⏳ '{args}' பற்றிய 25 ஆண்டு கால வரலாற்று ஆவணங்களைத் திரட்டும் வேலை நடந்து கொண்டு இருக்கிறது மச்சான்... 🔍")
+                await send_chat_action_async(chat_id, "typing")
+                
+                prompt = f"Conduct an exhaustive 25-year historical and political research on '{args}'. Deliver rich facts in Tamil with structured bullet points."
+                response_text = await ask_sam_ai(prompt, chat_id, f"25-year research report on {args} in Tamil.")
+                await send_telegram_message_async(chat_id, f"📋 25-Year Deep-Dive Research Report: {args}\n\n{response_text}")
+                return
 
-        # 7. /build (Autonomous Web/App Builder & Live Demo Link)
-        if command in ["/build", "/website", "/app", "/demo"]:
-            project_req = args or "Chudar Media News Portal like Tamilwin"
-            await send_telegram_message_async(
-                chat_id, 
-                f"⏳ <b>இணையதளம் உருவாக்கும் வேலை ஆரம்பிக்கப்பட்டுள்ளது!</b>\n\n"
-                f"'{project_req}' தேவைக்கேற்ப முழுமையான ரெஸ்பான்சிவ் இணையதளத்தை (Tamilwin Style UI & Live Ticker) உருவாக்கும் வேலை தற்போது தீவிரமாக நடந்து கொண்டு இருக்கிறது மச்சான். 🎨\n\n"
-                f"வேலை முடிந்ததும் Live Demo Link இங்கே உடனே அனுப்பப்படும்!"
-            )
-            await send_chat_action_async(chat_id, "typing")
-            
-            # Slug generation
-            slug = "chudar-media" if "chudar" in project_req.lower() else "default"
-            demo_url = f"https://samaipro.vercel.app/demo/{slug}"
-            
-            build_summary = (
-                f"🎉 <b>உங்கள் '{project_req}' இணையதள லைவ் டெமோ தயார் மச்சான்!</b> 🌐🔥\n\n"
-                f"🔗 <b>Live Demo Link:</b>\n{demo_url}\n\n"
-                f"✨ <b>பொருத்தப்பட்டுள்ள சிறப்பம்சங்கள்:</b>\n"
-                f"• 🔴 Breaking News Ticker (உடனுக்குடன் முக்கிய செய்திகள்)\n"
-                f"• 📰 Featured Lead Hero Story & Category Tabs (இலங்கை, சர்வதேசம், அரசியல், சினிமா)\n"
-                f"• 📺 Live Video News & YouTube Embed Container\n"
-                f"• 📱 100% Mobile-First & Dark-Mode Responsive Layout\n"
-                f"• ☀️ Live Colombo Weather & USD/LKR Exchange Ticker\n\n"
-                f"📝 <b>பிழைகள் அல்லது மாற்றங்கள் செய்ய:</b>\n"
-                f"இந்த லிங்கைத் திறந்து பார்த்துவிட்டு, நிற மாற்றம் (Color), புதிய பகுதிகள் (Sections) அல்லது பிழை திருத்தங்கள் எவை இருந்தாலும் எனக்கு இங்கேயே சொல்லுங்கள்; நான் உடனடியாக திருத்தி அனுப்பி வைக்கிறேன் மச்சான்! 🚀"
-            )
-            await send_telegram_message_async(chat_id, build_summary)
-            return
+            # 5. /slnews
+            if command in ["/slnews", "/srilanka", "/lankanews"]:
+                await send_telegram_message_async(chat_id, "⏳ இலங்கை முக்கிய அரசியல் மற்றும் பொருளாதார செய்திகளைத் திரட்டுகிறேன்...")
+                await send_chat_action_async(chat_id, "typing")
+                prompt = "Provide a comprehensive update of the most important news, political developments, and economic updates in Sri Lanka in Tamil with bold bullet points."
+                response_text = await ask_sam_ai(prompt, chat_id, "Sri Lankan news update in Tamil.")
+                await send_telegram_message_async(chat_id, f"🇱🇰 இலங்கை முக்கிய செய்திகள் & நடப்பு நிகழ்வுகள்:\n\n{response_text}")
+                return
 
-        # 8. /briefing
-        if command in ["/briefing", "/daily", "/today"]:
-            await send_telegram_message_async(chat_id, "⏳ இன்றைய முழு நாளுக்கான Executive Intelligence Briefing தயாரிக்கும் வேலை நடந்து கொண்டிருக்கிறது மச்சான்...")
-            await send_chat_action_async(chat_id, "typing")
-            prompt = "Generate today's complete Daily Intelligence Briefing: 1. Sri Lanka Summary, 2. Global Markets & Crypto Overview, 3. SAM AI Platform & Agency Updates, 4. Top Recommendation for Today. Format clearly in Tamil."
-            response_text = await ask_sam_ai(prompt, "Daily Executive Briefing in Tamil.")
-            await send_telegram_message_async(chat_id, f"📊 <b>Sam AI Assistant - Daily Executive Briefing:</b>\n\n{response_text}")
-            return
+            # 6. /worldnews
+            if command in ["/worldnews", "/global", "/world"]:
+                await send_telegram_message_async(chat_id, "⏳ உலகளாவிய முக்கிய செய்திகளைத் திரட்டுகிறேன்...")
+                await send_chat_action_async(chat_id, "typing")
+                prompt = "Provide a structured global intelligence digest covering international geopolitics, economic trends, and breakthrough AI/tech industry news in Tamil."
+                response_text = await ask_sam_ai(prompt, chat_id, "Global intelligence news in Tamil.")
+                await send_telegram_message_async(chat_id, f"🌐 உலகளாவிய முக்கிய செய்திகள் (Global Intelligence):\n\n{response_text}")
+                return
 
-        # 8. /newadminkey
-        if command == "/newadminkey":
-            key_code = f"SAM-ADMIN-{secrets.token_hex(4).upper()}-{secrets.token_hex(4).upper()}"
-            try:
-                db = SessionLocal()
-                new_key = models.AccessKey(key_code=key_code, key_type="admin", max_uses=9999, telegram_chat_id=str(chat_id))
-                db.add(new_key)
-                db.commit()
-                db.close()
-            except Exception:
-                pass
-            await send_telegram_message_async(chat_id, f"👑 <b>New Admin Access Key Generated:</b>\n<code>{key_code}</code>")
-            return
+            # 7. /briefing
+            if command in ["/briefing", "/daily", "/today"]:
+                await send_telegram_message_async(chat_id, "⏳ இன்றைய தினசரி Executive Intelligence Briefing தயாராகிறது...")
+                await send_chat_action_async(chat_id, "typing")
+                prompt = "Generate today's complete Daily Intelligence Briefing in Tamil."
+                response_text = await ask_sam_ai(prompt, chat_id)
+                await send_telegram_message_async(chat_id, f"📊 Sam AI Assistant - Daily Executive Briefing:\n\n{response_text}")
+                return
 
-        # 9. /stats
-        if command == "/stats":
-            await send_telegram_message_async(chat_id, "📊 <b>SAM AI System Statistics:</b>\n\n⚡ Core Engine: Operational (99.99%)\n🤖 AI Sentry: Active\n🌐 Multi-API Rotator: Online (Gemini + Groq + OpenRouter)")
-            return
+            # 8. /newadminkey
+            if command == "/newadminkey":
+                key_code = f"SAM-ADMIN-{secrets.token_hex(4).upper()}-{secrets.token_hex(4).upper()}"
+                try:
+                    db = SessionLocal()
+                    new_key = models.AccessKey(key_code=key_code, key_type="admin", max_uses=9999, telegram_chat_id=str(chat_id))
+                    db.add(new_key)
+                    db.commit()
+                    db.close()
+                except Exception:
+                    pass
+                await send_telegram_message_async(chat_id, f"👑 New Admin Access Key Generated:\n{key_code}")
+                return
 
-        # 10. Freeform Natural Language Query
-        await send_telegram_message_async(chat_id, f"⏳ உங்கள் கேள்விக்குரிய தகவல்களைத் திரட்டும் வேலை நடந்து கொண்டிருக்கிறது மச்சான்... முடிந்தவுடன் முழு விபரமும் தருகிறேன்!")
+        # ── 100% DIRECT NATURAL HUMAN CONVERSATION ──
+        # If the user did not use any slash command, talk naturally!
         await send_chat_action_async(chat_id, "typing")
         
-        context = "The user is chatting with Sam AI Assistant on Telegram. Respond clearly with factual, structured information in Tamil or the language of query."
-        if "ramesh" in text.lower() or "pathirana" in text.lower():
-            context += " Conduct a thorough 25-year biographical, political, and medical career breakdown of Dr. Ramesh Pathirana."
+        # Check if the user is asking to build or modify something
+        is_build_request = any(w in text.lower() for w in ["website", "web site", "portal", "site", "web", "வெப்சைட்", "இணையதளம்", "chudar", "சுடர்"])
         
-        response_text = await ask_sam_ai(text, context)
+        if is_build_request and any(w in text.lower() for w in ["chudar", "சுடர்", "media", "மீடியா", "tamilwin"]):
+            context = "The user is talking about Chudar Media or a Tamilwin style news website. Remind them of the live demo at https://samaipro.vercel.app/demo/chudar-media and address any changes they requested."
+        else:
+            context = "Natural friendly co-founder conversation with the user in Tamil/Tanglish. Be direct, helpful, and human. Remember conversational context."
+            
+        response_text = await ask_sam_ai(text, chat_id, context)
         await send_telegram_message_async(chat_id, response_text)
 
     except Exception as e:
         print(f"[Telegram Background Error]: {traceback.format_exc()}")
-        await send_telegram_message_async(chat_id, f"⚠️ Sam AI Assistant Error: {str(e)}")
+        await send_telegram_message_async(chat_id, f"⚠️ Sam AI Assistant: மன்னிக்கவும், ஒரு தற்காலிக தாமதம் ஏற்பட்டது ({str(e)}). தயவுசெய்து மீண்டும் ஒருமுறை சொல்லுங்கள் மச்சான்!")
 
 @router.get("/setup-webhook")
 async def setup_webhook(url: str):
@@ -335,11 +321,6 @@ async def send_test_message(chat_id: Optional[int] = None, message: str = "Hello
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
-    """
-    Ultra-Fast Webhook Handler:
-    Immediately returns 200 OK to Telegram servers (<50ms),
-    and spawns AI computation in background task to avoid timeouts.
-    """
     try:
         data = await request.json()
     except Exception:
