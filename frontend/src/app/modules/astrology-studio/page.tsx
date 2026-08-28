@@ -80,6 +80,171 @@ const DASHA_SEQ = [
   { lord: "Mercury", years: 17, mantra: "Om Bram Brim Broum Sah Budhaya Namaha" }
 ];
 
+const PLANET_DATA: { [key: string]: any } = {
+  "Sun (Surya)": {
+    baseOverview: "Surya (Sun) is the Atma Karaka (Soul Signifier), representing pure consciousness, personal sovereignty, leadership, government honor, and fatherly vitality.",
+    houses: {
+      1: { title: "Digbala in Tanu Bhava (1st House)", effect: "Commanding charisma, innate authority, strong skeletal vitality, natural executive presence, and independent spirit.", drishti: "Casts full 7th aspect onto the 7th house of partnerships, demanding respect and dignity in alliances." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Authoritative voice, noble family lineage, focus on state/government revenues, and high fiscal discipline.", drishti: "Aspects the 8th house of secret knowledge and transformation, granting acute analytical depth." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Fearless warrior drive, decisive communication, high initiative in commercial ventures, and leadership among peers.", drishti: "Aspects the 9th house of Dharma, infusing deep conviction into ethical principles and beliefs." },
+      4: { title: "Sukha Bhava (4th House)", effect: "Royal domestic foundation, ancestral property protection, strong patriotic inclinations, and enduring mental willpower.", drishti: "Aspects the 10th house of career (Karma Bhava), ensuring career prominence and public respect." },
+      5: { title: "Poorva Punya (5th House)", effect: "Brilliant strategic intelligence, creative mastery, high political acumen, blessing of noble progeny, and mastery of mantras.", drishti: "Aspects the 11th house of Labha (gains), converting intellectual inventions into massive revenues." },
+      6: { title: "Shatru Hanta (6th House)", effect: "Complete victory over competitors and adversaries, robust immunological stamina, success in administrative litigation.", drishti: "Aspects the 12th house of foreign affairs, ensuring authority in overseas and institutional dealings." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "High-status partnerships, influential public relations, and a dignified, principle-driven partner.", drishti: "Aspects the 1st house (Lagna), reinforcing personal sovereignty and social stature." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Profound investigative insight, interest in occult sciences and government analytics, longevity through disciplined life.", drishti: "Aspects the 2nd house of accumulated wealth and lineage, giving control over long-term assets." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Supreme divine grace, philosophical leadership, fortune through ethical enterprises, and global academic acclaim.", drishti: "Aspects the 3rd house of courage, turning theoretical wisdom into decisive commercial actions." },
+      10: { title: "Digbala Raja Yoga (10th House)", effect: "Peak career authority, government honors, executive power, institutional builder, and renowned reputation.", drishti: "Aspects the 4th house of happiness, bringing satisfaction through professional triumphs." },
+      11: { title: "Labha Bhava (11th House)", effect: "Extraordinary wealth accumulation, elite social networks, influential mentors, and total fulfillment of grand ambitions.", drishti: "Aspects the 5th house of intellect, multiplying speculative and creative breakthroughs." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Success in foreign governments, international diplomacy, spiritual enlightenment, and deep inner detachment.", drishti: "Aspects the 6th house, overcoming hidden obstacles and competitors through strategic wisdom." }
+    },
+    remedy: "Chant the Aditya Hridaya Stotram on Sundays at sunrise, offer water in a copper vessel (Surya Arghya), and wear high-grade Ruby (Manikkam) under expert guidance."
+  },
+  "Moon (Chandra)": {
+    baseOverview: "Chandra (Moon) is the Manas Karaka (Mind & Emotion Signifier), ruling psychological equilibrium, intuition, maternal connection, and liquid wealth.",
+    houses: {
+      1: { title: "Lagna Moon (1st House)", effect: "Magnetic personal charm, deep emotional empathy, intuitive perceptiveness, luminous complexion, and widespread public affection.", drishti: "Aspects the 7th house, attracting caring and emotionally responsive partners." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Sweet persuasive speech, fluctuating yet abundant cash flow, high investment in family comforts, and artistic appreciation.", drishti: "Aspects the 8th house, granting strong psychic intuition and emotional recovery power." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Creative writing genius, persuasive artistic communication, close bonds with siblings, and frequent inspiring journeys.", drishti: "Aspects the 9th house, aligning emotional impulses with righteous spiritual curiosity." },
+      4: { title: "Digbala Sukha Bhava (4th House)", effect: "Full directional strength (Digbala), profound inner peace, luxurious home sanctuary, maternal blessings, and vehicle comforts.", drishti: "Aspects the 10th house of career, blessing with a nurturing and public-facing professional career." },
+      5: { title: "Poorva Punya (5th House)", effect: "Refined creative imagination, artistic storytelling, loving children, sharp psychological understanding, and intuitive investing.", drishti: "Aspects the 11th house, generating steady wealth streams through creative ventures." },
+      6: { title: "Shatru Bhava (6th House)", effect: "Dedication to health healing, service in care-taking or hospitality sectors, sharp discernment in workplace dynamics.", drishti: "Aspects the 12th house, facilitating restful meditation and release of mental anxiety." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Charming, empathetic, and aesthetically refined spouse; highly successful in public relations, commerce, and consumer trade.", drishti: "Aspects the 1st house, infusing your aura with warmth and approachable gentleness." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Deep psychological and occult research, mystical dreams, high psychic sensitivity, and transformative emotional rebirths.", drishti: "Aspects the 2nd house, managing family legacies and liquid financial instruments." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Auspicious pilgrimage travels, fortunate mentors, noble spiritual inclinations, and flourishing global worldview.", drishti: "Aspects the 3rd house, expressing philosophical truths through poetic and inspiring words." },
+      10: { title: "Karma Bhava (10th House)", effect: "Dynamic public career, popularity with masses, success in travel/food/hospitality/creative industries, and honorable status.", drishti: "Aspects the 4th house, harmonizing professional triumphs with emotional family happiness." },
+      11: { title: "Labha Bhava (11th House)", effect: "Consistent financial growth, wide circle of supportive friends and influential women patrons, achieving heartfelt goals.", drishti: "Aspects the 5th house, fostering fertile creative ideas and joy from children." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Profound spiritual meditation, peaceful sleep, success in foreign lands and coastal regions, intuitive dream downloads.", drishti: "Aspects the 6th house, healing bodily stress through mindfulness and solitude." }
+    },
+    remedy: "Chant 'Om Namah Shivaya' on Mondays, drink water stored in pure silver vessels, and respect mother figures."
+  },
+  "Mars (Chevvai)": {
+    baseOverview: "Mangala (Mars) is the Bhratru & Bhoomi Karaka, commanding courage, adrenaline, physical vitality, logic, real estate, and engineering mastery.",
+    houses: {
+      1: { title: "Ruchaka / Lagna Mars (1st House)", effect: "Unyielding courage, sharp athletic reflexes, assertive executive energy, pioneering spirit, and magnetic willpower.", drishti: "Special 4th, 7th, and 8th aspects ignite high drive in property, partnerships, and crisis management." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Bold and direct speech, assertive financial management, wealth creation through engineering or real estate.", drishti: "Special aspects onto the 5th, 8th, and 9th houses empower tactical investments and decisive action." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Unrivaled bravery, martial competitiveness, digital/technical innovation, and mastery over technical crafts.", drishti: "Special aspects onto the 6th, 9th, and 10th houses ensure victory over competitors and rapid career ascents." },
+      4: { title: "Sukha Bhava (4th House)", effect: "Passionate protection of home, strong drive in land acquisition and automotive technology, domestic leadership.", drishti: "Special aspects onto the 7th, 10th, and 11th houses channel domestic drive into massive commercial achievements." },
+      5: { title: "Poorva Punya (5th House)", effect: "Brilliant technical intelligence, sharp strategic gaming/coding mindset, decisive leadership in creative enterprises.", drishti: "Special aspects onto the 8th, 11th, and 12th houses yield sudden breakthroughs in speculative analytics." },
+      6: { title: "Shatru Hanta Yoga (6th House)", effect: "Extraordinary competitive dominance, demolishes obstacles and legal adversaries, athletic stamina, and surgical problem-solving.", drishti: "Special aspects onto the 9th, 12th, and 1st houses shield your personal vitality from hidden hazards." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Dynamic, ambitious, and strong-willed partner; high energy in commercial ventures and contract negotiations.", drishti: "Special aspects onto the 10th, 1st, and 2nd houses fuel relentless drive for collective prosperity." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Deep technical forensics, cyber-security, emergency crisis leadership, occult mechanics, and transformative stamina.", drishti: "Special aspects onto the 11th, 2nd, and 3rd houses generate sudden financial recoveries from hidden sources." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Passionate defender of righteousness, high energy in international adventures, inspiring mentorship, and ideological drive.", drishti: "Special aspects onto the 12th, 3rd, and 4th houses inspire global expansions and property developments." },
+      10: { title: "Kuladipaka / Digbala (10th House)", effect: "Supreme directional strength (Digbala), peak executive command, architectural prowess, industrial leadership, and renown.", drishti: "Special aspects onto the 1st, 4th, and 5th houses infuse the entire chart with unstoppable energy." },
+      11: { title: "Labha Bhava (11th House)", effect: "Massive financial acquisitions, leadership in tech/industrial networks, conquering long-term material ambitions.", drishti: "Special aspects onto the 2nd, 5th, and 6th houses ensure consistent fiscal superiority." },
+      12: { title: "Moksha Bhava (12th House)", effect: "High drive in foreign missions, international tech implementations, intense disciplined meditation, and secret strategies.", drishti: "Special aspects onto the 3rd, 6th, and 7th houses neutralize foreign competitors." }
+    },
+    remedy: "Chant the Hanuman Chalisa on Tuesdays, recite 'Om Kram Krim Kroum Sah Bhaumaya Namaha', and donate blood or support veterans."
+  },
+  "Mercury (Budha)": {
+    baseOverview: "Budha (Mercury) is the Vidya & Buddhi Karaka, governing analytical intelligence, commercial agility, speech, software algorithms, and communication.",
+    houses: {
+      1: { title: "Bhadra / Lagna Mercury (1st House)", effect: "Sharp intellectual wit, youthfulness, linguistic mastery, mathematical brilliance, and exceptional communicative charm.", drishti: "Aspects the 7th house, facilitating witty and intellectually stimulating partnerships." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Eloquent persuasive speech, accounting and commercial genius, wealth creation through commerce, publishing, or code.", drishti: "Aspects the 8th house, unearthing deep financial insights and mathematical patterns." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Prolific author, media powerhouse, software engineering expertise, multi-tasking mastery, and vibrant sibling ties.", drishti: "Aspects the 9th house, linking day-to-day communication with higher scientific knowledge." },
+      4: { title: "Sukha Bhava (4th House)", effect: "Scholarly home environment, extensive library, high academic credentials, and analytical domestic peace.", drishti: "Aspects the 10th house, securing professional success in IT, research, education, or consulting." },
+      5: { title: "Poorva Punya (5th House)", effect: "Genius-level problem solver, algorithmic mastery, high investment intelligence, creative writing, and gifted children.", drishti: "Aspects the 11th house, turning innovative software or trade concepts into massive revenue streams." },
+      6: { title: "Shatru Bhava (6th House)", effect: "Excellence in legal debate, data analytics, resolving complex disputes, and optimizing operational workflows.", drishti: "Aspects the 12th house, streamlining international supply chains and foreign accounts." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Intelligent, articulate, and business-savvy partner; excellence in commercial contracts and international trade.", drishti: "Aspects the 1st house, sharpening your analytical acumen and communicative aura." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Data forensics, cryptography, secret research breakthroughs, profound analytical acumen, and inheritance management.", drishti: "Aspects the 2nd house of wealth, generating profits through hidden intellectual property." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Higher intellectual publishing, international scientific lectures, fortunate mentorship, and philosophical logic.", drishti: "Aspects the 3rd house, translating complex global theories into practical accessible media." },
+      10: { title: "Digbala / Karma (10th House)", effect: "Supreme career in technology, media, governance, finance, or commerce; celebrated intellectual executive.", drishti: "Aspects the 4th house, establishing educational institutions and respected family legacy." },
+      11: { title: "Labha Bhava (11th House)", effect: "Huge revenues through multiple commercial channels, tech syndicates, intellectual networking, and achieving financial goals.", drishti: "Aspects the 5th house, continuously regenerating creative and speculative intelligence." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Success in foreign software markets, global academic research, meditative writing, and international consulting.", drishti: "Aspects the 6th house, solving intricate technical snags and overcoming competitors with wit." }
+    },
+    remedy: "Chant 'Om Bram Brim Broum Sah Budhaya Namaha' on Wednesdays, wear Emerald (Maragatham), and sponsor educational books for students."
+  },
+  "Jupiter (Guru)": {
+    baseOverview: "Brihaspati (Jupiter) is the Supreme Benefic and Guru Karaka, ruling divine wisdom, financial expansion, dharma, noble children, and spiritual grace.",
+    houses: {
+      1: { title: "Hamsa / Digbala (1st House)", effect: "Magnificent aura, noble character, deep spiritual wisdom, philosophical optimism, and lifelong divine protection.", drishti: "Special 5th, 7th, and 9th aspects shower divine blessings on intellect, marriage, and supreme fortune." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Extraordinary wealth multiplication, truthful and inspirational speech, prestigious family lineage, and generous philanthropy.", drishti: "Special aspects onto the 6th, 8th, and 10th houses bring effortless dispute resolution and high career honors." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Philosophical writing, ethical journalism, uplifting community leadership, and harmonious fraternal relations.", drishti: "Special aspects onto the 7th, 9th, and 11th houses attract righteous partners and expansive network gains." },
+      4: { title: "Hamsa Raja Yoga (4th House)", effect: "Palatial residence, profound inner contentment, exceptional higher education, divine maternal blessings, and ancestral land.", drishti: "Special aspects onto the 8th, 10th, and 12th houses bring spiritual peace and celebrated professional standing." },
+      5: { title: "Poorva Punya Trikona (5th House)", effect: "Supreme intellect, blessings of virtuous children, mastery of sacred sciences, and lucrative advisory appointments.", drishti: "Special aspects onto the 9th, 11th, and 1st houses align your soul with immense wealth and cosmic grace." },
+      6: { title: "Shatru Bhava (6th House)", effect: "Overcomes all health ailments through holistic lifestyle, eliminates financial debt through prudent planning, wise counselor.", drishti: "Special aspects onto the 10th, 12th, and 2nd houses protect professional standing and family assets." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Virtuous, learned, and wealthy partner; immense prosperity through joint ventures and public advisory roles.", drishti: "Special aspects onto the 11th, 1st, and 3rd houses expand your social wealth, vitality, and courage." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Mastery of occult sciences, long and healthy lifespan, peaceful spiritual transformations, and unexpected inheritance blessings.", drishti: "Special aspects onto the 12th, 2nd, and 4th houses ensure spiritual liberation and family treasury security." },
+      9: { title: "Bhagya Trikona (9th House)", effect: "Supreme fortune, global spiritual authority, high mentorship, divine pilgrimage, and generational prosperity.", drishti: "Special aspects onto the 1st, 3rd, and 5th houses infuse your entire existence with cosmic luck." },
+      10: { title: "Karma Bhava (10th House)", effect: "High judicial, executive, or institutional leadership; renowned counselor, respected teacher, and ethical industrialist.", drishti: "Special aspects onto the 2nd, 4th, and 6th houses safeguard family wealth, happiness, and work victory." },
+      11: { title: "Labha Bhava (11th House)", effect: "Limitless wealth creation, influential mentors, elite community leadership, and effortless fulfillment of desires.", drishti: "Special aspects onto the 3rd, 5th, and 7th houses multiply creative intellect and joyful partnerships." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Spiritual liberation, generous charity, deep meditative states, peaceful retreats, and success in foreign ashrams/universities.", drishti: "Special aspects onto the 4th, 6th, and 8th houses bring tranquil home sanctuary and protection." }
+    },
+    remedy: "Chant 'Om Gram Grim Groum Sah Gurave Namaha' on Thursdays, wear Yellow Sapphire (Pushparagam), and offer yellow flowers/bananas to teachers."
+  },
+  "Venus (Sukra)": {
+    baseOverview: "Shukra (Venus) is the Kalathra & Beauty Karaka, governing love, artistic refinement, luxury vehicles, marital bliss, and aesthetic elegance.",
+    houses: {
+      1: { title: "Malavya / Lagna Venus (1st House)", effect: "Stunning physical charm, charismatic magnetism, refined taste in fashion/arts, and romantic popularity.", drishti: "Aspects the 7th house, assuring deep devotion, beauty, and harmony in marital union." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Sweet melodious voice, exquisite jewelry and precious gem collection, wealth from luxury commodities and arts.", drishti: "Aspects the 8th house, attracting unexpected financial benefits from marriage and partnerships." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Creative performing arts, interior design genius, pleasant communications, and affectionate ties with siblings.", drishti: "Aspects the 9th house, inspiring fortunate travels for cultural and artistic expositions." },
+      4: { title: "Malavya Raja Yoga (4th House)", effect: "Palatial home with luxury aesthetics, collection of premium vehicles, profound maternal bonding, and domestic joy.", drishti: "Aspects the 10th house, blessing with an illustrious career in cinema, luxury, design, or diplomacy." },
+      5: { title: "Poorva Punya (5th House)", effect: "Exceptional artistic creativity, poetic eloquence, romantic fulfillment, talented children, and speculative artistic windfalls.", drishti: "Aspects the 11th house, turning creative concepts into grand monetary fortunes." },
+      6: { title: "Shatru Bhava (6th House)", effect: "Tactful diplomacy in resolving disputes, success in hospitality, cosmetic wellness, and beauty medicine.", drishti: "Aspects the 12th house, promoting blissful relaxation and luxury foreign stays." },
+      7: { title: "Malavya / Kalathra (7th House)", effect: "Exceptionally attractive, loving, and supportive partner; high prosperity through luxury trade and global hospitality.", drishti: "Aspects the 1st house, reflecting youthful beauty and elegance onto your persona." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Secret artistic investments, inheritance of luxury goods and assets, sensual rejuvenation, and peaceful longevity.", drishti: "Aspects the 2nd house, enriching the family treasury with antique and precious valuables." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Fortunate foreign cultural tours, romantic serendipities, blessings of refined mentors, and artistic spirituality.", drishti: "Aspects the 3rd house, expressing cultural wisdom through refined literature and music." },
+      10: { title: "Karma Bhava (10th House)", effect: "Celebrated career in fashion, luxury hospitality, cinema, arts, diplomatic relations, or financial services.", drishti: "Aspects the 4th house, ensuring domestic peace and luxurious residential environments." },
+      11: { title: "Labha Bhava (11th House)", effect: "Continuous cash flow from luxury goods, high-society friends, artistic syndicates, and material prosperity.", drishti: "Aspects the 5th house, amplifying romantic joy and creative output." },
+      12: { title: "Exalted Moksha (12th House)", effect: "Classical placement for bed pleasures, luxury foreign travel, peaceful sleep, and generous philanthropic donations.", drishti: "Aspects the 6th house, overcoming stress through cultural relaxation and meditation." }
+    },
+    remedy: "Recite Sri Suktam or 'Om Shum Shukraya Namaha' on Fridays, wear Diamond or White Zircon, and respect artists and women."
+  },
+  "Saturn (Sani)": {
+    baseOverview: "Shani (Saturn) is the Karma & Ayur Karaka, presiding over longevity, justice, perseverance, strategic structure, realism, and permanent enterprise.",
+    houses: {
+      1: { title: "Sasa Raja Yoga / Lagna Sani (1st House)", effect: "Profound maturity, exceptional patience, serious contemplative mind, resilient constitution, and enduring leadership.", drishti: "Special 3rd, 7th, and 10th aspects instill iron discipline into courage, alliances, and career legacy." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Prudent financial realism, long-term wealth accumulation, cautious speech, and conservative asset management.", drishti: "Special aspects onto the 4th, 8th, and 11th houses bring solid real estate security and delayed yet massive returns." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Extraordinary tenacity, systematic work ethic, technical writing prowess, and victory over all initial hardships.", drishti: "Special aspects onto the 5th, 9th, and 12th houses anchor spiritual wisdom and analytical endurance." },
+      4: { title: "Sasa Raja Yoga (4th House)", effect: "Massive foundation in ancestral land and heavy industries, deep emotional stoicism, and long-term property legacy.", drishti: "Special aspects onto the 6th, 10th, and 1st houses solidify unassailable professional authority." },
+      5: { title: "Poorva Punya (5th House)", effect: "Methodical intellectual research, high discipline in analytical studies, realistic investments, and wise parental guidance.", drishti: "Special aspects onto the 7th, 11th, and 2nd houses build permanent wealth from dedicated research." },
+      6: { title: "Shatru Hanta Yoga (6th House)", effect: "Invincible resistance against illness, completely wears down all adversaries and competitors, master of organizational logistics.", drishti: "Special aspects onto the 8th, 12th, and 3rd houses grant long life and tireless work stamina." },
+      7: { title: "Digbala / Sasa Yoga (7th House)", effect: "Supreme directional strength (Digbala), mature, loyal, and steadfast partner; permanent growth in international commerce.", drishti: "Special aspects onto the 9th, 1st, and 4th houses anchor personal integrity and public esteem." },
+      8: { title: "Ayur Sthana (8th House)", effect: "Long and resilient lifespan (Deergha Ayu), deep research into history/mining/cryptography, and profound karmic wisdom.", drishti: "Special aspects onto the 10th, 2nd, and 5th houses protect long-term career foundations." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Dedication to traditional philosophies, disciplined pilgrimage, enduring ethical principles, and respect for elder mentors.", drishti: "Special aspects onto the 11th, 3rd, and 6th houses convert moral diligence into tangible financial gains." },
+      10: { title: "Karma / Sasa Yoga (10th House)", effect: "Pinnacle of executive endurance, industrial magnate, political statesman, legendary work ethic, and enduring legacy.", drishti: "Special aspects onto the 12th, 4th, and 7th houses safeguard institutional stability." },
+      11: { title: "Labha Bhava (11th House)", effect: "Massive long-term wealth accumulation, powerful enterprise networks, steady compounding revenues, and goal attainment.", drishti: "Special aspects onto the 1st, 5th, and 8th houses bring lifelong security and enduring peace." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Spiritual discipline, solitary research success, international institutional management, and deep detachment from material ego.", drishti: "Special aspects onto the 2nd, 6th, and 9th houses protect against impulsive losses." }
+    },
+    remedy: "Chant the Hanuman Chalisa or 'Om Sham Shanaischaraya Namaha' on Saturdays, light sesame oil lamps, and support manual laborers."
+  },
+  "Rahu ℞": {
+    baseOverview: "Rahu is the Shadow Node (Chhaya Graha) of ambition, digital innovation, international frontiers, high technology, and unconventional breakthroughs.",
+    houses: {
+      1: { title: "Lagna Rahu (1st House)", effect: "Hypnotic charisma, unorthodox worldview, pioneering in AI and frontier technologies, bold independent persona.", drishti: "Aspects 5th, 7th, and 9th houses, generating sudden speculative and global breakthroughs." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Unconventional wealth sources, crypto/fintech profits, multi-lingual fluency, and sharp financial perception.", drishti: "Aspects the 6th, 8th, and 10th houses, conquering commercial markets through digital intelligence." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Tremendous courage in media/tech, revolutionary digital projects, massive social reach, and daring initiative.", drishti: "Aspects the 7th, 9th, and 11th houses, expanding global networks and international alliances." },
+      4: { title: "Sukha Bhava (4th House)", effect: "Modern high-tech smart residences, foreign relocations, passion for imported vehicles, and dynamic mind.", drishti: "Aspects the 8th, 10th, and 12th houses, linking home life with international career prospects." },
+      5: { title: "Poorva Punya (5th House)", effect: "Algorithmic genius, frontier AI/crypto research, unconventional artistic creations, and high speculative acumen.", drishti: "Aspects the 9th, 11th, and 1st houses, producing sudden exponential windfalls." },
+      6: { title: "Shatru Hanta (6th House)", effect: "Legendary powerhouse in overcoming all rivals, immunity against cyber/legal attacks, triumphs in complex corporate environments.", drishti: "Aspects the 10th, 12th, and 2nd houses, securing overseas corporate dominance." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Foreign or culturally diverse partner; huge success in multinational corporations and international export/import trade.", drishti: "Aspects the 11th, 1st, and 3rd houses, boosting personal reach across global markets." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Deep cybersecurity investigations, secret technologies, occult discoveries, and sudden massive inheritance or buyout windfalls.", drishti: "Aspects the 12th, 2nd, and 4th houses, opening clandestine wealth streams." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Unorthodox philosophical systems, international education, breaking conventional dogmas, and global cultural journeys.", drishti: "Aspects the 1st, 3rd, and 5th houses, enriching the mind with cutting-edge concepts." },
+      10: { title: "Karma Bhava (10th House)", effect: "Explosive career rise in technology, media, politics, AI platforms, or multinational conglomerates; celebrity influence.", drishti: "Aspects the 2nd, 4th, and 6th houses, multiplying global organizational authority." },
+      11: { title: "Labha Bhava (11th House)", effect: "Massive wealth windfalls through high-tech and overseas syndicates, achieving audacious dreams, elite global circle.", drishti: "Aspects the 3rd, 5th, and 7th houses, ensuring relentless financial multiplication." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Permanent foreign settlement, global digital exports, transcendental meditation, and deep subconscious insights.", drishti: "Aspects the 4th, 6th, and 8th houses, providing peace and prosperity abroad." }
+    },
+    remedy: "Chant 'Om Bhram Bhrim Bhroum Sah Rahave Namaha', recite Durga Chalisa, and feed birds or stray animals on Saturdays."
+  },
+  "Ketu ℞": {
+    baseOverview: "Ketu is the Moksha Karaka (Spiritual Node), governing mystical intuition, computational mathematics, detachment, and high-dimensional insight.",
+    houses: {
+      1: { title: "Lagna Ketu (1st House)", effect: "Mystical presence, sharp sixth sense, intuitive problem-solving, spiritual independence, and profound depth.", drishti: "Aspects 5th, 7th, and 9th houses, infusing relationships and intellect with spiritual detachment." },
+      2: { title: "Dhana Bhava (2nd House)", effect: "Philosophical speech, detachment from material greed while maintaining steady reserves, insight into occult finances.", drishti: "Aspects the 6th, 8th, and 10th houses, analyzing financial risk with deep precision." },
+      3: { title: "Dhairya Bhava (3rd House)", effect: "Quiet fearless courage, spiritual literature and coding genius, subtle martial agility, and self-reliance.", drishti: "Aspects the 7th, 9th, and 11th houses, attracting intuitive and like-minded spiritual allies." },
+      4: { title: "Sukha Bhava (4th House)", effect: "Spiritual sanctuary at home, meditation retreats, detachment from superficial comforts, inner peace.", drishti: "Aspects the 8th, 10th, and 12th houses, fostering tranquil contemplation and focused work." },
+      5: { title: "Poorva Punya (5th House)", effect: "Profound mathematical acumen, Vedic astrology mastery, spiritual intelligence, and connection to sacred mantras.", drishti: "Aspects the 9th, 11th, and 1st houses, producing spontaneous enlightened revelations." },
+      6: { title: "Shatru Bhava (6th House)", effect: "Silent eradication of obstacles, holistic natural healing abilities, immunity from negative energy, and dedicated service.", drishti: "Aspects the 10th, 12th, and 2nd houses, keeping career and assets safe from disputes." },
+      7: { title: "Kalathra Bhava (7th House)", effect: "Spiritually minded and deeply intuitive partner; focus on shared philosophical values and mutual autonomy.", drishti: "Aspects the 11th, 1st, and 3rd houses, harmonizing spiritual and mental energy." },
+      8: { title: "Randhra Bhava (8th House)", effect: "Supreme occult research, high-dimensional algorithm design, miraculous survival intuition, and deep spiritual awakening.", drishti: "Aspects the 12th, 2nd, and 4th houses, opening access to ancestral spiritual secrets." },
+      9: { title: "Bhagya Bhava (9th House)", effect: "Devotion to transcendent truth, sacred spiritual pilgrimages, guidance from realized masters, and divine grace.", drishti: "Aspects the 1st, 3rd, and 5th houses, sanctifying the entire life purpose." },
+      10: { title: "Karma Bhava (10th House)", effect: "Career in research, spiritual guidance, medicine, data science, or anonymous executive mastery; selfless leadership.", drishti: "Aspects the 2nd, 4th, and 6th houses, building an untarnished ethical legacy." },
+      11: { title: "Labha Bhava (11th House)", effect: "Spiritual wealth, income through research/healing/advisory crafts, unattached to material excess, peaceful abundance.", drishti: "Aspects the 3rd, 5th, and 7th houses, attracting authentic and virtuous friendships." },
+      12: { title: "Moksha Bhava (12th House)", effect: "Classical position for ultimate spiritual enlightenment (Kaivalya Moksha), deep meditation, and inner bliss.", drishti: "Aspects the 4th, 6th, and 8th houses, liberating the soul from cyclical anxieties." }
+    },
+    remedy: "Chant 'Om Kem Ketave Namaha' or Ganesha Atharvashirsha, wear Cat's Eye (Vaidooryam) under guidance, and practice silent meditation."
+  }
+};
+
 function degToDms(degFloat: number): string {
   const norm = ((degFloat % 360) + 360) % 360;
   let d = Math.floor(norm);
@@ -441,15 +606,27 @@ export default function AstrologyStudio() {
 
   const openPlanetDeepDive = (p: any) => {
     const sym = PLANET_SYMBOLS[p.name] || { color: "#fff", karaka: "General energy", nature: "Planetary influence" };
+    const pData = (PLANET_DATA as any)[p.name] || {
+      baseOverview: `${p.name} represents '${sym.karaka}' in your cosmic blueprint.`,
+      houses: {},
+      remedy: `Honor ${p.name} with focused morning contemplation and dedicated mantra repetition.`
+    };
+
+    const houseInfo = pData.houses?.[p.house] || {
+      title: `${p.house_str} Placement`,
+      effect: `Channels focused energy and distinct capabilities into the matters of the ${p.house_str}. Located in ${p.rasi} at ${p.degrees}.`,
+      drishti: `Radiates planetary aspects (Drishti) across opposing and trinal houses, bringing energetic momentum.`
+    };
+
     setActiveDeepDive({
-      title: `${p.name} Placement Deep-Dive`,
-      subtitle: `In ${p.rasi} (${p.degrees}) · ${p.house_str} · Star: ${p.nakshatra} (Pada ${p.pada})`,
+      title: `${p.name} in ${p.house_str}`,
+      subtitle: `${houseInfo.title} · Sign: ${p.rasi} (${p.degrees}) · Star: ${p.nakshatra} (Pada ${p.pada})`,
       badge: sym.nature,
-      icon: "🪐",
-      overview: `${p.name} represents '${sym.karaka}' in your cosmic blueprint. Located in the ${p.house_str} in ${p.rasi} at ${p.degrees}, it exerts a decisive influence on this life domain.`,
-      psychology: `This planetary placement channels sharp focus and distinct strategic capabilities into the matters of the ${p.house_str}. When activated by transits or Dasha periods, it brings focused results and leadership competence.`,
-      astrologicalImpact: `As ruler of ${p.rasi_lord || 'its domain'}, its aspects (Drishti) radiate into opposing and trinal houses, infusing them with energetic momentum and structural discipline.`,
-      remedies: `Honor ${p.name} through focused morning contemplation, charitable contributions aligned with its significations, and dedicated mantra repetition.`
+      icon: p.name.includes("Sun") ? "☀️" : (p.name.includes("Moon") ? "🌙" : (p.name.includes("Mars") ? "🔥" : (p.name.includes("Mercury") ? "💡" : (p.name.includes("Jupiter") ? "👑" : (p.name.includes("Venus") ? "💎" : (p.name.includes("Saturn") ? "🪐" : (p.name.includes("Rahu") ? "🔮" : "🕉️"))))))),
+      overview: `${pData.baseOverview} In this chart, it is positioned in ${p.rasi} (${p.rasi_sinhala} / ${p.rasi_tamil}) at ${p.degrees}.`,
+      psychology: `${houseInfo.effect}`,
+      astrologicalImpact: `${houseInfo.drishti} As ruler of ${p.rasi_lord || 'its domain'}, its energy interacts with the ${p.house_str} to shape personal destiny and career milestones.`,
+      remedies: `${pData.remedy}`
     });
   };
 
