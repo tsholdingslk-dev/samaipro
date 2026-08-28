@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
+import Link from 'next/link';
 import JSZip from 'jszip';
 import { Play, Code, Smartphone, Terminal, LayoutPanelLeft, FileCode, CheckCircle, Database, Server, Settings, Box, Upload, FolderUp, Cpu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -66,12 +67,10 @@ class MyApp extends StatelessWidget {
       const formData = new FormData();
       formData.append("zip_file", zipBlob, "project.zip");
       
-      // Hit our new real backend via localtunnel to bypass Vercel 4.5MB limit and use local Flutter SDK
-      const res = await fetch("https://loose-shirts-chew.loca.lt/api/flutter-build/", {
+      // Hit backend flutter-build endpoint with fallback
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${API_URL}/api/flutter-build`, {
         method: "POST",
-        headers: {
-            "Bypass-Tunnel-Reminder": "true"
-        },
         body: formData,
       });
       
@@ -271,11 +270,14 @@ class MyApp extends StatelessWidget {
       {/* Top Navbar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', backgroundColor: 'var(--bg-sidebar)', borderBottom: '1px solid var(--border)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Link href="/modules" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '13px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)' }}>
+            ← Back
+          </Link>
           <div style={{ padding: '8px', backgroundColor: 'rgba(99, 102, 241, 0.15)', borderRadius: '8px' }}>
             <Smartphone size={22} style={{ color: 'var(--primary)' }} />
           </div>
           <span style={{ fontSize: '18px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Flutter AI Studio</span>
-          <span style={{ padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', color: 'var(--text-muted)' }}>Beta</span>
+          <span style={{ padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold', color: 'var(--text-muted)' }}>Enterprise</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {/* Hidden File Input for Folder Upload */}

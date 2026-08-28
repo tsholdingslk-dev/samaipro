@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
-import { FileUp, Search, ShieldAlert, CheckCircle, Code, FileCode, Play, Smartphone, BrainCircuit, Download, RotateCcw, Package } from 'lucide-react';
+import Link from 'next/link';
+import { FileUp, Search, ShieldAlert, CheckCircle, Code, FileCode, Play, Smartphone, BrainCircuit, Download, RotateCcw, Package, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import JSZip from 'jszip';
 
@@ -171,10 +172,15 @@ export default function ApkDecompPage() {
 
   return (
     <div style={{ padding: '32px', minHeight: '100vh', background: 'linear-gradient(to bottom right, var(--bg-dark), #0f0f16)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-        <BrainCircuit style={{ width: '32px', height: '32px', color: '#ef4444' }} />
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>AtoZ-DecompEngine</h1>
-        <span style={{ padding: '2px 10px', borderRadius: '12px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', fontSize: '11px', fontWeight: 'bold', color: '#ef4444', textTransform: 'uppercase' }}>Security</span>
+      <div style={{ marginBottom: '24px' }}>
+        <Link href="/modules" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '13px', marginBottom: '12px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)' }}>
+          <ArrowLeft size={14} /> Back to Modules
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <BrainCircuit style={{ width: '32px', height: '32px', color: '#ef4444' }} />
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0 }}>AtoZ-DecompEngine</h1>
+          <span style={{ padding: '2px 10px', borderRadius: '12px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', fontSize: '11px', fontWeight: 'bold', color: '#ef4444', textTransform: 'uppercase' }}>Security</span>
+        </div>
       </div>
       <p style={{ color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '700px', lineHeight: '1.6' }}>
         Upload an APK file. The AI Security Engine will run Apktool, Dex2Jar, and analyze the decompiled source for API keys, hardcoded passwords, and vulnerabilities.
