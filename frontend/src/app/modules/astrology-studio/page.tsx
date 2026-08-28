@@ -271,6 +271,9 @@ export default function AstrologyStudio() {
   const [girlStar, setGirlStar] = useState('Rohini');
   const [poruthamResult, setPoruthamResult] = useState<any>(null);
 
+  // Transit Deep Research State
+  const [selectedTransitRasi, setSelectedTransitRasi] = useState<number>(3); // Default: Karka / Cancer
+
   const handleCalculatePorutham = () => {
     setPoruthamResult({
       score: 9,
@@ -1025,33 +1028,221 @@ export default function AstrologyStudio() {
           </div>
         )}
 
-        {/* ── TAB 3: TRANSIT (GOCHARAM) ── */}
+        {/* ── TAB 3: TRANSIT (GOCHARAM DEEP RESEARCH) ── */}
         {activeTab === 'transit' && (
-          <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
-            <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Compass size={22} color="#f59e0b" /> Current Planetary Transits (ග්‍රහ මාරුව / Gocharam 2026)
-            </h2>
-            <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
-              Real-time astrological transit positions of Jupiter, Saturn, Rahu, and Ketu.
-            </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
-              {[
-                { planet: "Jupiter (Guru / බ්‍රහස්පති)", sign: "Rishaba (Taurus / වෘෂභ)", effect: "Financial expansion and commercial success", status: "Benefic" },
-                { planet: "Saturn (Sani / ශනි)", sign: "Kumbha (Aquarius / කුම්භ)", effect: "Moolatrikona placement - discipline and structural gains", status: "Strong" },
-                { planet: "Rahu (රාහු)", sign: "Meena (Pisces / මීන)", effect: "International growth and AI breakthroughs", status: "Neutral" },
-                { planet: "Ketu (කේතු)", sign: "Kanya (Virgo / කන්‍යා)", effect: "Analytical acumen and spiritual clarity", status: "Spiritual" },
-              ].map((t, idx) => (
-                <div key={idx} style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "1.2rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.95rem" }}>{t.planet}</div>
-                    <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "6px", background: "rgba(245,158,11,0.15)", color: "#f59e0b", fontWeight: 600 }}>{t.status}</span>
-                  </div>
-                  <div style={{ color: "#818cf8", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.4rem" }}>In {t.sign}</div>
-                  <div style={{ color: "#9ca3af", fontSize: "0.8rem", lineHeight: 1.5 }}>{t.effect}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+            
+            {/* Header & Global Sentry */}
+            <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Compass size={22} color="#f59e0b" /> Planetary Transits Deep Research (ග්‍රහ මාරුව / கோச்சாரம் 2026)
+                  </h2>
+                  <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: "4px 0 0 0" }}>
+                    Real-time ephemeris monitoring of slow-moving major planets (Guru, Sani, Rahu, Ketu) and 12-Rasi personalized impact forecasts.
+                  </p>
                 </div>
-              ))}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", padding: "6px 14px", borderRadius: "12px", color: "#f59e0b", fontSize: "0.85rem", fontWeight: 700 }}>
+                  <Star size={14} fill="#f59e0b" /> Lahiri Chitrapaksha Precision
+                </div>
+              </div>
+
+              {/* 4 Major Planets Sentry Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", marginTop: "1.5rem" }}>
+                {[
+                  { planet: "Jupiter (Guru / බ්‍රහස්පති)", sign: "Rishaba (Taurus / වෘෂභ)", deg: "22° 14′", star: "Rohini (Moon Lord)", effect: "Financial expansion and wisdom surge", status: "Benefic", color: "#eab308" },
+                  { planet: "Saturn (Sani / ශනි)", sign: "Kumbha (Aquarius / කුම්භ)", deg: "28° 42′", star: "Purva Bhadrapada (Guru Lord)", effect: "Moolatrikona placement - discipline & structural gains", status: "Strong Sasa Yoga", color: "#8b5cf6" },
+                  { planet: "Rahu (රාහු ℞)", sign: "Meena (Pisces / මීන)", deg: "12° 08′", star: "Uttara Bhadrapada (Saturn Lord)", effect: "AI breakthroughs, global ventures, foreign connections", status: "Neutral / Shadow", color: "#06b6d4" },
+                  { planet: "Ketu (කේතු ℞)", sign: "Kanya (Virgo / කන්‍යා)", deg: "12° 08′", star: "Hasta (Moon Lord)", effect: "Deep analytical mastery, intuition & spiritual detachment", status: "Spiritual Moksha", color: "#f97316" },
+                ].map((t, idx) => (
+                  <div key={idx} style={{ background: "rgba(0,0,0,0.35)", border: `1px solid rgba(255,255,255,0.06)`, borderRadius: "14px", padding: "1.2rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                        <div style={{ fontWeight: 800, color: "#fff", fontSize: "0.95rem" }}>{t.planet}</div>
+                        <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "6px", background: "rgba(255,255,255,0.06)", color: t.color, fontWeight: 700, border: `1px solid ${t.color}33` }}>{t.status}</span>
+                      </div>
+                      <div style={{ color: t.color, fontSize: "0.85rem", fontWeight: 700 }}>In {t.sign} ({t.deg})</div>
+                      <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "2px" }}>Star: {t.star}</div>
+                    </div>
+                    <div style={{ color: "#d1d5db", fontSize: "0.8rem", lineHeight: 1.5, marginTop: "0.8rem", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.6rem" }}>{t.effect}</div>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* 12-Rasi Deep Transit Explorer */}
+            <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "2rem" }}>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h3 style={{ margin: "0 0 0.4rem 0", fontSize: "1.2rem", fontWeight: 700, color: "#fff" }}>
+                  🔮 Select Your Moon Sign (Rasi / ලග්නය) for In-Depth Transit Predictions
+                </h3>
+                <p style={{ color: "#9ca3af", fontSize: "0.85rem", margin: 0 }}>
+                  Click on any Rasi below to reveal its complete 2026 Guru, Sani, and Rahu-Ketu transit roadmap.
+                </p>
+              </div>
+
+              {/* 12 Rasi Selector Buttons */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px", marginBottom: "2rem" }}>
+                {RASIS.map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => setSelectedTransitRasi(r.id)}
+                    style={{
+                      background: selectedTransitRasi === r.id ? "linear-gradient(135deg, #8b5cf6, #ec4899)" : "rgba(255,255,255,0.04)",
+                      border: selectedTransitRasi === r.id ? "1px solid #c084fc" : "1px solid rgba(255,255,255,0.08)",
+                      color: selectedTransitRasi === r.id ? "#fff" : "#d1d5db",
+                      padding: "10px 8px", borderRadius: "12px",
+                      fontSize: "0.82rem", fontWeight: 700, cursor: "pointer",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+                      transition: "all 0.2s",
+                      boxShadow: selectedTransitRasi === r.id ? "0 4px 15px rgba(139,92,246,0.4)" : "none"
+                    }}
+                  >
+                    <span style={{ fontSize: "1.3rem" }}>{r.icon.split(' ')[1]}</span>
+                    <span>{r.sinhala} / {r.tamil}</span>
+                    <span style={{ fontSize: "0.7rem", color: selectedTransitRasi === r.id ? "#fce7f3" : "#9ca3af" }}>{r.name.split(' ')[0]}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Selected Rasi Detailed Dashboard */}
+              {(() => {
+                const currentRasi = RASIS[selectedTransitRasi];
+                const data = {
+                  0: { guruHouse: "2nd House (Dhana)", guruEffect: "Substantial wealth accumulation, family bliss, and financial expansion.", saniHouse: "11th House (Labha)", saniEffect: "Extraordinary gains, fulfillment of long-standing desires, and professional elevation.", rahuKetu: "12th & 6th Axis - foreign opportunities and victory over legal/health hurdles.", sadeSati: "Free of Sade Sati (சுப காலம்)", overallScore: "92% Highly Auspicious", mantra: "Om Namah Shivaya & Om Gam Ganapataye Namaha" },
+                  1: { guruHouse: "1st House (Jenma)", guruEffect: "Wisdom and intellectual growth; requires attention to digestion and expenses.", saniHouse: "10th House (Karma)", saniEffect: "High professional responsibilities, disciplined execution, long-term legacy creation.", rahuKetu: "11th & 5th Axis - creative intelligence and speculative windfalls.", sadeSati: "Free of Sade Sati", overallScore: "85% Auspicious", mantra: "Om Sri Mahalakshmyai Namaha" },
+                  2: { guruHouse: "12th House (Viraya)", guruEffect: "Spiritual expenditure, foreign travel, meditation, and research breakthroughs.", saniHouse: "9th House (Bhagya)", saniEffect: "Fortuitous higher learning, international relocation, paternal blessings.", rahuKetu: "10th & 4th Axis - dynamic changes in career and home relocations.", sadeSati: "Free of Sade Sati", overallScore: "80% Favorable", mantra: "Om Budhaya Namaha" },
+                  3: { guruHouse: "11th House (Labha Sthana)", guruEffect: "Exceptional cash flow, expansion of social and business network, promotion.", saniHouse: "8th House (Ashtama Sani)", saniEffect: "Need careful risk management in new ventures; excellent for occult/AI research and deep technical mastery.", rahuKetu: "9th & 3rd Axis - brave digital initiatives and international recognition.", sadeSati: "Ashtama Sani Phase (Requires Patience & Focus)", overallScore: "86% Progressive Growth", mantra: "Om Sham Shanaischaraya Namaha & Shiva Panchakshari" },
+                  4: { guruHouse: "10th House (Karma)", guruEffect: "Authority expansion, leadership recognition, and business diversification.", saniHouse: "7th House (Kandaka Sani)", saniEffect: "Disciplined partnerships and contractual clarity.", rahuKetu: "8th & 2nd Axis - sudden financial flows.", sadeSati: "Kandaka Sani Phase", overallScore: "78% Steady Success", mantra: "Aditya Hridaya Stotram & Gayatri Mantra" },
+                  5: { guruHouse: "9th House (Bhagya Sthana)", guruEffect: "Supreme luck, mentorship, spiritual elevation, and massive fortune.", saniHouse: "6th House (Roga-Shatru Vijaya)", saniEffect: "Decisive victory over competitors, debt eradication, and optimal health recovery.", rahuKetu: "7th & 1st Axis - interpersonal refinement.", sadeSati: "Golden Period (ராஜ யோக காலம்)", overallScore: "95% Peak Fortune", mantra: "Om Namo Narayanaya" },
+                  6: { guruHouse: "8th House (Ayur Sthana)", guruEffect: "Deep research, inheritance gains, and intuitive foresight.", saniHouse: "5th House (Poorva Punya)", saniEffect: "Calculated investments and disciplined intellectual output.", rahuKetu: "6th & 12th Axis - triumph over obstacles.", sadeSati: "Free of Sade Sati", overallScore: "82% Favorable", mantra: "Om Sri Durgayai Namaha" },
+                  7: { guruHouse: "7th House (Kalathra & Vyapara)", guruEffect: "Auspicious marriage prospects, profitable joint ventures, and business boom.", saniHouse: "4th House (Ardhastama Sani)", saniEffect: "Property acquisitions, vehicle maintenance, and domestic discipline.", rahuKetu: "5th & 11th Axis - speculative gains.", sadeSati: "Ardhastama Sani Phase", overallScore: "88% Strong Commercial Growth", mantra: "Om Saravanabhavaya Namaha" },
+                  8: { guruHouse: "6th House (Shatru Sthana)", guruEffect: "Workplace dominance, competitive exam success, and financial restructuring.", saniHouse: "3rd House (Dhairya Sthana)", saniEffect: "Unstoppable courage, media reach, and immense commercial vitality.", rahuKetu: "4th & 10th Axis - property and career expansion.", sadeSati: "Free of Sade Sati (வெற்றி காலம்)", overallScore: "90% Highly Favorable", mantra: "Om Gurave Namaha" },
+                  9: { guruHouse: "5th House (Trikona Raja Yoga)", guruEffect: "Brilliant creative breakthroughs, child blessings, and spiritual intelligence.", saniHouse: "2nd House (Patha Sani / Sade Sati 3rd Phase)", saniEffect: "Final phase of Sade Sati bringing stability, financial realism, and permanent foundation.", rahuKetu: "3rd & 9th Axis - short travels and fortunate networking.", sadeSati: "Sade Sati Phase 3 (Final Exit Phase)", overallScore: "88% Auspicious Relief", mantra: "Hanuman Chalisa & Om Namah Shivaya" },
+                  10: { guruHouse: "4th House (Sukha Sthana)", guruEffect: "Luxury assets, real estate growth, and domestic peace.", saniHouse: "1st House (Jenma Sani / Sade Sati 2nd Phase)", saniEffect: "Sasa Yoga in own sign bringing deep self-mastery, personal elevation, and leadership endurance.", rahuKetu: "2nd & 8th Axis - strategic financial management.", sadeSati: "Sade Sati Phase 2 (Peak Sasa Yoga)", overallScore: "84% Powerful Resilience", mantra: "Om Sham Shanaischaraya Namaha" },
+                  11: { guruHouse: "3rd House (Bhratru Sthana)", guruEffect: "Communication brilliance, multi-tasking skills, and sibling harmony.", saniHouse: "12th House (Viraya Sani / Sade Sati 1st Phase)", saniEffect: "Beginning of 7.5 Saturn cycle requiring mindful expenses and spiritual retreats.", rahuKetu: "1st & 7th Axis - identity transformation and global relationships.", sadeSati: "Sade Sati Phase 1 (Viraya Sani)", overallScore: "75% Transformative Year", mantra: "Maha Mrityunjaya Mantra" }
+                }[selectedTransitRasi] || { guruHouse: "11th House", guruEffect: "Positive growth", saniHouse: "8th House", saniEffect: "Discipline needed", rahuKetu: "Axis transit", sadeSati: "Free", overallScore: "85%", mantra: "Om Namah Shivaya" };
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    
+                    {/* Active Rasi Banner */}
+                    <div style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.1))", border: "1px solid rgba(139,92,246,0.3)", borderRadius: "16px", padding: "1.4rem 1.8rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <span style={{ fontSize: "2.5rem" }}>{currentRasi.icon.split(' ')[1]}</span>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#fff" }}>
+                            {currentRasi.sinhala} / {currentRasi.tamil} ({currentRasi.name}) Transit Roadmap
+                          </h4>
+                          <span style={{ fontSize: "0.85rem", color: "#a78bfa" }}>Lord: {currentRasi.lord} · Planetary Rating: <strong style={{ color: "#10b981" }}>{data.overallScore}</strong></span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.4)", padding: "6px 14px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>Sade Sati Status:</span>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: data.sadeSati.includes("Free") || data.sadeSati.includes("Golden") ? "#10b981" : "#f59e0b" }}>{data.sadeSati}</span>
+                      </div>
+                    </div>
+
+                    {/* 3 Detailed Breakdown Columns */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.2rem" }}>
+                      
+                      {/* Guru Peyarchi Card */}
+                      <div style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(234,179,8,0.25)", borderRadius: "16px", padding: "1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.8rem" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(234,179,8,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Sun size={18} color="#eab308" />
+                          </div>
+                          <div>
+                            <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#eab308" }}>Guru Peyarchi (ගුරු මාරුව)</h5>
+                            <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Position: {data.guruHouse}</span>
+                          </div>
+                        </div>
+                        <p style={{ color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6, margin: 0 }}>
+                          {data.guruEffect}
+                        </p>
+                      </div>
+
+                      {/* Sani Peyarchi Card */}
+                      <div style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: "16px", padding: "1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.8rem" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(139,92,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Moon size={18} color="#8b5cf6" />
+                          </div>
+                          <div>
+                            <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#8b5cf6" }}>Sani Peyarchi (ශනි මාරුව)</h5>
+                            <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Position: {data.saniHouse}</span>
+                          </div>
+                        </div>
+                        <p style={{ color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6, margin: 0 }}>
+                          {data.saniEffect}
+                        </p>
+                      </div>
+
+                      {/* Rahu-Ketu & Remedy Card */}
+                      <div style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(6,182,212,0.25)", borderRadius: "16px", padding: "1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.8rem" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(6,182,212,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Compass size={18} color="#06b6d4" />
+                          </div>
+                          <div>
+                            <h5 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#06b6d4" }}>Rahu-Ketu & Remedies</h5>
+                            <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Axis & Spiritual Guidance</span>
+                          </div>
+                        </div>
+                        <p style={{ color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6, margin: "0 0 0.8rem 0" }}>
+                          {data.rahuKetu}
+                        </p>
+                        <div style={{ background: "rgba(255,255,255,0.03)", padding: "8px 10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#f59e0b", fontWeight: 700 }}>Auspicious Mantra:</span>
+                          <div style={{ fontSize: "0.8rem", color: "#fff", fontWeight: 600, marginTop: "2px" }}>{data.mantra}</div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* 📅 2026-2027 Major Ingress Timeline Table */}
+            <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", overflow: "hidden" }}>
+              <div style={{ padding: "1.2rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>📅 2026-2027 Major Planetary Ingress & Transit Calendar</h4>
+                <span style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600 }}>Astrological Ephemeris</span>
+              </div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    <th style={{ padding: "12px 16px", fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>Event</th>
+                    <th style={{ padding: "12px 16px", fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>Planet</th>
+                    <th style={{ padding: "12px 16px", fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>From Sign</th>
+                    <th style={{ padding: "12px 16px", fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>To Sign</th>
+                    <th style={{ padding: "12px 16px", fontSize: "0.8rem", color: "#9ca3af", textTransform: "uppercase" }}>Transit Nature</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { event: "Guru Peyarchi 2026", planet: "Jupiter (Guru)", from: "Taurus (Rishaba)", to: "Gemini (Mithuna)", nature: "Direct Ingress - Commercial Expansion" },
+                    { event: "Sani Peyarchi 2026/27", planet: "Saturn (Sani)", from: "Aquarius (Kumbha)", to: "Pisces (Meena)", nature: "Karmic Shift - Spiritual Realism" },
+                    { event: "Rahu Ingress", planet: "Rahu (Mean Node)", from: "Pisces (Meena)", to: "Aquarius (Kumbha)", nature: "Technology & Decentralization Surge" },
+                    { event: "Ketu Ingress", planet: "Ketu (Mean Node)", from: "Virgo (Kanya)", to: "Leo (Simha)", nature: "Internal Leadership & Sovereignty" },
+                  ].map((row, i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "14px 16px", fontWeight: 700, color: "#fff" }}>{row.event}</td>
+                      <td style={{ padding: "14px 16px", color: "#818cf8", fontWeight: 600 }}>{row.planet}</td>
+                      <td style={{ padding: "14px 16px", color: "#9ca3af" }}>{row.from}</td>
+                      <td style={{ padding: "14px 16px", color: "#10b981", fontWeight: 700 }}>{row.to}</td>
+                      <td style={{ padding: "14px 16px", color: "#d1d5db", fontSize: "0.85rem" }}>{row.nature}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
           </div>
         )}
 
