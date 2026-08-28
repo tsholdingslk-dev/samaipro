@@ -38,8 +38,18 @@ coverage/
 
 .vercel
 *.zip
+*.db
+*.sqlite
 
 samaicoder/
-
-*.zip
-samaicoder/
+astrology_data/
+jothisaimages/
+super_app_projects/
+dummy-app/
+samai-assistant-mobile/
+cpanel_deploy_package/
+scratch/
+test_read.py
+backend/gen_prompt.py
+backend/inject*.py
+backend/inject*.cjs

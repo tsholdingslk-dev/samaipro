@@ -1,34 +1,30 @@
 // Centralized SAM AI Developer Chat Widget
-document.addEventListener('DOMContentLoaded', () => {
+function initSamWidget() {
     // Prevent multiple injections
     if(document.getElementById('sam-dev-widget')) return;
 
     // Detect Module Name & Path dynamically
-    const currentUrl = window.location.pathname; // e.g., /samai/super_app_projects/sampro/dashboard.php or /tsvideo/dashboard.php
+    const currentUrl = window.location.pathname; 
     const pathParts = currentUrl.split('/').filter(p => p.length > 0 && !p.includes('.php') && !p.includes('.html'));
     
-    // We assume the last valid directory is the module name
     const moduleName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : "unknown";
-    
-    // Construct local path based on XAMPP default
-    // E.g. /samai/super_app_projects/sampro -> C:/Users/ASUS/Desktop/xampp/htdocs/samai/super_app_projects/sampro
     const modulePath = "C:/Users/ASUS/Desktop/xampp/htdocs/" + pathParts.join('/');
 
-    const widgetHTML = `
+    const widgetHTML = \
     <div id="sam-dev-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <!-- Chat Box -->
         <div id="sam-dev-chatbox" style="display: none; width: 350px; height: 500px; background: #0f172a; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; flex-direction: column; overflow: hidden; margin-bottom: 15px;">
             <div style="background: #1e293b; padding: 15px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981;"></div>
-                    <strong style="color: #f8fafc; font-size: 14px;">SAM AI - ${moduleName}</strong>
+                    <strong style="color: #f8fafc; font-size: 14px;">SAM AI - \</strong>
                 </div>
                 <button id="sam-dev-close" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">&times;</button>
             </div>
             
             <div id="sam-dev-messages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #0f172a;">
                 <div style="background: #1e293b; color: #e2e8f0; padding: 10px 14px; border-radius: 12px; border-top-left-radius: 2px; font-size: 13px; max-width: 85%; align-self: flex-start; border: 1px solid #334155;">
-                    Hi Admin! I'm your embedded SAM AI Developer for <b>${moduleName}</b>. What code changes do you need today? 🚀
+                    Hi Admin! I'm your embedded SAM AI Developer for <b>\</b>. What code changes do you need today? ??
                 </div>
             </div>
             
@@ -40,10 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         <!-- Toggle Button -->
         <button id="sam-dev-toggle" style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border: none; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5); display: flex; align-items: center; justify-content: center; float: right; transition: transform 0.2s;">
-            👨‍💻
+            ?????
         </button>
     </div>
-    `;
+    \;
 
     document.body.insertAdjacentHTML('beforeend', widgetHTML);
 
@@ -103,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.value = '';
         
         const typingId = 'typing-' + Date.now();
-        const typingHTML = `<div id="${typingId}" style="color: #94a3b8; font-size: 12px; align-self: flex-start; padding: 0 10px;">SAM AI is editing your code... ⚙️</div>`;
+        const typingHTML = \<div id="\" style="color: #94a3b8; font-size: 12px; align-self: flex-start; padding: 0 10px;">SAM AI is editing your code... ??</div>\;
         messages.insertAdjacentHTML('beforeend', typingHTML);
         messages.scrollTop = messages.scrollHeight;
 
@@ -113,8 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('module_path', modulePath);
             formData.append('module_name', moduleName);
             
-            // Note: Since Railway deployment might run this remotely, we should use a relative URL or configured URL.
-            // But since local testing is on localhost:8000, we hardcode for now.
             const apiUrl = 'http://localhost:8000/developer/edit_module';
             
             const response = await fetch(apiUrl, {
@@ -126,13 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(typingId).remove();
             
             if (data.status === 'success') {
-                addMessage('✅ ' + data.message + '<br><br><small><i>Refresh the page to see changes!</i></small>');
+                addMessage('? ' + data.message + '<br><br><small><i>Refresh the page to see changes!</i></small>');
             } else {
-                addMessage('❌ Error: ' + data.message);
+                addMessage('? Error: ' + data.message);
             }
         } catch (err) {
             document.getElementById(typingId).remove();
-            addMessage('⚠️ Connection to SAM AI Backend failed. Make sure the backend is running on port 8000.');
+            addMessage('?? Connection to SAM AI Backend failed. Make sure it is running on port 8000.');
         }
     }
 
@@ -140,4 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
     inputField.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSend();
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSamWidget);
+} else {
+    initSamWidget();
+}

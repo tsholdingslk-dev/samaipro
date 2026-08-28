@@ -381,3 +381,265 @@ class AgentMemory(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     due_date = Column(DateTime(timezone=True), nullable=True)
 
+
+class CommProvider(Base):
+    __tablename__ = "comm_providers"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    provider_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    category = Column(String(50), nullable=False)
+    status = Column(String(50), default="active")
+    enabled = Column(String(10), default="true")
+    priority = Column(Integer, default=1)
+    capabilities = Column(Text)
+    credentials_encrypted = Column(Text, nullable=True)
+    configuration = Column(Text)
+    quota = Column(Text)
+    health_status = Column(String(50), default="unknown")
+    last_health_check = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CommRoom(Base):
+    __tablename__ = "comm_rooms"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    room_id = Column(String(100), unique=True, nullable=False, index=True)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    provider = Column(String(100), nullable=False)
+    provider_room_id = Column(String(255), nullable=True)
+    room_type = Column(String(50), default="video")
+    name = Column(String(255), nullable=True)
+    max_participants = Column(Integer, default=10)
+    record = Column(String(10), default="false")
+    enable_chat = Column(String(10), default="true")
+    enable_screen_share = Column(String(10), default="true")
+    status = Column(String(50), default="active")
+    room_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=True)
+
+    project = relationship("Project", backref="comm_rooms")
+
+
+class CommParticipant(Base):
+    __tablename__ = "comm_participants"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    room_id = Column(String(36), ForeignKey("comm_rooms.id"), nullable=False)
+    user_id = Column(String(36), nullable=True)
+    user_name = Column(String(255), nullable=True)
+    role = Column(String(50), default="publisher")
+    joined_at = Column(DateTime, default=datetime.utcnow)
+    left_at = Column(DateTime, nullable=True)
+    is_active = Column(String(10), default="true")
+
+    room = relationship("CommRoom", backref="participants")
+
+
+class CommMeeting(Base):
+    __tablename__ = "comm_meetings"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    meeting_id = Column(String(100), unique=True, nullable=False, index=True)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    provider = Column(String(100), nullable=False)
+    title = Column(String(255), nullable=True)
+    password = Column(String(100), nullable=True)
+    host_id = Column(String(36), nullable=True)
+    co_host_ids = Column(Text)
+    participant_count = Column(Integer, default=0)
+    max_participants = Column(Integer, default=100)
+    record = Column(String(10), default="false")
+    waiting_room = Column(String(10), default="true")
+    status = Column(String(50), default="scheduled")
+    started_at = Column(DateTime, nullable=True)
+    ended_at = Column(DateTime, nullable=True)
+    meeting_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", backref="comm_meetings")
+
+
+class CommMeetingParticipant(Base):
+    __tablename__ = "comm_meeting_participants"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    meeting_id = Column(String(36), ForeignKey("comm_meetings.id"), nullable=False)
+    user_id = Column(String(36), nullable=True)
+    user_name = Column(String(255), nullable=True)
+    role = Column(String(50), default="attendee")
+    joined_at = Column(DateTime, nullable=True)
+    left_at = Column(DateTime, nullable=True)
+    is_active = Column(String(10), default="true")
+
+    meeting = relationship("CommMeeting", backref="meeting_participants")
+
+
+class CommRecording(Base):
+    __tablename__ = "comm_recordings"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    recording_id = Column(String(100), unique=True, nullable=False, index=True)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    room_id = Column(String(36), ForeignKey("comm_rooms.id"), nullable=True)
+    meeting_id = Column(String(36), ForeignKey("comm_meetings.id"), nullable=True)
+    provider = Column(String(100), nullable=False)
+    status = Column(String(50), default="started")
+    duration = Column(Integer, default=0)
+    file_url = Column(String(500), nullable=True)
+    storage_provider = Column(String(100), nullable=True)
+    size_bytes = Column(Integer, default=0)
+    recording_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    project = relationship("Project", backref="comm_recordings")
+    room = relationship("CommRoom", backref="recordings")
+    meeting = relationship("CommMeeting", backref="recordings")
+
+
+class CommWebhook(Base):
+    __tablename__ = "comm_webhooks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    url = Column(String(500), nullable=False)
+    secret = Column(String(255), nullable=True)
+    events = Column(Text)
+    status = Column(String(50), default="active")
+    last_delivery_at = Column(DateTime, nullable=True)
+    failure_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", backref="comm_webhooks")
+
+
+class CommWebhookDelivery(Base):
+    __tablename__ = "comm_webhook_deliveries"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    webhook_id = Column(String(36), ForeignKey("comm_webhooks.id"), nullable=False)
+    event_type = Column(String(100), nullable=False)
+    payload = Column(Text)
+    status = Column(String(50), default="pending")
+    response_status = Column(Integer, nullable=True)
+    response_body = Column(Text, nullable=True)
+    attempts = Column(Integer, default=0)
+    next_attempt_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    webhook = relationship("CommWebhook", backref="deliveries")
+
+
+class CommUsageEvent(Base):
+    __tablename__ = "comm_usage_events"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    provider = Column(String(100), nullable=False)
+    service = Column(String(100), nullable=False)
+    request_id = Column(String(100), nullable=True)
+    duration = Column(Integer, default=0)
+    status = Column(String(50), default="success")
+    usage_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", backref="usage_events")
+
+
+class CommQuota(Base):
+    __tablename__ = "comm_quotas"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    provider = Column(String(100), nullable=False)
+    quota_type = Column(String(100), nullable=False) # monthly_minutes, monthly_requests, concurrent_rooms
+    limit_value = Column(Integer, default=0)
+    used_value = Column(Integer, default=0)
+    warning_threshold = Column(Integer, default=80)
+    period_start = Column(DateTime, default=datetime.utcnow)
+    period_end = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    project = relationship("Project", backref="comm_quotas")
+
+
+class CommAPIToken(Base):
+    __tablename__ = "comm_api_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    token_type = Column(String(50), default="rtc") # rtc, chat, meeting
+    token_hash = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    scopes = Column(Text)
+    expires_at = Column(DateTime, nullable=True)
+    last_used = Column(DateTime, nullable=True)
+    revoked = Column(String(10), default="false")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", backref="comm_api_tokens")
+
+
+class CommAPIKey(Base):
+    __tablename__ = "comm_api_keys"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    user_id = Column(String(36), nullable=True)
+    key_type = Column(String(50), default="public") # public, secret, server, webhook
+    key_code = Column(String(255), unique=True, nullable=False, index=True)
+    key_hash = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=True)
+    scopes = Column(Text)
+    environment = Column(String(50), default="development")
+    ip_whitelist = Column(Text)
+    expires_at = Column(DateTime, nullable=True)
+    last_used = Column(DateTime, nullable=True)
+    revoked = Column(String(10), default="false")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", backref="comm_api_keys")
+
+
+class CommAITranscript(Base):
+    __tablename__ = "comm_ai_transcripts"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    room_id = Column(String(36), ForeignKey("comm_rooms.id"), nullable=True)
+    meeting_id = Column(String(36), ForeignKey("comm_meetings.id"), nullable=True)
+    provider = Column(String(100), nullable=False)
+    language = Column(String(20), default="en")
+    content = Column(Text)
+    segments = Column(Text)
+    transcript_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CommAISummary(Base):
+    __tablename__ = "comm_ai_summaries"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    project_id = Column(String(36), ForeignKey("projects.id"), nullable=True)
+    room_id = Column(String(36), ForeignKey("comm_rooms.id"), nullable=True)
+    meeting_id = Column(String(36), ForeignKey("comm_meetings.id"), nullable=True)
+    transcript_id = Column(String(36), ForeignKey("comm_ai_transcripts.id"), nullable=True)
+    provider = Column(String(100), nullable=False)
+    summary = Column(Text)
+    action_items = Column(Text)
+    key_points = Column(Text)
+    sentiment = Column(String(50))
+    summary_metadata = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+

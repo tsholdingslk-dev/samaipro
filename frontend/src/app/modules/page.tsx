@@ -10,7 +10,7 @@ import {
   MessageSquare, Briefcase, TrendingUp, Cpu, 
   Terminal, Image as ImageIcon, Mic, FileText, 
   Share2, Brain, Newspaper, BookOpen, MonitorPlay, 
-  Network, KeyRound, Database, Activity, ShieldAlert, Smartphone
+  Network, KeyRound, Database, Activity, ShieldAlert, Smartphone, Radio
 } from "lucide-react";
 
 type Module = {
@@ -49,7 +49,8 @@ const modules: Module[] = [
   { id: "project-memory", title: "Project Memory Storage", description: "Persistent workspace memory for files, code snippets, and logs.", icon: Database, href: "/modules/project-memory", color: "#64748b" },
   { id: "ai-intelligence", title: "24/7 System Intelligence", description: "AI market monitoring, performance diagnostics, and automated admin digests.", icon: Activity, href: "/modules/ai-intelligence", color: "#f43f5e" },
   { id: "apk-decomp", title: "AtoZ-DecompEngine", description: "Upload APKs, Auto-Decompile, Security Audit, and Generate Reverse Engineering Reports.", icon: ShieldAlert, href: "/modules/apk-decomp", color: "#ef4444" },
-  { id: "admin-keys", title: "Admin: Access Keys", description: "Generate and manage dynamic access tokens for users.", icon: KeyRound, href: "/modules/admin-keys", color: "#000000" }
+  { id: "admin-keys", title: "Admin: Access Keys", description: "Generate and manage dynamic access tokens for users.", icon: KeyRound, href: "/modules/admin-keys", color: "#000000" },
+  { id: "communication-cloud", title: "SAM Communication Cloud", description: "Unified RTC API with multi-provider routing, failover, video, audio, meetings, and recording.", icon: Radio, href: "/modules/communication-cloud", color: "#6366f1" }
 ];
 
 const containerVariants: Variants = {
@@ -95,7 +96,7 @@ export default function ModulesPage() {
             SAM AI v2.0 Platform
           </motion.div>
           <h1 style={{ fontSize: "3rem", fontWeight: "700", marginBottom: "1rem", background: "linear-gradient(to right, #fff, #9ca3af)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            SAM AI 16 Core Modules
+            SAM AI {modules.length} Core Modules
           </h1>
           <p style={{ color: "var(--text-muted)", fontSize: "1.2rem", maxWidth: "600px", margin: "0 auto" }}>
             Explore the intelligent ecosystem powering your ultimate workflow.

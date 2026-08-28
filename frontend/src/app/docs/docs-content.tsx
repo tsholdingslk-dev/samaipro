@@ -5,18 +5,34 @@ import { useState, useEffect } from "react";
 const LIVE_DOMAIN = "https://samaipro.vercel.app";
 
 const MODULES = [
-  { icon: "💬", name: "Chat Engine", path: "/api/chat/default", method: "GET", desc: "AI-powered conversational assistant" },
-  { icon: "🪙", name: "Crypto Market", path: "/api/crypto/market", method: "GET", desc: "Live crypto prices from CoinGecko" },
-  { icon: "📰", name: "Crypto News", path: "/api/crypto/news", method: "GET", desc: "Real-time crypto news feed" },
-  { icon: "🕯️", name: "Candlestick Data", path: "/api/crypto/candlesticks?symbol=BTC", method: "GET", desc: "OHLCV chart data & pattern detection" },
-  { icon: "🧠", name: "AI Market Analysis", path: "/api/crypto/analyze", method: "POST", desc: "AI sentiment & crash risk prediction" },
-  { icon: "⏱️", name: "Time-Series Predict", path: "/api/crypto/time-series-predict", method: "POST", desc: "Micro-interval price forecasting" },
-  { icon: "🎯", name: "Lead Generation", path: "/api/lead-gen/leads", method: "GET", desc: "Local business lead extraction" },
-  { icon: "🖼️", name: "Image Generation", path: "/api/image/generate", method: "POST", desc: "AI image via Pollinations engine" },
-  { icon: "🔊", name: "Voice Engine", path: "/api/voice/transcribe", method: "POST", desc: "Speech-to-text transcription" },
-  { icon: "💻", name: "Code Generator", path: "/api/coding/generate", method: "POST", desc: "AI code generation & bug fixing" },
-  { icon: "🌍", name: "Translator", path: "/api/translate", method: "POST", desc: "Multi-language AI translation" },
-  { icon: "🤖", name: "Autonomous Agents", path: "/api/agents/planner", method: "POST", desc: "AI agents: planner, researcher, coder" },
+  { icon: "💬", name: "AI Chat Engine", path: "/api/chat/default", method: "POST", desc: "Conversational assistant with multi-file analysis & context" },
+  { icon: "🪙", name: "Crypto Market", path: "/api/crypto/market", method: "GET", desc: "Live crypto prices, market caps & 24h stats from CoinGecko" },
+  { icon: "📰", name: "Crypto News", path: "/api/crypto/news", method: "GET", desc: "Real-time cryptocurrency news & sentiment feed" },
+  { icon: "🕯️", name: "Candlestick Data", path: "/api/crypto/candlesticks?symbol=BTC", method: "GET", desc: "OHLCV chart data & technical pattern detection" },
+  { icon: "🧠", name: "AI Market Analysis", path: "/api/crypto/analyze", method: "POST", desc: "AI market sentiment & crash risk prediction" },
+  { icon: "⏱️", name: "Time-Series Predict", path: "/api/crypto/time-series-predict", method: "POST", desc: "Micro-interval price forecasting engine" },
+  { icon: "📞", name: "Communication Cloud", path: "/api/communication/call", method: "POST", desc: "WebRTC video/audio calls, room meetings & recording" },
+  { icon: "🤖", name: "Autonomous AI Agents", path: "/api/agents/planner", method: "POST", desc: "Multi-step task planner, researcher & coder agents" },
+  { icon: "💻", name: "SAM Coder Studio", path: "/api/coding/generate", method: "POST", desc: "AI code generation, debugging & sandbox execution" },
+  { icon: "🎯", name: "Lead Generation", path: "/api/lead-gen/leads", method: "GET", desc: "Local business lead extraction & WhatsApp proposals" },
+  { icon: "🖼️", name: "AI Image Studio", path: "/api/image/generate", method: "POST", desc: "AI image generation, prompt tuning & filters" },
+  { icon: "🔊", name: "Voice & Transcription", path: "/api/voice/transcribe", method: "POST", desc: "Speech-to-text audio transcription & voice commands" },
+  { icon: "🗣️", name: "OmniVoice TTS", path: "/api/voice/tts", method: "POST", desc: "High-quality text-to-speech voice synthesis" },
+  { icon: "📄", name: "PDF Studio", path: "/api/pdf-studio/edit", method: "POST", desc: "PDF document manipulation, annotations & form editor" },
+  { icon: "🌍", name: "Language Translator", path: "/api/translate", method: "POST", desc: "Multi-language AI translation (Tamil, Sinhala, English)" },
+  { icon: "📑", name: "PDF OCR & Translate", path: "/api/pdf-translate", method: "POST", desc: "PDF document text extraction & localized translation" },
+  { icon: "📰", name: "NewsFlash Viral Editor", path: "/api/social-news/generate", method: "POST", desc: "Viral Facebook posts, news articles & fact-checking" },
+  { icon: "📱", name: "Flutter AI Studio", path: "/api/flutter/build", method: "POST", desc: "Flutter app reconstruction engine & code editor" },
+  { icon: "🛡️", name: "AtoZ APK Decompiler", path: "/api/developer/apk", method: "POST", desc: "APK decompilation, reverse engineering & security audit" },
+  { icon: "🔮", name: "Astrology Engine", path: "/api/modules/astrology", method: "POST", desc: "Vedic birth charts, horoscopes & compatibility" },
+  { icon: "⚙️", name: "Automation & Bot Hub", path: "/api/autonomous-hub", method: "GET", desc: "Python AI web extractors & MT5 trading bots" },
+  { icon: "🌐", name: "Websites & CMS Manager", path: "/api/modules/site-manager", method: "GET", desc: "WordPress, PHP & custom site management" },
+  { icon: "🔀", name: "Multi-API Provider Hub", path: "/api/api-provider/rotator", method: "GET", desc: "Auto-failover model rotator (Gemini, Groq, OpenRouter)" },
+  { icon: "🔑", name: "Auto API Integrator", path: "/api/auto-integrator/test", method: "POST", desc: "Dynamic AI API key validation & registration" },
+  { icon: "💾", name: "Project Memory Storage", path: "/api/project/memory", method: "GET", desc: "Persistent workspace memory, snippets & logs" },
+  { icon: "📊", name: "24/7 AI Intelligence", path: "/api/ai-intelligence/diagnostics", method: "GET", desc: "System diagnostics, market monitoring & admin digests" },
+  { icon: "🧠", name: "Self Learning AI Brain", path: "/api/learning/feedback", method: "POST", desc: "Reinforcement learning from user feedback & style adaptation" },
+  { icon: "🔐", name: "Zero-Trust Security & Auth", path: "/api/auth/login", method: "POST", desc: "JWT authentication, device fingerprinting & audit logs" },
 ];
 
 export default function DocsContent() {
@@ -136,7 +152,7 @@ export default function DocsContent() {
                 Build powerful AI applications using SAM AI's RESTful API. Access real-time crypto data, AI chat, image generation, lead extraction, code generation, voice processing, and more.
               </p>
               <div style={{ display: "flex", gap: "0.8rem", marginTop: "1rem", flexWrap: "wrap" }}>
-                {[["⚡", "Ultra Fast"], ["🔄", "99.98% Uptime"], ["🔐", "JWT Auth"], ["🌍", "Global CDN"], ["📦", "16 Modules"]].map(([icon, label]) => (
+                {[["⚡", "Ultra Fast"], ["🔄", "99.98% Uptime"], ["🔐", "JWT Auth"], ["🌍", "Global CDN"], ["📦", `${MODULES.length} Modules`]].map(([icon, label]) => (
                   <span key={label} style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "20px", padding: "0.3rem 0.9rem", fontSize: "0.85rem", color: "var(--primary)" }}>
                     {icon} {label}
                   </span>

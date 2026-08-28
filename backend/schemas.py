@@ -180,3 +180,212 @@ class PaymentVerificationResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# --- Communication Provider Schemas ---
+class CommProviderBase(BaseModel):
+    provider_id: str
+    name: str
+    category: str
+    priority: Optional[int] = 1
+    enabled: Optional[bool] = True
+    configuration: Optional[str] = None
+    quota: Optional[str] = None
+
+
+class CommProviderCreate(CommProviderBase):
+    credentials: Optional[str] = None
+
+
+class CommProviderResponse(CommProviderBase):
+    id: str
+    status: str
+    capabilities: str
+    health_status: str
+    last_health_check: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CommProviderHealthResponse(BaseModel):
+    provider: str
+    status: str
+    latency_ms: float
+    last_check: Optional[datetime]
+    error_message: Optional[str]
+    quota_remaining: Optional[int]
+    quota_limit: Optional[int]
+
+
+# --- Communication Room Schemas ---
+class CommRoomBase(BaseModel):
+    room_id: str
+    room_type: str = "video"
+    name: Optional[str] = None
+    max_participants: int = 10
+    record: bool = False
+    enable_chat: bool = True
+    enable_screen_share: bool = True
+
+
+class CommRoomCreate(CommRoomBase):
+    pass
+
+
+class CommRoomResponse(CommRoomBase):
+    id: str
+    provider: str
+    provider_room_id: Optional[str]
+    status: str
+    room_metadata: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CommRoomJoinResponse(BaseModel):
+    success: bool
+    room_id: str
+    token: str
+    provider: str
+    expires_at: datetime
+
+
+# --- Communication Meeting Schemas ---
+class CommMeetingBase(BaseModel):
+    meeting_id: str
+    title: Optional[str] = None
+    password: Optional[str] = None
+    max_participants: int = 100
+    record: bool = False
+    waiting_room: bool = True
+
+
+class CommMeetingCreate(CommMeetingBase):
+    pass
+
+
+class CommMeetingResponse(CommMeetingBase):
+    id: str
+    provider: str
+    status: str
+    participant_count: int
+    started_at: Optional[datetime]
+    ended_at: Optional[datetime]
+    meeting_metadata: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CommMeetingJoinResponse(BaseModel):
+    success: bool
+    meeting_id: str
+    token: str
+    provider: str
+    join_url: str
+
+
+# --- Communication API Key Schemas ---
+class CommAPIKeyBase(BaseModel):
+    name: str
+    key_type: str = "public"
+    scopes: Optional[str] = None
+    environment: str = "development"
+    ip_whitelist: Optional[str] = None
+
+
+class CommAPIKeyCreate(CommAPIKeyBase):
+    pass
+
+
+class CommAPIKeyResponse(CommAPIKeyBase):
+    id: str
+    key_code: str
+    secret_key: Optional[str] = None
+    expires_at: Optional[datetime]
+    last_used: Optional[datetime]
+    revoked: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CommTokenResponse(BaseModel):
+    success: bool
+    token: str
+    provider: str
+    expires_at: datetime
+
+
+# --- Communication Webhook Schemas ---
+class CommWebhookBase(BaseModel):
+    url: str
+    events: str
+    secret: Optional[str] = None
+
+
+class CommWebhookCreate(CommWebhookBase):
+    pass
+
+
+class CommWebhookResponse(CommWebhookBase):
+    id: str
+    status: str
+    last_delivery_at: Optional[datetime]
+    failure_count: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Communication Recording Schemas ---
+class CommRecordingResponse(BaseModel):
+    id: str
+    recording_id: str
+    provider: str
+    status: str
+    duration: int
+    file_url: Optional[str]
+    storage_provider: Optional[str]
+    size_bytes: int
+    recording_metadata: Optional[str]
+    created_at: datetime
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+# --- Communication Usage Schemas ---
+class CommUsageEventResponse(BaseModel):
+    id: str
+    provider: str
+    service: str
+    request_id: Optional[str]
+    duration: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class CommQuotaResponse(BaseModel):
+    id: str
+    provider: str
+    quota_type: str
+    limit_value: int
+    used_value: int
+    warning_threshold: int
+    period_start: datetime
+    period_end: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+

@@ -1,5 +1,6 @@
 import os
 import traceback
+import json
 from fastapi import FastAPI, APIRouter, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +15,8 @@ from routers import (
     validation as validation_router, analytics as analytics_router,
     gateway as gateway_router, sam_ai as sam_ai_router,
     secrets as secrets_router,
-    developer, pdf_studio, autonomous_hub
+    developer, pdf_studio, autonomous_hub,
+    communication as communication_router
 )
 from routers.modules.module import router as module_router
 
@@ -104,7 +106,8 @@ routers = [
     api_proxy.router, lead_gen.router, crypto.router, auto_integrator.router,
     ai_intelligence.router, translate.router, social_news.router,
     flutter_build.router, telegram_bot.router, knowledge.router, orchestrator.router, multimodel.router, security_router.router, permissions_router.router, validation_router.router, analytics_router.router, gateway_router.router, sam_ai_router.router, secrets_router.router,
-    developer.router, pdf_studio.router, autonomous_hub.router
+    developer.router, pdf_studio.router, autonomous_hub.router,
+    communication_router.router
 ]
 
 # Mount under standard paths (/crypto/market, /chat, etc.)
@@ -164,6 +167,49 @@ async def startup_event():
         _db.close()
     except Exception:
         pass
+        
+    # Initialize Communication Cloud Providers
+    from providers.communication import comm_registry
+    from providers.communication.agora_adapter import AgoraAdapter
+    from providers.communication.livekit_adapter import LiveKitAdapter
+    from providers.communication.jitsi_adapter import JitsiAdapter
+    from providers.communication.webrtc_adapter import WebRTCAdapter
+
+    try:
+        _db = SessionLocal()
+        db_providers = _db.query(models.CommProvider).filter(models.CommProvider.status == "active").all()
+        for p in db_providers:
+            config = json.loads(p.configuration) if p.configuration else {}
+            creds = json.loads(p.credentials_encrypted) if p.credentials_encrypted else {}
+            quota = json.loads(p.quota) if p.quota else {}
+            caps = json.loads(p.capabilities) if p.capabilities else {}
+
+            adapter_kwargs = {
+                "provider_id": p.provider_id,
+                "name": p.name,
+                "priority": p.priority,
+                "enabled": p.enabled == "true",
+                "credentials": creds,
+                "configuration": config,
+                "quota": quota,
+            }
+
+            if p.provider_id == "agora":
+                adapter = AgoraAdapter(**adapter_kwargs)
+            elif p.provider_id == "livekit":
+                adapter = LiveKitAdapter(**adapter_kwargs)
+            elif p.provider_id == "jitsi":
+                adapter = JitsiAdapter(**adapter_kwargs)
+            elif p.provider_id == "webrtc":
+                adapter = WebRTCAdapter(**adapter_kwargs)
+            else:
+                continue
+
+            comm_registry.register(adapter)
+        _db.close()
+        print(f"Communication Cloud: Initialized {len(comm_registry.providers)} providers")
+    except Exception as e:
+        print(f"Communication Cloud init notice: {e}")
         
     # Start Agent Background Proactive Cron Job
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
