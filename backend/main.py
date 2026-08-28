@@ -16,7 +16,7 @@ from routers import (
     gateway as gateway_router, sam_ai as sam_ai_router,
     secrets as secrets_router,
     developer, pdf_studio, autonomous_hub,
-    communication as communication_router
+    communication as communication_router, astrology
 )
 from routers.modules.module import router as module_router
 
@@ -107,7 +107,7 @@ routers = [
     ai_intelligence.router, translate.router, social_news.router,
     flutter_build.router, telegram_bot.router, knowledge.router, orchestrator.router, multimodel.router, security_router.router, permissions_router.router, validation_router.router, analytics_router.router, gateway_router.router, sam_ai_router.router, secrets_router.router,
     developer.router, pdf_studio.router, autonomous_hub.router,
-    communication_router.router
+    communication_router.router, astrology.router
 ]
 
 # Mount under standard paths (/crypto/market, /chat, etc.)
