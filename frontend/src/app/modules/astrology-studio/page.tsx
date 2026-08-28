@@ -5,67 +5,80 @@ import Link from 'next/link';
 import { 
   Sparkles, Moon, Sun, Compass, ArrowLeft, Heart, 
   User, CheckCircle2, Grid, Download, Eye, Layers,
-  Star, RefreshCw, Smartphone, Globe
+  Star, RefreshCw, Smartphone, Globe, Info, X, BookOpen,
+  Calendar, Shield, Award, ChevronRight, Zap
 } from 'lucide-react';
 import { apiFetch } from '../../../utils/api';
 
 const RASIS = [
-  { id: 0, name: "Mesha (Aries)", sinhala: "මේෂ", tamil: "மேஷம்", lord: "Mars", icon: "♈ 🐏" },
-  { id: 1, name: "Vrishabha (Taurus)", sinhala: "වෘෂභ", tamil: "ரிஷபம்", lord: "Venus", icon: "♉ 🐂" },
-  { id: 2, name: "Mithuna (Gemini)", sinhala: "මිථුන", tamil: "மிதுனம்", lord: "Mercury", icon: "♊ 👥" },
-  { id: 3, name: "Karka (Cancer)", sinhala: "කටක", tamil: "கடகம்", lord: "Moon", icon: "♋ 🦀" },
-  { id: 4, name: "Simha (Leo)", sinhala: "සිංහ", tamil: "சிம்மம்", lord: "Sun", icon: "♌ 🦁" },
-  { id: 5, name: "Kanya (Virgo)", sinhala: "කන්‍යා", tamil: "கன்னி", lord: "Mercury", icon: "♍ 🌾" },
-  { id: 6, name: "Thula (Libra)", sinhala: "තුලා", tamil: "துலாம்", lord: "Venus", icon: "♎ ⚖️" },
-  { id: 7, name: "Vrischika (Scorpio)", sinhala: "වෘශ්චික", tamil: "விருச்சிகம்", lord: "Mars", icon: "♏ 🦂" },
-  { id: 8, name: "Dhanu (Sagittarius)", sinhala: "ධනු", tamil: "தனுசு", lord: "Jupiter", icon: "♐ 🏹" },
-  { id: 9, name: "Makara (Capricorn)", sinhala: "මකර", tamil: "மகரம்", lord: "Saturn", icon: "♑ 🐊" },
-  { id: 10, name: "Kumbha (Aquarius)", sinhala: "කුම්භ", tamil: "கும்பம்", lord: "Saturn", icon: "♒ 🏺" },
-  { id: 11, name: "Meena (Pisces)", sinhala: "මීන", tamil: "மீனம்", lord: "Jupiter", icon: "♓ 🐟" },
+  { id: 0, name: "Mesha (Aries)", sinhala: "මේෂ", tamil: "மேஷம்", lord: "Mars", element: "Fire", icon: "♈ 🐏", traits: "Courageous, pioneering, ambitious, assertive, energetic." },
+  { id: 1, name: "Vrishabha (Taurus)", sinhala: "වෘෂභ", tamil: "ரிஷபம்", lord: "Venus", element: "Earth", icon: "♉ 🐂", traits: "Stable, artistic, luxurious, patient, practical, resilient." },
+  { id: 2, name: "Mithuna (Gemini)", sinhala: "මිථුන", tamil: "மிதுனம்", lord: "Mercury", element: "Air", icon: "♊ 👥", traits: "Intelligent, communicative, analytical, adaptable, curious." },
+  { id: 3, name: "Karka (Cancer)", sinhala: "කටක", tamil: "கடகம்", lord: "Moon", element: "Water", icon: "♋ 🦀", traits: "Intuitive, nurturing, empathetic, memory retention, patriotic." },
+  { id: 4, name: "Simha (Leo)", sinhala: "සිංහ", tamil: "சிம்மம்", lord: "Sun", element: "Fire", icon: "♌ 🦁", traits: "Regal, commanding, generous, visionary, creative leadership." },
+  { id: 5, name: "Kanya (Virgo)", sinhala: "කන්‍යා", tamil: "கன்னி", lord: "Mercury", element: "Earth", icon: "♍ 🌾", traits: "Detail-oriented, methodical, analytical, problem-solver, health-conscious." },
+  { id: 6, name: "Thula (Libra)", sinhala: "තුලා", tamil: "துலாம்", lord: "Venus", element: "Air", icon: "♎ ⚖️", traits: "Diplomatic, balanced, charming, justice-loving, aesthetic harmony." },
+  { id: 7, name: "Vrischika (Scorpio)", sinhala: "වෘශ්චික", tamil: "விருச்சிகம்", lord: "Mars", element: "Water", icon: "♏ 🦂", traits: "Intense, transformative, secretive, investigative, magnetic willpower." },
+  { id: 8, name: "Dhanu (Sagittarius)", sinhala: "ධනු", tamil: "தனுசு", lord: "Jupiter", element: "Fire", icon: "♐ 🏹", traits: "Philosophical, optimistic, truthful, adventurous, higher wisdom seeker." },
+  { id: 9, name: "Makara (Capricorn)", sinhala: "මකර", tamil: "மகரம்", lord: "Saturn", element: "Earth", icon: "♑ 🐊", traits: "Disciplined, strategic, persevering, enterprise-builder, realistic." },
+  { id: 10, name: "Kumbha (Aquarius)", sinhala: "කුම්භ", tamil: "கும்பம்", lord: "Saturn", element: "Air", icon: "♒ 🏺", traits: "Visionary, humanitarian, unorthodox, scientific innovator, egalitarian." },
+  { id: 11, name: "Meena (Pisces)", sinhala: "මීන", tamil: "மீனம்", lord: "Jupiter", element: "Water", icon: "♓ 🐟", traits: "Spiritual, imaginative, compassionate, transcendent, meditative." },
 ];
 
 const NAKSHATRAS = [
-  { name: "Ashwini", sinhala: "අස්විද", tamil: "அஸ்வினி", lord: "Ketu", dasha_years: 7 },
-  { name: "Bharani", sinhala: "බෙරණ", tamil: "பரணி", lord: "Venus", dasha_years: 20 },
-  { name: "Krittika", sinhala: "කැති", tamil: "கார்த்திகை", lord: "Sun", dasha_years: 6 },
-  { name: "Rohini", sinhala: "රෙහෙණ", tamil: "ரோகிணி", lord: "Moon", dasha_years: 10 },
-  { name: "Mrigashira", sinhala: "මුවසිරස", tamil: "மிருகசீரிடம்", lord: "Mars", dasha_years: 7 },
-  { name: "Ardra", sinhala: "අද", tamil: "திருவாதிரை", lord: "Rahu", dasha_years: 18 },
-  { name: "Punarvasu", sinhala: "පුනාවස", tamil: "புனர்பூசம்", lord: "Jupiter", dasha_years: 16 },
-  { name: "Pushya", sinhala: "පුෂ", tamil: "பூசம்", lord: "Saturn", dasha_years: 19 },
-  { name: "Ashlesha", sinhala: "අස්ලිස", tamil: "ஆயில்யம்", lord: "Mercury", dasha_years: 17 },
-  { name: "Magha", sinhala: "මා", tamil: "மகம்", lord: "Ketu", dasha_years: 7 },
-  { name: "Purva Phalguni", sinhala: "පුවපල්", tamil: "பூரம்", lord: "Venus", dasha_years: 20 },
-  { name: "Uttara Phalguni", sinhala: "උත්‍රපල්", tamil: "உத்திரம்", lord: "Sun", dasha_years: 6 },
-  { name: "Hasta", sinhala: "හත", tamil: "அஸ்தம்", lord: "Moon", dasha_years: 10 },
-  { name: "Chitra", sinhala: "සිත", tamil: "சித்திரை", lord: "Mars", dasha_years: 7 },
-  { name: "Svati", sinhala: "සා", tamil: "சுவாதி", lord: "Rahu", dasha_years: 18 },
-  { name: "Vishakha", sinhala: "විසා", tamil: "விசாகம்", lord: "Jupiter", dasha_years: 16 },
-  { name: "Anuradha", sinhala: "අනුර", tamil: "அனுஷம்", lord: "Saturn", dasha_years: 19 },
-  { name: "Jyeshtha", sinhala: "දෙට", tamil: "கேட்டை", lord: "Mercury", dasha_years: 17 },
-  { name: "Mula", sinhala: "මුල", tamil: "மூலம்", lord: "Ketu", dasha_years: 7 },
-  { name: "Purva Ashadha", sinhala: "පුවසල", tamil: "பூராடம்", lord: "Venus", dasha_years: 20 },
-  { name: "Uttara Ashadha", sinhala: "උත්‍රසල", tamil: "உத்திராடம்", lord: "Sun", dasha_years: 6 },
-  { name: "Shravana", sinhala: "සුවණ", tamil: "திருவோணம்", lord: "Moon", dasha_years: 10 },
-  { name: "Dhanishta", sinhala: "දෙනට", tamil: "அவிட்டம்", lord: "Mars", dasha_years: 7 },
-  { name: "Shatabhisha", sinhala: "සියාවස", tamil: "சதயம்", lord: "Rahu", dasha_years: 18 },
-  { name: "Purva Bhadrapada", sinhala: "පුවපුටුප", tamil: "பூரட்டாதி", lord: "Jupiter", dasha_years: 16 },
-  { name: "Uttara Bhadrapada", sinhala: "උත්‍රපුටුප", tamil: "உத்திரட்டாதி", lord: "Saturn", dasha_years: 19 },
-  { name: "Revati", sinhala: "රේවතී", tamil: "ரேவதி", lord: "Mercury", dasha_years: 17 },
+  { name: "Ashwini", sinhala: "අස්විද", tamil: "அஸ்வினி", lord: "Ketu", deity: "Ashwini Kumaras", symbol: "Horse's Head", gana: "Deva", dasha_years: 7 },
+  { name: "Bharani", sinhala: "බෙරණ", tamil: "பரணி", lord: "Venus", deity: "Yama", symbol: "Yoni", gana: "Manushya", dasha_years: 20 },
+  { name: "Krittika", sinhala: "කැති", tamil: "கார்த்திகை", lord: "Sun", deity: "Agni", symbol: "Razor / Flame", gana: "Rakshasa", dasha_years: 6 },
+  { name: "Rohini", sinhala: "රෙහෙණ", tamil: "ரோகிணி", lord: "Moon", deity: "Brahma / Prajapati", symbol: "Chariot / Temple", gana: "Manushya", dasha_years: 10 },
+  { name: "Mrigashira", sinhala: "මුවසිරස", tamil: "மிருகசீரிடம்", lord: "Mars", deity: "Soma", symbol: "Deer's Head", gana: "Deva", dasha_years: 7 },
+  { name: "Ardra", sinhala: "අද", tamil: "திருவாதிரை", lord: "Rahu", deity: "Rudra", symbol: "Teardrop / Diamond", gana: "Manushya", dasha_years: 18 },
+  { name: "Punarvasu", sinhala: "පුනාවස", tamil: "புனர்பூசம்", lord: "Jupiter", deity: "Aditi", symbol: "Bow and Quiver", gana: "Deva", dasha_years: 16 },
+  { name: "Pushya", sinhala: "පුෂ", tamil: "பூசம்", lord: "Saturn", deity: "Brihaspati (Guru)", symbol: "Lotus / Cow's Udder", gana: "Deva", dasha_years: 19 },
+  { name: "Ashlesha", sinhala: "අස්ලිස", tamil: "ஆயில்யம்", lord: "Mercury", deity: "Sarpas (Serpents)", symbol: "Coiled Snake", gana: "Rakshasa", dasha_years: 17 },
+  { name: "Magha", sinhala: "මා", tamil: "மகம்", lord: "Ketu", deity: "Pitris (Ancestors)", symbol: "Royal Throne", gana: "Rakshasa", dasha_years: 7 },
+  { name: "Purva Phalguni", sinhala: "පුවපල්", tamil: "பூரம்", lord: "Venus", deity: "Bhaga", symbol: "Front Legs of Couch", gana: "Manushya", dasha_years: 20 },
+  { name: "Uttara Phalguni", sinhala: "උත්‍රපල්", tamil: "உத்திரம்", lord: "Sun", deity: "Aryaman", symbol: "Back Legs of Couch", gana: "Manushya", dasha_years: 6 },
+  { name: "Hasta", sinhala: "හත", tamil: "அஸ்தம்", lord: "Moon", deity: "Savitar (Sun God)", symbol: "Open Hand / Fist", gana: "Deva", dasha_years: 10 },
+  { name: "Chitra", sinhala: "සිත", tamil: "சித்திரை", lord: "Mars", deity: "Tvashtar (Divine Architect)", symbol: "Bright Jewel", gana: "Rakshasa", dasha_years: 7 },
+  { name: "Svati", sinhala: "සා", tamil: "சுவாதி", lord: "Rahu", deity: "Vayu (Wind God)", symbol: "Young Shoot / Coral", gana: "Deva", dasha_years: 18 },
+  { name: "Vishakha", sinhala: "විසා", tamil: "விசாகம்", lord: "Jupiter", deity: "Indra & Agni", symbol: "Triumphal Arch", gana: "Rakshasa", dasha_years: 16 },
+  { name: "Anuradha", sinhala: "අනුර", tamil: "அனுஷம்", lord: "Saturn", deity: "Mitra", symbol: "Lotus Flower", gana: "Deva", dasha_years: 19 },
+  { name: "Jyeshtha", sinhala: "දෙට", tamil: "கேட்டை", lord: "Mercury", deity: "Indra", symbol: "Circular Amulet / Umbrella", gana: "Rakshasa", dasha_years: 17 },
+  { name: "Mula", sinhala: "මුල", tamil: "மூலம்", lord: "Ketu", deity: "Nirriti", symbol: "Tied Bunch of Roots", gana: "Rakshasa", dasha_years: 7 },
+  { name: "Purva Ashadha", sinhala: "පුවසල", tamil: "பூராடம்", lord: "Venus", deity: "Apas (Water Goddess)", symbol: "Winnowing Basket / Fan", gana: "Manushya", dasha_years: 20 },
+  { name: "Uttara Ashadha", sinhala: "උත්‍රසල", tamil: "உத்திராடம்", lord: "Sun", deity: "Vishwadevas", symbol: "Elephant Tusk", gana: "Manushya", dasha_years: 6 },
+  { name: "Shravana", sinhala: "සුවණ", tamil: "திருவோணம்", lord: "Moon", deity: "Vishnu", symbol: "Ear / Three Footprints", gana: "Deva", dasha_years: 10 },
+  { name: "Dhanishta", sinhala: "දෙනට", tamil: "அவிட்டம்", lord: "Mars", deity: "Eight Vasus", symbol: "Drum / Flute", gana: "Rakshasa", dasha_years: 7 },
+  { name: "Shatabhisha", sinhala: "සියාවස", tamil: "சதயம்", lord: "Rahu", deity: "Varuna", symbol: "100 Physicians / Empty Circle", gana: "Rakshasa", dasha_years: 18 },
+  { name: "Purva Bhadrapada", sinhala: "පුවපුටුප", tamil: "பூரட்டாதி", lord: "Jupiter", deity: "Aja Ekapada", symbol: "Front of Funeral Cot / Two-Faced Man", gana: "Manushya", dasha_years: 16 },
+  { name: "Uttara Bhadrapada", sinhala: "උත්‍රපුටුප", tamil: "உத்திரட்டாதி", lord: "Saturn", deity: "Ahirbudhnya", symbol: "Back of Funeral Cot / Snake in Water", gana: "Manushya", dasha_years: 19 },
+  { name: "Revati", sinhala: "රේවතී", tamil: "ரேவதி", lord: "Mercury", deity: "Pushan", symbol: "Fish / Pair of Fish", gana: "Deva", dasha_years: 17 },
 ];
 
-const PLANET_SYMBOLS: { [key: string]: { sinhala: string; tamil: string; en: string; color: string } } = {
-  "Sun (Surya)": { sinhala: "ර", tamil: "சூ", en: "Su", color: "#f59e0b" },
-  "Moon (Chandra)": { sinhala: "ච", tamil: "சந்", en: "Mo", color: "#10b981" },
-  "Mars (Chevvai)": { sinhala: "කු", tamil: "செ", en: "Ma", color: "#ef4444" },
-  "Mercury (Budha)": { sinhala: "-බු", tamil: "பு", en: "Me", color: "#3b82f6" },
-  "Jupiter (Guru)": { sinhala: "ගු", tamil: "குரு", en: "Ju", color: "#eab308" },
-  "Venus (Sukra)": { sinhala: "-සි", tamil: "சு", en: "Ve", color: "#ec4899" },
-  "Saturn (Sani)": { sinhala: "-ශ", tamil: "சனி", en: "Sa", color: "#8b5cf6" },
-  "Rahu ℞": { sinhala: "-රා", tamil: "ரா", en: "Ra", color: "#06b6d4" },
-  "Ketu ℞": { sinhala: "-කේ", tamil: "கே", en: "Ke", color: "#f97316" },
-  "Ascendant (Lagna)": { sinhala: "ල", tamil: "ல", en: "Asc", color: "#c084fc" },
+const PLANET_SYMBOLS: { [key: string]: { sinhala: string; tamil: string; en: string; color: string; karaka: string; nature: string } } = {
+  "Sun (Surya)": { sinhala: "ර", tamil: "சூ", en: "Su", color: "#f59e0b", karaka: "Soul, Father, Vitality, Authority, Government", nature: "Cruel Benefic / Sattvic Fire" },
+  "Moon (Chandra)": { sinhala: "ච", tamil: "சந்", en: "Mo", color: "#10b981", karaka: "Mind, Mother, Emotions, Memory, Nourishment", nature: "Benefic / Sattvic Water" },
+  "Mars (Chevvai)": { sinhala: "කු", tamil: "செ", en: "Ma", color: "#ef4444", karaka: "Courage, Real Estate, Siblings, Logic, Engineering", nature: "Malefic / Tamasic Fire" },
+  "Mercury (Budha)": { sinhala: "-බු", tamil: "பு", en: "Me", color: "#3b82f6", karaka: "Intellect, Speech, Commerce, Software, Mathematics", nature: "Adaptive Benefic / Rajasic Earth" },
+  "Jupiter (Guru)": { sinhala: "ගු", tamil: "குரு", en: "Ju", color: "#eab308", karaka: "Wisdom, Wealth, Children, Dharma, Spirituality", nature: "Supreme Benefic / Sattvic Ether" },
+  "Venus (Sukra)": { sinhala: "-සි", tamil: "சு", en: "Ve", color: "#ec4899", karaka: "Love, Arts, Vehicles, Luxury, Marriage, Aesthetics", nature: "Prime Benefic / Rajasic Water" },
+  "Saturn (Sani)": { sinhala: "-ශ", tamil: "சனி", en: "Sa", color: "#8b5cf6", karaka: "Longevity, Discipline, Perseverance, Hard Work, Karma", nature: "Great Malefic / Tamasic Air" },
+  "Rahu ℞": { sinhala: "-රා", tamil: "ரா", en: "Ra", color: "#06b6d4", karaka: "Ambition, Innovation, Foreign Lands, Artificial Intelligence", nature: "Shadow Planet (Chhaya Graha)" },
+  "Ketu ℞": { sinhala: "-කේ", tamil: "கே", en: "Ke", color: "#f97316", karaka: "Moksha, Intuition, Occult, Detachment, Deep Analytics", nature: "Spiritual Node (Moksha Karaka)" },
+  "Ascendant (Lagna)": { sinhala: "ල", tamil: "ல", en: "Asc", color: "#c084fc", karaka: "Self, Physical Constitution, General Destiny, Vitality", nature: "Core Reference Point (Tanu Bhava)" },
 };
+
+const DASHA_SEQ = [
+  { lord: "Ketu", years: 7, mantra: "Om Kem Ketave Namaha" },
+  { lord: "Venus", years: 20, mantra: "Om Shum Shukraya Namaha" },
+  { lord: "Sun", years: 6, mantra: "Om Hram Hrim Hroum Sah Suryaya Namaha" },
+  { lord: "Moon", years: 10, mantra: "Om Shram Shrim Shroum Sah Chandraya Namaha" },
+  { lord: "Mars", years: 7, mantra: "Om Kram Krim Kroum Sah Bhaumaya Namaha" },
+  { lord: "Rahu", years: 18, mantra: "Om Bhram Bhrim Bhroum Sah Rahave Namaha" },
+  { lord: "Jupiter", years: 16, mantra: "Om Gram Grim Groum Sah Gurave Namaha" },
+  { lord: "Saturn", years: 19, mantra: "Om Pram Prim Proum Sah Shanaischaraya Namaha" },
+  { lord: "Mercury", years: 17, mantra: "Om Bram Brim Broum Sah Budhaya Namaha" }
+];
 
 function degToDms(degFloat: number): string {
   const norm = ((degFloat % 360) + 360) % 360;
@@ -209,6 +222,7 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
       rasi_tamil: rasiObj.tamil,
       rasi_icon: rasiObj.icon,
       rasi_lord: rasiObj.lord,
+      rasi_element: rasiObj.element,
       nakshatra: nakObj.name,
       nakshatra_sinhala: nakObj.sinhala,
       nakshatra_tamil: nakObj.tamil,
@@ -232,6 +246,30 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const moonNakObj = NAKSHATRAS.find(n => n.name === moonInfo.nakshatra) || NAKSHATRAS[0];
   const balanceYears = moonNakObj.dasha_years * (1.0 - (moonInfo.pada - 1) / 4.0);
 
+  // Generate Vimshottari Mahadasha Timeline from birth
+  const startLordIdx = DASHA_SEQ.findIndex(d => d.lord === moonNakObj.lord);
+  const birthYear = y;
+  let currentYearCursor = birthYear;
+  const dashaTimeline = [];
+
+  for (let i = 0; i < 9; i++) {
+    const idx = (startLordIdx + i) % 9;
+    const dItem = DASHA_SEQ[idx];
+    const duration = i === 0 ? balanceYears : dItem.years;
+    const startY = currentYearCursor;
+    const endY = currentYearCursor + duration;
+    dashaTimeline.push({
+      lord: dItem.lord,
+      duration: duration.toFixed(1),
+      years: dItem.years,
+      start: Math.round(startY),
+      end: Math.round(endY),
+      periodStr: `${Math.round(startY)} — ${Math.round(endY)} (${duration.toFixed(1)} yrs)`,
+      mantra: dItem.mantra
+    });
+    currentYearCursor = endY;
+  }
+
   return {
     ayanamsa: `Lahiri Chitrapaksha (${degToDms(ayanamsa)})`,
     lagna: lagnaInfo.rasi_full,
@@ -249,6 +287,7 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
     nakshatra_tamil: moonInfo.nakshatra_tamil,
     pada: moonInfo.pada,
     birth_dasha_balance: `${moonNakObj.lord} Dasha: ${balanceYears.toFixed(1)} Yrs remaining at birth`,
+    dasha_timeline: dashaTimeline,
     planets: calculatedPlanets
   };
 }
@@ -274,22 +313,35 @@ export default function AstrologyStudio() {
   // Transit Deep Research State
   const [selectedTransitRasi, setSelectedTransitRasi] = useState<number>(3); // Default: Karka / Cancer
 
+  // ── DEEP-DIVE MODAL STATE ──
+  const [activeDeepDive, setActiveDeepDive] = useState<{
+    title: string;
+    subtitle: string;
+    badge: string;
+    icon: string;
+    overview: string;
+    psychology: string;
+    astrologicalImpact: string;
+    remedies: string;
+    timeline?: any[];
+  } | null>(null);
+
   const handleCalculatePorutham = () => {
     setPoruthamResult({
       score: 9,
       total: 10,
       verdict: "Uthama Porutham / ඉතා යහපත් ගැළපීමක් (Highly Compatible)",
       details: [
-        { name: "Dina Porutham (දින පොරොන්දම / தினப் பொருத்தம்)", status: "Favorable (Good Health & Longevity)", ok: true },
-        { name: "Gana Porutham (ගණ පොරොන්දම / கணப் பொருத்தம்)", status: "Deva Gana - Highly Compatible", ok: true },
-        { name: "Mahendra Porutham (මාහේන්ද්‍ර / மகேந்திரப் பொருத்தம்)", status: "Blessed (Wealth & Progeny)", ok: true },
-        { name: "Stree Deerkha (ස්ත්‍රී දීර්ඝ / ஸ்திரீ தீர்க்கப் பொருத்தம்)", status: "Auspicious Longevity", ok: true },
-        { name: "Yoni Porutham (යෝනි පොරොන්දම / யோனிப் பொருத்தம்)", status: "Friendly & Harmonious", ok: true },
-        { name: "Rasi Porutham (රාශි පොරොන්දම / ராசிப் பொருத்தம்)", status: "Favorable Planetary Harmony", ok: true },
-        { name: "Rasi Athipathi (රාශ්‍යාධිපති / ராசி அதிபதிப் பொருத்தம்)", status: "Friendly Planet Lords", ok: true },
-        { name: "Vasiya Porutham (වශ්‍ය පොරොන්දම / வசியப் பொருத்தம்)", status: "Mutual Affection", ok: true },
-        { name: "Rajju Porutham (රජ්ජු පොරොන්දම / ரஜ்ஜுப் பொருத்தம்)", status: "Auspicious Mangalya Balam (100%)", ok: true },
-        { name: "Vedha Porutham (වේධ පොරොන්දම / வேதைப் பொருத்தம்)", status: "No Afflictions (Auspicious)", ok: true }
+        { name: "Dina Porutham (දින පොරොන්දම / தினப் பொருத்தம்)", status: "Favorable (Good Health & Longevity)", ok: true, exp: "Aligns life expectancy, health, and mutual vitality. Ensures day-to-day harmony without friction." },
+        { name: "Gana Porutham (ගණ පොරොන්දම / கணப் பொருத்தம்)", status: "Deva Gana - Highly Compatible", ok: true, exp: "Matches temperament and spiritual frequency. Deva Gana pairs exhibit mutual respect, patience, and kindness." },
+        { name: "Mahendra Porutham (මාහේන්ද්‍ර / மகேந்திரப் பொருத்தம்)", status: "Blessed (Wealth & Progeny)", ok: true, exp: "Fosters lineage continuity, deep attachment, and collective family wealth growth." },
+        { name: "Stree Deerkha (ස්ත්‍රී දීර්ඝ / ஸ்திரී தீர்க்கப் பொருத்தம்)", status: "Auspicious Longevity", ok: true, exp: "Assures prosperity and longevity of the bride in the matrimonial home." },
+        { name: "Yoni Porutham (යෝනි පොරොන්දම / யோனிப் பொருத்தம்)", status: "Friendly & Harmonious", ok: true, exp: "Biological, physical, and intimate compatibility ensuring sustained romantic bonding." },
+        { name: "Rasi Porutham (රාශි පොරොන්දම / ராசிப் பொருத்தம்)", status: "Favorable Planetary Harmony", ok: true, exp: "Mental alignment between Moon signs prevents ego clashes and encourages cooperative decision-making." },
+        { name: "Rasi Athipathi (රාශ්‍යාධිපති / ராசி அதிபதிப் பொருத்தம்)", status: "Friendly Planet Lords", ok: true, exp: "Planetary rulers of both Moon signs are friendly, blessing the union with mutual appreciation." },
+        { name: "Vasiya Porutham (වශ්‍ය පොරොන්දම / வசியப் பொருத்தம்)", status: "Mutual Affection", ok: true, exp: "Creates reciprocal magnetic attraction and emotional loyalty between partners." },
+        { name: "Rajju Porutham (රජ්ජු පොරොන්දම / ரஜ்ජුப் பொருத்தம்)", status: "Auspicious Mangalya Balam (100%)", ok: true, exp: "The supreme match for marital longevity (Mangalya Balam). Different Rajju lines prevent health afflictions." },
+        { name: "Vedha Porutham (වේධ පොරොන්දම / வேதைப் பொருத்தம்)", status: "No Afflictions (Auspicious)", ok: true, exp: "Ensures the couple is free from conflicting energetic stars, removing sudden life disruptions." }
       ]
     });
   };
@@ -326,6 +378,94 @@ export default function AstrologyStudio() {
     };
   };
 
+  // ── DEEP-DIVE MODAL OPENERS ──
+
+  const openLagnaDeepDive = () => {
+    if (!chartResult) return;
+    const lagnaPlanet = chartResult.planets[0];
+    setActiveDeepDive({
+      title: `${chartResult.lagna} (Lagna / Ascendant)`,
+      subtitle: `${chartResult.lagna_sinhala} / ${chartResult.lagna_tamil} — ${chartResult.lagna_deg}`,
+      badge: "Self & Life Destiny (Tanu Bhava)",
+      icon: "🏹",
+      overview: `Lagna is the rising sign on the eastern horizon at the exact moment of birth. It defines your core identity, physical vitality, outward persona, and the foundational lens through which you experience the universe.`,
+      psychology: `Individuals born in ${chartResult.lagna} are characterized by distinct cognitive pathways, natural leadership instinct, and sharp perceptual faculties. You possess an innate drive to build purpose-driven milestones and inspire your environment.`,
+      astrologicalImpact: `As the 1st House (Kendra & Trikona simultaneously), your Ascendant Lord (${lagnaPlanet.rasi_lord}) acts as the prime guardian of your chart. Placements from Lagna establish all 12 life dimensions: wealth (2nd), courage (3rd), property (4th), intelligence (5th), and career (10th).`,
+      remedies: `Strengthen your Lagna Lord through conscious morning meditation, wearing supportive gemstones (under guidance), and aligning decisions with your natural elemental energy (${lagnaPlanet.rasi_element || 'Vitality'}).`
+    });
+  };
+
+  const openRasiDeepDive = () => {
+    if (!chartResult) return;
+    setActiveDeepDive({
+      title: `${chartResult.rasi} (Moon Sign / Rasi)`,
+      subtitle: `${chartResult.rasi_sinhala} / ${chartResult.rasi_tamil} — ${chartResult.moon_deg}`,
+      badge: "Mind & Emotional Subconscious (Chandra)",
+      icon: "🦀",
+      overview: `Moon Sign (Janma Rasi) governs your subconscious mind, emotional equilibrium, instinctual reactions, memory retention, and how you internalize experiences. In Vedic astrology, the Moon is as crucial as the Ascendant for psychological health.`,
+      psychology: `With the Moon placed in ${chartResult.rasi}, your mind operates with acute intuitive receptivity. You possess deep empathetic sensitivity, high creative imagination, and a strong protective instinct toward family, allies, and creative projects.`,
+      astrologicalImpact: `Your Moon sign is the foundation for all Vimshottari Mahadasha timing and Gocharam (transit) impacts. Favorable transits of Jupiter and Saturn over your Moon create major career surges and emotional breakthroughs.`,
+      remedies: `Honor Moon energy with silver ornaments, drinking water from silver vessels, maintaining emotional hydration, and reciting 'Om Namah Shivaya' or 'Om Chandraya Namaha' on Mondays.`
+    });
+  };
+
+  const openNakshatraDeepDive = () => {
+    if (!chartResult) return;
+    const nakObj = NAKSHATRAS.find(n => n.name === chartResult.nakshatra) || NAKSHATRAS[0];
+    setActiveDeepDive({
+      title: `${chartResult.nakshatra} (Birth Star / නැකත)`,
+      subtitle: `${chartResult.nakshatra_sinhala} / ${chartResult.nakshatra_tamil} — Pada ${chartResult.pada}`,
+      badge: `Ruled by ${nakObj.lord} · Deity: ${nakObj.deity}`,
+      icon: "✨",
+      overview: `${chartResult.nakshatra} is the lunar mansion presiding at your birth. It reveals your soul's karmic blueprint, unique talents, temperament (Gana: ${nakObj.gana}), and spiritual alignment.`,
+      psychology: `Blessed with the archetype of '${nakObj.symbol}', you naturally radiate nurturing power, perseverance, intellectual depth, and unwavering loyalty. Pada ${chartResult.pada} anchors your mental discipline and ethical focus.`,
+      astrologicalImpact: `The planetary ruler of this star is ${nakObj.lord}, which initiated your life's first Vimshottari Dasha period. The deity ${nakObj.deity} grants continuous wisdom, intellectual protection, and spiritual elevation throughout life transitions.`,
+      remedies: `Connect with the divine energy of ${nakObj.deity} during monthly Moon transits over ${chartResult.nakshatra}. Support charitable endeavors aligned with food nourishment and educational patronage.`
+    });
+  };
+
+  const openDashaDeepDive = () => {
+    if (!chartResult) return;
+    setActiveDeepDive({
+      title: `Vimshottari Dasa-Bhukti Master Timeline`,
+      subtitle: `120-Year Planetary Lifecycle Map · Starting from ${chartResult.nakshatra}`,
+      badge: "Karmic Timing Engine",
+      icon: "⏳",
+      overview: `The Vimshottari Dasha system is the 120-year cycle of planetary periods that controls the unfolding of life events. Each Mahadasha activates specific houses, bringing tailored opportunities, career shifts, and personal evolution.`,
+      psychology: `Transitions between Dasha periods mark profound psychological transformations. As you shift from one planetary ruler to another, your ambitions, values, relationships, and energetic focus evolve accordingly.`,
+      astrologicalImpact: `Your birth opened with ${chartResult.birth_dasha_balance}. Review the complete chronological roadmap below to understand key active windows for education, marriage, wealth creation, and spiritual awakening.`,
+      remedies: `During any active Mahadasha, chant the dedicated planetary mantra and perform service aligned with that planet's archetypal energy.`,
+      timeline: chartResult.dasha_timeline
+    });
+  };
+
+  const openPlanetDeepDive = (p: any) => {
+    const sym = PLANET_SYMBOLS[p.name] || { color: "#fff", karaka: "General energy", nature: "Planetary influence" };
+    setActiveDeepDive({
+      title: `${p.name} Placement Deep-Dive`,
+      subtitle: `In ${p.rasi} (${p.degrees}) · ${p.house_str} · Star: ${p.nakshatra} (Pada ${p.pada})`,
+      badge: sym.nature,
+      icon: "🪐",
+      overview: `${p.name} represents '${sym.karaka}' in your cosmic blueprint. Located in the ${p.house_str} in ${p.rasi} at ${p.degrees}, it exerts a decisive influence on this life domain.`,
+      psychology: `This planetary placement channels sharp focus and distinct strategic capabilities into the matters of the ${p.house_str}. When activated by transits or Dasha periods, it brings focused results and leadership competence.`,
+      astrologicalImpact: `As ruler of ${p.rasi_lord || 'its domain'}, its aspects (Drishti) radiate into opposing and trinal houses, infusing them with energetic momentum and structural discipline.`,
+      remedies: `Honor ${p.name} through focused morning contemplation, charitable contributions aligned with its significations, and dedicated mantra repetition.`
+    });
+  };
+
+  const openPoruthamDeepDive = (item: any) => {
+    setActiveDeepDive({
+      title: `${item.name} Match Breakdown`,
+      subtitle: `Compatibility Status: ${item.status}`,
+      badge: item.ok ? "✓ Favorable Alignment" : "⚠️ Requires Remedial Mitigation",
+      icon: "💖",
+      overview: item.exp || "Deep physiological and psychological harmony evaluated across Vedic marital criteria.",
+      psychology: `This koota alignment harmonizes subconscious temperament, physiological health, and emotional resilience between partners, ensuring mutual trust and joyful co-existence.`,
+      astrologicalImpact: `In classical Vedic matchmaking, strong alignment in this factor safeguards marital longevity (Mangalya Balam), financial growth, and harmonious family progeny.`,
+      remedies: `For sustained harmony, both partners should regularly visit auspicious temples together, engage in collective family charity, and maintain open, transparent communication.`
+    });
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(to bottom right, #090a12, #0d0f1c)", color: "#f3f4f6", padding: "2.5rem 2rem", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "1350px", margin: "0 auto" }}>
@@ -338,10 +478,10 @@ export default function AstrologyStudio() {
             </Link>
             <h1 style={{ fontSize: "2.4rem", fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: "0.8rem", background: "linear-gradient(135deg, #a78bfa, #c084fc, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               <Sparkles size={36} color="#c084fc" />
-              Astrology Studio & Kendare Engine
+              Astrology Studio & Interactive Knowledge Suite
             </h1>
             <p style={{ color: "#9ca3af", fontSize: "1rem", marginTop: "0.4rem" }}>
-              Traditional Sri Lankan Kendare (කේන්ද්‍රය), Vedic Diamond Chart & South Indian 12-Rasi Grid.
+              Click-to-Explore Vedic Kendare (කේන්ද්‍රය), interactive planetary knowledge graph & remedial astrology engine.
             </p>
           </div>
 
@@ -380,7 +520,7 @@ export default function AstrologyStudio() {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>Birth Information</h3>
-                  <span style={{ fontSize: "0.75rem", color: "#a78bfa" }}>Dynamic Ephemeris Engine</span>
+                  <span style={{ fontSize: "0.75rem", color: "#a78bfa" }}>Interactive Knowledge Engine</span>
                 </div>
               </div>
 
@@ -440,27 +580,60 @@ export default function AstrologyStudio() {
             {chartResult && (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.8rem" }}>
                 
-                {/* 4 Summary Metric Cards */}
+                {/* 4 Interactive Click-to-Explore Summary Metric Cards */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
-                  <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(129,140,248,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center" }}>
+                  
+                  {/* Card 1: Lagna (Clickable) */}
+                  <div 
+                    onClick={openLagnaDeepDive}
+                    style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(129,140,248,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center", cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                    className="hover:scale-[1.02] hover:border-indigo-400"
+                  >
+                    <span style={{ position: "absolute", top: "8px", right: "8px", fontSize: "10px", background: "rgba(129,140,248,0.2)", color: "#c7d2fe", padding: "2px 6px", borderRadius: "6px", fontWeight: 700 }}>
+                      🔍 Deep-Dive
+                    </span>
                     <div style={{ fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase" }}>Ascendant (Lagna)</div>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#818cf8", marginTop: "4px" }}>{chartResult.lagna}</div>
                     <div style={{ fontSize: "0.8rem", color: "#c7d2fe", marginTop: "2px" }}>{chartResult.lagna_sinhala} / {chartResult.lagna_tamil} ({chartResult.lagna_deg})</div>
                   </div>
 
-                  <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(236,72,153,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center" }}>
+                  {/* Card 2: Moon Sign (Clickable) */}
+                  <div 
+                    onClick={openRasiDeepDive}
+                    style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(236,72,153,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center", cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                    className="hover:scale-[1.02] hover:border-pink-400"
+                  >
+                    <span style={{ position: "absolute", top: "8px", right: "8px", fontSize: "10px", background: "rgba(236,72,153,0.2)", color: "#fbcfe8", padding: "2px 6px", borderRadius: "6px", fontWeight: 700 }}>
+                      🔍 Deep-Dive
+                    </span>
                     <div style={{ fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase" }}>Rasi (Moon Sign)</div>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#ec4899", marginTop: "4px" }}>{chartResult.rasi}</div>
                     <div style={{ fontSize: "0.8rem", color: "#fbcfe8", marginTop: "2px" }}>{chartResult.rasi_sinhala} / {chartResult.rasi_tamil} ({chartResult.moon_deg})</div>
                   </div>
 
-                  <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center" }}>
+                  {/* Card 3: Nakshatra (Clickable) */}
+                  <div 
+                    onClick={openNakshatraDeepDive}
+                    style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center", cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                    className="hover:scale-[1.02] hover:border-emerald-400"
+                  >
+                    <span style={{ position: "absolute", top: "8px", right: "8px", fontSize: "10px", background: "rgba(16,185,129,0.2)", color: "#a7f3d0", padding: "2px 6px", borderRadius: "6px", fontWeight: 700 }}>
+                      🔍 Deep-Dive
+                    </span>
                     <div style={{ fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase" }}>Birth Star (Nakshatra)</div>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#10b981", marginTop: "4px" }}>{chartResult.nakshatra}</div>
                     <div style={{ fontSize: "0.8rem", color: "#a7f3d0", marginTop: "2px" }}>{chartResult.nakshatra_sinhala} / {chartResult.nakshatra_tamil} (Pada {chartResult.pada})</div>
                   </div>
 
-                  <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center" }}>
+                  {/* Card 4: Dasha Timeline (Clickable) */}
+                  <div 
+                    onClick={openDashaDeepDive}
+                    style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "16px", padding: "1.2rem", textAlign: "center", cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+                    className="hover:scale-[1.02] hover:border-amber-400"
+                  >
+                    <span style={{ position: "absolute", top: "8px", right: "8px", fontSize: "10px", background: "rgba(245,158,11,0.2)", color: "#fde68a", padding: "2px 6px", borderRadius: "6px", fontWeight: 700 }}>
+                      📅 Timeline
+                    </span>
                     <div style={{ fontSize: "0.75rem", color: "#9ca3af", textTransform: "uppercase" }}>Birth Dasha Balance</div>
                     <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#f59e0b", marginTop: "4px" }}>{chartResult.birth_dasha_balance}</div>
                     <div style={{ fontSize: "0.75rem", color: "#fde68a", marginTop: "2px" }}>{chartResult.ayanamsa}</div>
@@ -511,7 +684,7 @@ export default function AstrologyStudio() {
                   </div>
                 </div>
 
-                {/* ── VIEW 1: TRADITIONAL KENDARE / DIAMOND CHART (Matching User Screenshot) ── */}
+                {/* ── VIEW 1: TRADITIONAL KENDARE / DIAMOND CHART (Interactive Clickable) ── */}
                 {chartViewMode === 'kendare' && (
                   <div style={{ background: "#ffffff", borderRadius: "20px", padding: "2rem", color: "#1e293b", boxShadow: "0 10px 35px rgba(0,0,0,0.5)", border: "2px solid #cbd5e1" }}>
                     <div style={{ maxWidth: "600px", margin: "0 auto" }}>
@@ -521,139 +694,144 @@ export default function AstrologyStudio() {
                         
                         {/* SVG Diagonal Lines Layer */}
                         <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 1 }}>
-                          {/* Top-Left Box Diagonal */}
                           <line x1="0%" y1="0%" x2="33.33%" y2="33.33%" stroke="#94a3b8" strokeWidth="1.5" />
-                          {/* Top-Right Box Diagonal */}
                           <line x1="100%" y1="0%" x2="66.66%" y2="33.33%" stroke="#94a3b8" strokeWidth="1.5" />
-                          {/* Bottom-Left Box Diagonal */}
                           <line x1="0%" y1="100%" x2="33.33%" y2="66.66%" stroke="#94a3b8" strokeWidth="1.5" />
-                          {/* Bottom-Right Box Diagonal */}
                           <line x1="100%" y1="100%" x2="66.66%" y2="66.66%" stroke="#94a3b8" strokeWidth="1.5" />
                           
-                          {/* Grid Lines */}
                           <line x1="33.33%" y1="0%" x2="33.33%" y2="100%" stroke="#94a3b8" strokeWidth="1.5" />
                           <line x1="66.66%" y1="0%" x2="66.66%" y2="100%" stroke="#94a3b8" strokeWidth="1.5" />
                           <line x1="0%" y1="33.33%" x2="100%" y2="33.33%" stroke="#94a3b8" strokeWidth="1.5" />
                           <line x1="0%" y1="66.66%" x2="100%" y2="66.66%" stroke="#94a3b8" strokeWidth="1.5" />
                         </svg>
 
-                        {/* ── ROW 0: TOP ROW ── */}
-
-                        {/* (0,0) Top-Left Box: Split into House 2 (Inner Triangle) & House 3 (Outer Triangle) */}
+                        {/* (0,0) Top-Left */}
                         <div style={{ position: "relative", padding: "8px", overflow: "hidden" }}>
-                          {/* Arudha Tags */}
                           <span style={{ position: "absolute", top: "4px", left: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>A11</span>
                           <span style={{ position: "absolute", bottom: "4px", left: "4px", fontSize: "10px", color: "#64748b" }}>A6 A7</span>
                           <span style={{ position: "absolute", bottom: "4px", right: "6px", fontSize: "10px", color: "#64748b" }}>5 6</span>
                           
-                          {/* House 3 (Outer) */}
                           <div style={{ position: "absolute", top: "35%", left: "15%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: "12px", color: "#475569", borderRadius: "50%", width: "20px", height: "20px", border: "1px solid #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center" }}>3</span>
                             <div style={{ display: "flex", gap: "3px", marginTop: "2px", fontWeight: 800 }}>
                               {getPlanetsInHouse(3).map((p: any) => {
                                 const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color, fontSize: "15px" }}>{lbl.text}</span>;
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, fontSize: "15px", cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
                               })}
                             </div>
                           </div>
 
-                          {/* House 2 (Inner) */}
                           <div style={{ position: "absolute", top: "20%", right: "20%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: "12px", color: "#3b82f6", borderRadius: "50%", width: "20px", height: "20px", border: "1px solid #93c5fd", display: "flex", alignItems: "center", justifyContent: "center" }}>2</span>
                             <div style={{ display: "flex", gap: "3px", marginTop: "2px", fontWeight: 800 }}>
                               {getPlanetsInHouse(2).map((p: any) => {
                                 const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color, fontSize: "15px" }}>{lbl.text}</span>;
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, fontSize: "15px", cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
                               })}
                             </div>
                           </div>
                         </div>
 
-                        {/* (0,1) Top-Center Box: House 1 (Lagna / ලග්නය / First House) */}
+                        {/* (0,1) Top-Center: House 1 (Lagna) */}
                         <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px" }}>
                           <span style={{ position: "absolute", bottom: "6px", left: "6px", width: "22px", height: "22px", borderRadius: "50%", background: "#16a34a", color: "#fff", fontSize: "11px", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {chartResult.lagna_sinhala === 'කටක' ? '4' : '1'}
                           </span>
                           
-                          {/* Planets in Lagna */}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "center", alignItems: "center", fontWeight: 800, fontSize: "18px" }}>
                             {getPlanetsInHouse(1).length === 0 ? (
-                              <span style={{ color: "#16a34a", fontSize: "20px", fontWeight: 800 }}>{chartLanguage === 'sinhala' ? 'ච' : (chartLanguage === 'tamil' ? 'சந்' : 'Mo')}</span>
+                              <span onClick={openLagnaDeepDive} style={{ color: "#16a34a", fontSize: "20px", fontWeight: 800, cursor: "pointer" }} title="Click for Lagna Analysis">
+                                {chartLanguage === 'sinhala' ? 'ල' : (chartLanguage === 'tamil' ? 'ல' : 'Asc')}
+                              </span>
                             ) : (
                               getPlanetsInHouse(1).map((p: any) => {
                                 const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color }}>{lbl.text}</span>;
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
                               })
                             )}
                           </div>
                         </div>
 
-                        {/* (0,2) Top-Right Box: Split into House 12 (Inner) & House 11 (Outer) */}
+                        {/* (0,2) Top-Right */}
                         <div style={{ position: "relative", padding: "8px", overflow: "hidden" }}>
                           <span style={{ position: "absolute", top: "4px", left: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>A4 A9</span>
                           <span style={{ position: "absolute", bottom: "4px", right: "6px", fontSize: "10px", color: "#64748b" }}>A8</span>
                           
-                          {/* House 12 (Inner) */}
                           <div style={{ position: "absolute", top: "18%", left: "22%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: "12px", color: "#ef4444", borderRadius: "50%", width: "20px", height: "20px", border: "1px solid #fca5a5", display: "flex", alignItems: "center", justifyContent: "center" }}>12</span>
                             <div style={{ display: "flex", gap: "3px", marginTop: "2px", fontWeight: 800 }}>
                               {getPlanetsInHouse(12).map((p: any) => {
                                 const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color, fontSize: "15px" }}>{lbl.text}</span>;
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, fontSize: "15px", cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
                               })}
                             </div>
                           </div>
 
-                          {/* House 11 (Outer) */}
                           <div style={{ position: "absolute", top: "35%", right: "12%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <div style={{ display: "flex", gap: "3px", fontWeight: 800, fontSize: "18px", color: "#1d4ed8" }}>
-                              {getPlanetsInHouse(11).length === 0 ? (
-                                <span>-රා</span>
-                              ) : (
-                                getPlanetsInHouse(11).map((p: any) => {
-                                  const lbl = getPlanetLabel(p.name);
-                                  return <span key={p.name} style={{ color: lbl.color }}>{lbl.text}</span>;
-                                })
-                              )}
+                              {getPlanetsInHouse(11).map((p: any) => {
+                                const lbl = getPlanetLabel(p.name);
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
 
-                        {/* ── ROW 1: MIDDLE ROW ── */}
-
-                        {/* (1,0) Middle-Left: House 4 */}
+                        {/* (1,0) Middle-Left */}
                         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}>
                           <span style={{ position: "absolute", top: "4px", right: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>7</span>
                           <div style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a" }}>
-                            {getPlanetsInHouse(4).length === 0 ? (
-                              <span>-ප්</span>
-                            ) : (
-                              getPlanetsInHouse(4).map((p: any) => {
-                                const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color, marginRight: "4px" }}>{lbl.text}</span>;
-                              })
-                            )}
+                            {getPlanetsInHouse(4).map((p: any) => {
+                              const lbl = getPlanetLabel(p.name);
+                              return (
+                                <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, marginRight: "4px", cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                  {lbl.text}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
 
-                        {/* (1,1) CENTER BOX: Moon Rasi Emblem & Degrees (Matching User Screenshot) */}
-                        <div style={{ background: "#f8fafc", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+                        {/* (1,1) CENTER BOX: Moon Rasi Emblem & Degrees (Clickable to explore Rasi) */}
+                        <div 
+                          onClick={openRasiDeepDive}
+                          style={{ background: "#f8fafc", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px", textAlign: "center", border: "1px solid #e2e8f0", cursor: "pointer" }}
+                          title="Click to explore Moon Sign (Rasi) psychology and traits"
+                        >
                           <div style={{ fontSize: "17px", fontWeight: 800, color: "#0f172a", fontFamily: "monospace" }}>
                             {chartResult.moon_deg?.replace('′', '') || "27:06:48"}
                           </div>
                           
-                          {/* Animated Rasi Emblem Icon */}
                           <div style={{ fontSize: "36px", margin: "4px 0", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}>
-                            🦀
+                            {chartResult.rasi_icon?.split(' ')[1] || '🦀'}
                           </div>
 
-                          {/* Colored Pill with Rasi Name */}
                           <div style={{ background: "#0ea5e9", color: "#fff", padding: "3px 16px", borderRadius: "10px", fontSize: "14px", fontWeight: 800, boxShadow: "0 2px 8px rgba(14,165,233,0.3)" }}>
                             {chartLanguage === 'sinhala' ? (chartResult.rasi_sinhala || 'කටක') : (chartLanguage === 'tamil' ? (chartResult.rasi_tamil || 'கடகம்') : (chartResult.rasi || 'Cancer'))}
                           </div>
                         </div>
 
-                        {/* (1,2) Middle-Right: House 10 */}
+                        {/* (1,2) Middle-Right */}
                         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}>
                           <span style={{ position: "absolute", top: "4px", right: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>AL A2</span>
                           <span style={{ position: "absolute", bottom: "4px", left: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>1</span>
@@ -663,39 +841,35 @@ export default function AstrologyStudio() {
                             <div style={{ display: "flex", gap: "3px", marginTop: "2px", fontWeight: 800, fontSize: "16px" }}>
                               {getPlanetsInHouse(10).map((p: any) => {
                                 const lbl = getPlanetLabel(p.name);
-                                return <span key={p.name} style={{ color: lbl.color }}>{lbl.text}</span>;
+                                return (
+                                  <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                    {lbl.text}
+                                  </span>
+                                );
                               })}
                             </div>
                           </div>
                         </div>
 
-                        {/* ── ROW 2: BOTTOM ROW ── */}
-
-                        {/* (2,0) Bottom-Left Box: Split into House 5 (Outer) & House 6 (Inner) */}
+                        {/* (2,0) Bottom-Left */}
                         <div style={{ position: "relative", padding: "8px", overflow: "hidden" }}>
                           <span style={{ position: "absolute", top: "4px", left: "6px", fontSize: "11px", fontWeight: 800, color: "#16a34a" }}>GL</span>
                           <span style={{ position: "absolute", top: "4px", right: "6px", fontSize: "11px", fontWeight: 800, color: "#dc2626" }}>8</span>
                           <span style={{ position: "absolute", bottom: "4px", left: "6px", fontSize: "10px", color: "#64748b" }}>A3 A10</span>
                           
-                          {/* House 5/6 Planets */}
                           <div style={{ position: "absolute", top: "18%", left: "10%", display: "flex", flexDirection: "column", gap: "2px", fontWeight: 800, fontSize: "16px" }}>
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              <span style={{ color: "#1d4ed8" }}>-කේ</span>
-                              <span style={{ color: "#d97706" }}>-ශ</span>
-                            </div>
-                            <span style={{ color: "#4338ca" }}>යු</span>
-                            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                              <span style={{ color: "#0f172a" }}>-බු</span>
-                              <span style={{ color: "#0f172a" }}>-නෙ</span>
-                            </div>
-                            <div style={{ display: "flex", gap: "4px" }}>
-                              <span style={{ color: "#0891b2" }}>ර</span>
-                              <span style={{ color: "#16a34a" }}>ගු</span>
-                            </div>
+                            {getPlanetsInHouse(5).map((p: any) => {
+                              const lbl = getPlanetLabel(p.name);
+                              return (
+                                <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                  {lbl.text}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
 
-                        {/* (2,1) Bottom-Center: House 7 */}
+                        {/* (2,1) Bottom-Center */}
                         <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "8px" }}>
                           <span style={{ position: "absolute", top: "6px", left: "6px", fontSize: "11px", color: "#64748b" }}>9</span>
                           <span style={{ position: "absolute", top: "6px", right: "6px", fontSize: "11px", color: "#64748b" }}>10</span>
@@ -706,26 +880,34 @@ export default function AstrologyStudio() {
                           <div style={{ display: "flex", gap: "4px", marginTop: "4px", fontWeight: 800, fontSize: "16px" }}>
                             {getPlanetsInHouse(7).map((p: any) => {
                               const lbl = getPlanetLabel(p.name);
-                              return <span key={p.name} style={{ color: lbl.color }}>{lbl.text}</span>;
+                              return (
+                                <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                  {lbl.text}
+                                </span>
+                              );
                             })}
                           </div>
                         </div>
 
-                        {/* (2,2) Bottom-Right Box: Split into House 8 (Inner) & House 9 (Outer) */}
+                        {/* (2,2) Bottom-Right */}
                         <div style={{ position: "relative", padding: "8px", overflow: "hidden" }}>
                           <span style={{ position: "absolute", top: "4px", left: "4px", fontSize: "10px", color: "#64748b" }}>11 12</span>
                           <span style={{ position: "absolute", top: "4px", right: "6px", fontSize: "11px", fontWeight: 800, color: "#64748b" }}>UL</span>
                           <span style={{ position: "absolute", bottom: "4px", left: "6px", fontSize: "11px", fontWeight: 700, color: "#64748b" }}>A5 HL</span>
                           
-                          {/* House 9 (Outer) */}
                           <div style={{ position: "absolute", top: "35%", right: "20%", display: "flex", flexDirection: "column", alignItems: "center" }}>
                             <span style={{ fontSize: "12px", color: "#3b82f6", borderRadius: "50%", width: "20px", height: "20px", border: "1px solid #93c5fd", display: "flex", alignItems: "center", justifyContent: "center" }}>9</span>
                           </div>
 
-                          {/* House 8 (Inner) */}
                           <div style={{ position: "absolute", bottom: "16%", left: "18%", display: "flex", gap: "4px", fontWeight: 800, fontSize: "18px", color: "#0f172a" }}>
-                            <span>-සි</span>
-                            <span>කු</span>
+                            {getPlanetsInHouse(8).map((p: any) => {
+                              const lbl = getPlanetLabel(p.name);
+                              return (
+                                <span key={p.name} onClick={() => openPlanetDeepDive(p)} style={{ color: lbl.color, cursor: "pointer" }} title={`Click to deep-dive into ${p.name}`}>
+                                  {lbl.text}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -735,171 +917,62 @@ export default function AstrologyStudio() {
                       <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
                         <span>Lagna: {chartResult.lagna_sinhala} ({chartResult.lagna})</span>
                         <span>Moon Sign: {chartResult.rasi_sinhala} ({chartResult.rasi})</span>
-                        <span>Ayanamsa: Lahiri</span>
+                        <span>Click any planet / house to deep-dive</span>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* ── VIEW 2: SOUTH INDIAN SQUARE 12-RASI GRID ── */}
+                {/* ── VIEW 2: SOUTH INDIAN SQUARE 12-RASI GRID (Interactive Clickable) ── */}
                 {chartViewMode === 'south' && (
                   <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "1.8rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem" }}>
                       <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
                         <Grid size={18} color="#8b5cf6" /> South Indian Rasi Chart (இராசி கட்டம்)
                       </h3>
-                      <span style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600 }}>Lahiri Ayanamsa</span>
+                      <span style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600 }}>Click any planet box to deep-dive</span>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "repeat(4, 110px)", gap: "6px", background: "#05060b", padding: "10px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      {/* (0,0) Meena */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>மீனம் (Pisces)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(11).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (0,1) Mesha */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>மேஷம் (Aries)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(0).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (0,2) Vrishabha */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(59,130,246,0.08)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#60a5fa" }}>ரிஷபம் (Taurus)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(1).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#3b82f6", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (0,3) Mithuna */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>மிதுனம் (Gemini)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(2).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (1,0) Kumbha */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(236,72,153,0.08)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#f472b6" }}>கும்பம் (Aquarius)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(10).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#ec4899", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Center Box */}
-                      <div style={{ gridColumn: "span 2", gridRow: "span 2", border: "1px solid rgba(139,92,246,0.3)", borderRadius: "10px", background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(236,72,153,0.08))", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "10px" }}>
-                        <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#fff" }}>{name}&apos;s Rasi Chart</div>
-                        <div style={{ fontSize: "0.85rem", color: "#a78bfa", marginTop: "4px" }}>Lagna: {chartResult.lagna_sinhala} / {chartResult.lagna_tamil}</div>
-                        <div style={{ fontSize: "0.85rem", color: "#ec4899", marginTop: "2px" }}>Rasi: {chartResult.rasi_sinhala} / {chartResult.rasi_tamil} ({chartResult.nakshatra})</div>
-                        <div style={{ fontSize: "0.72rem", color: "#9ca3af", marginTop: "4px" }}>DOB: {dob} · {tob}</div>
-                      </div>
-
-                      {/* (1,3) Karka */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(16,185,129,0.08)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#34d399" }}>கடகம் (Cancer)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(3).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#10b981", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (2,0) Makara */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>மகரம் (Capricorn)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(9).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (2,3) Simha */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>சிம்மம் (Leo)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(4).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (3,0) Dhanu */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(245,158,11,0.08)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fbbf24" }}>தனுசு (Sagittarius)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(8).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#f59e0b", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (3,1) Vrischika */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(239,68,68,0.08)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#f87171" }}>விருச்சிகம் (Scorpio)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(7).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#ef4444", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (3,2) Thula */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9ca3af" }}>துலாம் (Libra)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(6).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
-                      {/* (3,3) Kanya */}
-                      <div style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px", background: "rgba(139,92,246,0.1)" }}>
-                        <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#c084fc" }}>கன்னி (Virgo)</div>
-                        <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                          {getPlanetsInRasi(5).map((p: any) => {
-                            const lbl = getPlanetLabel(p.name);
-                            return <span key={p.name} style={{ fontSize: "0.75rem", background: "#8b5cf6", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>{lbl.text} {p.degrees}</span>;
-                          })}
-                        </div>
-                      </div>
-
+                      {RASIS.map(r => {
+                        // Map Rasi ID to South Indian position
+                        return (
+                          <div 
+                            key={r.id} 
+                            style={{ 
+                              border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", padding: "8px",
+                              background: r.id === chartResult.planets[0]?.rasi_id ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.02)"
+                            }}
+                          >
+                            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: r.id === chartResult.planets[0]?.rasi_id ? "#c084fc" : "#9ca3af" }}>
+                              {r.tamil} ({r.name.split(' ')[0]})
+                            </div>
+                            <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                              {getPlanetsInRasi(r.id).map((p: any) => {
+                                const lbl = getPlanetLabel(p.name);
+                                return (
+                                  <span 
+                                    key={p.name} 
+                                    onClick={() => openPlanetDeepDive(p)}
+                                    style={{ fontSize: "0.75rem", background: p.symbol === 'Asc' ? "#8b5cf6" : "rgba(255,255,255,0.1)", color: lbl.color, padding: "2px 6px", borderRadius: "4px", fontWeight: 700, cursor: "pointer" }}
+                                    title={`Click for ${p.name} analysis`}
+                                  >
+                                    {lbl.text} {p.degrees}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* ── PLANETARY LONGITUDES TABLE ── */}
+                {/* ── PLANETARY LONGITUDES TABLE (Clickable Rows) ── */}
                 <div style={{ background: "rgba(25, 25, 38, 0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", overflow: "hidden" }}>
                   <div style={{ padding: "1.2rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>🪐 Planetary Positions & Ephemeris Degrees</h3>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>🪐 Planetary Positions & Ephemeris Degrees (Click to Explore)</h3>
                     <span style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600 }}>Lahiri Ayanamsa</span>
                   </div>
 
@@ -919,7 +992,13 @@ export default function AstrologyStudio() {
                       {chartResult.planets.map((p: any, i: number) => {
                         const lbl = getPlanetLabel(p.name);
                         return (
-                          <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <tr 
+                            key={i} 
+                            onClick={() => openPlanetDeepDive(p)}
+                            style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.2s" }}
+                            className="hover:bg-white/5"
+                            title="Click to view detailed planet placement analysis"
+                          >
                             <td style={{ padding: "14px 16px", fontWeight: 700, color: p.name.includes("Asc") ? "#818cf8" : (p.name.includes("Moon") ? "#ec4899" : "#fff") }}>
                               {p.name}
                             </td>
@@ -961,7 +1040,7 @@ export default function AstrologyStudio() {
               <Heart size={22} color="#ec4899" /> 10-Porutham Vedic Marriage Compatibility (පොරොන්දම් ගැලපීම)
             </h2>
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "2rem" }}>
-              Match groom & bride birth stars across Dina, Gana, Mahendra, Yoni, Rasi, Rajju, and Vedha Poruthams.
+              Match groom & bride birth stars. Click on any Porutham result row for deep remedial & physiological analysis.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
@@ -1004,7 +1083,7 @@ export default function AstrologyStudio() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem", flexWrap: "wrap", gap: "8px" }}>
                   <div>
                     <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "#fff" }}>{poruthamResult.verdict}</div>
-                    <div style={{ fontSize: "0.85rem", color: "#10b981" }}>Score: {poruthamResult.score} / {poruthamResult.total} Poruthams Matching</div>
+                    <div style={{ fontSize: "0.85rem", color: "#10b981" }}>Score: {poruthamResult.score} / {poruthamResult.total} Poruthams Matching · (Click any row for Pariharams)</div>
                   </div>
                   <span style={{ padding: "6px 14px", borderRadius: "20px", background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 700, fontSize: "0.9rem" }}>
                     ✓ Recommended Match / සුබ විවාහ යෝගය
@@ -1013,7 +1092,13 @@ export default function AstrologyStudio() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.8rem" }}>
                   {poruthamResult.details.map((item: any, i: number) => (
-                    <div key={i} style={{ background: "rgba(255,255,255,0.03)", padding: "0.8rem 1rem", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div 
+                      key={i} 
+                      onClick={() => openPoruthamDeepDive(item)}
+                      style={{ background: "rgba(255,255,255,0.03)", padding: "0.8rem 1rem", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)" }}
+                      className="hover:border-purple-500 hover:bg-purple-900/10"
+                      title="Click for deep explanation and remedies"
+                    >
                       <div>
                         <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#e5e7eb" }}>{item.name}</div>
                         <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>{item.status}</div>
@@ -1243,6 +1328,99 @@ export default function AstrologyStudio() {
               </table>
             </div>
 
+          </div>
+        )}
+
+        {/* ── INTERACTIVE DEEP-DIVE MODAL DRAWER ── */}
+        {activeDeepDive && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", zIndex: 9999 }}>
+            <div style={{ background: "#0e111d", border: "1px solid rgba(139,92,246,0.3)", borderRadius: "24px", maxWidth: "650px", width: "100%", maxHeight: "90vh", overflowY: "auto", padding: "2rem", color: "#fff", boxShadow: "0 20px 50px rgba(0,0,0,0.8)", position: "relative" }}>
+              
+              {/* Close Button */}
+              <button 
+                onClick={() => setActiveDeepDive(null)}
+                style={{ position: "absolute", top: "18px", right: "18px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "50%", width: "34px", height: "34px", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px" }}
+              >
+                ✕
+              </button>
+
+              {/* Modal Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "1.2rem" }}>
+                <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "linear-gradient(135deg, #8b5cf6, #ec4899)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
+                  {activeDeepDive.icon}
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800 }}>{activeDeepDive.title}</h3>
+                  <div style={{ fontSize: "0.85rem", color: "#a78bfa", marginTop: "2px" }}>{activeDeepDive.subtitle}</div>
+                  <span style={{ display: "inline-block", fontSize: "0.72rem", background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", padding: "2px 8px", borderRadius: "6px", fontWeight: 700, marginTop: "4px" }}>
+                    ● {activeDeepDive.badge}
+                  </span>
+                </div>
+              </div>
+
+              {/* Modal Body Sections */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                
+                {/* 1. Core Overview */}
+                <div style={{ background: "rgba(255,255,255,0.03)", padding: "1.2rem", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#818cf8", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <BookOpen size={16} /> Core Astrological Overview
+                  </div>
+                  <p style={{ margin: 0, color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                    {activeDeepDive.overview}
+                  </p>
+                </div>
+
+                {/* 2. Psychological & Behavioral Archetype */}
+                <div style={{ background: "rgba(255,255,255,0.03)", padding: "1.2rem", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#ec4899", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Zap size={16} /> Psychological & Mind Tendencies
+                  </div>
+                  <p style={{ margin: 0, color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                    {activeDeepDive.psychology}
+                  </p>
+                </div>
+
+                {/* 3. Astrological Impact */}
+                <div style={{ background: "rgba(255,255,255,0.03)", padding: "1.2rem", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f59e0b", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Star size={16} /> House & Planetary Interactions
+                  </div>
+                  <p style={{ margin: 0, color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                    {activeDeepDive.astrologicalImpact}
+                  </p>
+                </div>
+
+                {/* 4. Dasha Timeline Table (if applicable) */}
+                {activeDeepDive.timeline && (
+                  <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.2rem", borderRadius: "14px", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f59e0b", marginBottom: "0.6rem" }}>
+                      📅 120-Year Vimshottari Mahadasha Chronological Roadmap
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "200px", overflowY: "auto" }}>
+                      {activeDeepDive.timeline.map((row, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.03)", padding: "6px 10px", borderRadius: "6px", fontSize: "0.82rem" }}>
+                          <span style={{ fontWeight: 700, color: "#fff" }}>{row.lord} Mahadasha</span>
+                          <span style={{ color: "#10b981", fontWeight: 600 }}>{row.periodStr}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Auspicious Remedies & Mantras */}
+                <div style={{ background: "rgba(16,185,129,0.06)", padding: "1.2rem", borderRadius: "14px", border: "1px solid rgba(16,185,129,0.25)" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#10b981", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Shield size={16} /> Auspicious Vedic Remedies & Guidelines (ශාන්ති කර්ම / பரிகாரங்கள்)
+                  </div>
+                  <p style={{ margin: 0, color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.6 }}>
+                    {activeDeepDive.remedies}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
           </div>
         )}
 
