@@ -23,6 +23,7 @@ type Module = {
 };
 
 const modules: Module[] = [
+  { id: "agency-workspace", title: "Enterprise Agency & Task Hub", description: "Multi-tier team management, $100 vs $40 Job Bidding, Client AI Proxy & A-to-Z Manuals.", icon: Briefcase, href: "/modules/agency-workspace", color: "#ec4899" },
   { id: "media-voice-studio", title: "Media & Voice Studio", description: "OmniVoice AI TTS and Universal video/media downloaders.", icon: Mic, href: "/modules/media-voice-studio", color: "#8b5cf6" },
   { id: "web-editor-ide", title: "Web Editor & IDE", description: "Cloud-based SAM Editor and Flutter Reconstruction environment.", icon: Code, href: "/modules/web-editor-ide", color: "#14b8a6" },
   { id: "site-manager", title: "Websites & CMS Manager", description: "Manage PHP, WordPress, and Custom sites (3zero, AusLanka, Kannagi).", icon: Globe, href: "/modules/site-manager", color: "#f59e0b" },
