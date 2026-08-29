@@ -337,16 +337,59 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const rahu_sid = normDeg(rahu_trop - ayanamsa);
   const ketu_sid = normDeg(rahu_sid + 180.0);
 
-  // Planets (Helio to Geocentric Conversion)
+  // Planets (Helio to Geocentric Conversion) - Corrected 3D Keplerian Orbit model
+  const d_since_j2000 = JD - 2451545.0;
+
   const planetsEl: { [key: string]: any } = {
-    Mercury: { a: 0.387098, e: 0.205635, w: 29.1241 + 1.01444e-5 * JD, M: normDeg(168.6562 + 4.0923344368 * (JD - 2451545.0)) },
-    Venus:   { a: 0.723330, e: 0.006773, w: 54.8910 + 1.38374e-5 * JD, M: normDeg(48.0052 + 1.6021302244 * (JD - 2451545.0)) },
-    Mars:    { a: 1.523688, e: 0.093405, w: 286.5016 + 2.92961e-5 * JD, M: normDeg(18.6021 + 0.5240207766 * (JD - 2451545.0)) },
-    Jupiter: { a: 5.202561, e: 0.048498, w: 273.8777 + 1.64505e-5 * JD, M: normDeg(19.8950 + 0.0830853001 * (JD - 2451545.0)) },
-    Saturn:  { a: 9.554747, e: 0.055546, w: 339.3939 + 2.97661e-5 * JD, M: normDeg(316.9670 + 0.0334442282 * (JD - 2451545.0)) }
+    Mercury: {
+      N: 48.3313 + 3.24587e-5 * d_since_j2000,
+      i: 7.0047 + 5.00e-8 * d_since_j2000,
+      w: 29.1241 + 1.01444e-5 * d_since_j2000,
+      e: 0.205635 + 5.59e-10 * d_since_j2000,
+      M: normDeg(168.6562 + 4.0923344368 * d_since_j2000),
+      a: 0.387098
+    },
+    Venus: {
+      N: 76.6799 + 2.46590e-5 * d_since_j2000,
+      i: 3.3946 + 2.75e-8 * d_since_j2000,
+      w: 54.8910 + 1.38374e-5 * d_since_j2000,
+      e: 0.006773 - 1.302e-9 * d_since_j2000,
+      M: normDeg(48.0052 + 1.6021302244 * d_since_j2000),
+      a: 0.723330
+    },
+    Mars: {
+      N: 49.5574 + 2.11081e-5 * d_since_j2000,
+      i: 1.8497 - 1.78e-8 * d_since_j2000,
+      w: 286.5016 + 2.92961e-5 * d_since_j2000,
+      e: 0.093405 + 2.516e-9 * d_since_j2000,
+      M: normDeg(18.6021 + 0.5240207766 * d_since_j2000),
+      a: 1.523688
+    },
+    Jupiter: {
+      N: 100.4542 + 2.76854e-5 * d_since_j2000,
+      i: 1.3030 - 1.557e-7 * d_since_j2000,
+      w: 273.8777 + 1.64505e-5 * d_since_j2000,
+      e: 0.048498 + 4.469e-9 * d_since_j2000,
+      M: normDeg(19.8950 + 0.0830853001 * d_since_j2000),
+      a: 5.202561
+    },
+    Saturn: {
+      N: 113.6655 + 2.38378e-5 * d_since_j2000,
+      i: 2.4886 - 1.081e-7 * d_since_j2000,
+      w: 339.3939 + 2.97661e-5 * d_since_j2000,
+      e: 0.055546 - 9.499e-9 * d_since_j2000,
+      M: normDeg(316.9670 + 0.0334442282 * d_since_j2000),
+      a: 9.554747
+    }
   };
 
   const geoPlanets: { [key: string]: number } = {};
+  
+  // Earth coordinates (heliocentric)
+  const L_E_rad = toRad(L_E);
+  const xe = R_E * Math.cos(L_E_rad);
+  const ye = R_E * Math.sin(L_E_rad);
+
   for (const [pName, el] of Object.entries(planetsEl)) {
     const M_rad = toRad(el.M);
     let E = el.M + toDeg(el.e * Math.sin(M_rad) * (1.0 + el.e * Math.cos(M_rad)));
@@ -359,18 +402,24 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
     const yv = el.a * (Math.sqrt(1.0 - el.e * el.e) * Math.sin(E_rad));
     const v = toDeg(Math.atan2(yv, xv));
     const r = Math.sqrt(xv * xv + yv * yv);
-    const l_helio_rad = toRad(normDeg(v + el.w));
-    const xh = r * Math.cos(l_helio_rad);
-    const yh = r * Math.sin(l_helio_rad);
-    const L_E_rad = toRad(L_E);
-    const xg = xh + R_E * Math.cos(L_E_rad);
-    const yg = yh + R_E * Math.sin(L_E_rad);
+    
+    const u = toRad(v + el.w);
+    const N_rad = toRad(el.N);
+    const i_rad = toRad(el.i);
+    
+    // 3D Heliocentric ecliptic coordinates
+    const xh = r * (Math.cos(N_rad) * Math.cos(u) - Math.sin(N_rad) * Math.sin(u) * Math.cos(i_rad));
+    const yh = r * (Math.sin(N_rad) * Math.cos(u) + Math.cos(N_rad) * Math.sin(u) * Math.cos(i_rad));
+    
+    // Geocentric coordinates (vector subtraction)
+    const xg = xh - xe;
+    const yg = yh - ye;
+    
     const l_geo_trop = normDeg(toDeg(Math.atan2(yg, xg)));
     geoPlanets[pName] = normDeg(l_geo_trop - ayanamsa);
   }
 
   // Ascendant (Lagna) - Exact Standard Astronomical Ephemeris Formula (Jean Meeus)
-  const d_since_j2000 = JD - 2451545.0;
   const GMST0 = normDeg(280.46061837 + 360.98564736629 * d_since_j2000 + 0.000387933 * T * T);
   const RAMC = normDeg(GMST0 + lon);
   const eps = 23.4392911 - 0.0130042 * T;
