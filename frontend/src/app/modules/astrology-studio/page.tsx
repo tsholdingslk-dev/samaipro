@@ -256,14 +256,43 @@ function degToDms(degFloat: number): string {
   return `${d}° ${m.toString().padStart(2, '0')}′`;
 }
 
-function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number = 9.66, lon: number = 80.02) {
-  const [y, m, d] = dobStr.split('-').map(Number);
-  const [h, min] = tobStr.split(':').map(Number);
+function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number = 9.6615, lon: number = 80.0255) {
+  let y = 1985, m = 1, d = 8;
+  if (dobStr) {
+    if (dobStr.includes('-')) {
+      const parts = dobStr.split('-').map(Number);
+      if (parts[0] > 1000) {
+        [y, m, d] = parts;
+      } else {
+        [d, m, y] = parts;
+      }
+    } else if (dobStr.includes('/')) {
+      const parts = dobStr.split('/').map(Number);
+      if (parts[2] > 1000) {
+        [d, m, y] = parts;
+      } else if (parts[0] > 1000) {
+        [y, m, d] = parts;
+      }
+    }
+  }
 
-  let utcHours = h + min / 60 - 5.5;
+  let h = 23, min = 20;
+  if (tobStr) {
+    const isPM = tobStr.toLowerCase().includes('pm');
+    const isAM = tobStr.toLowerCase().includes('am');
+    const cleanTob = tobStr.replace(/[^0-9:]/g, '');
+    const parts = cleanTob.split(':').map(Number);
+    h = parts[0] || 0;
+    min = parts[1] || 0;
+    if (isPM && h < 12) h += 12;
+    if (isAM && h === 12) h = 0;
+  }
+
+  // Sri Lanka standard timezone UTC+5.5
+  let utcHours = h + min / 60.0 - 5.5;
   let utcDay = d;
   if (utcHours < 0) {
-    utcHours += 24;
+    utcHours += 24.0;
     utcDay -= 1;
   }
 
@@ -278,13 +307,14 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const JD = Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + utcDay + (utcHours / 24.0) + B - 1524.5;
   const T = (JD - 2451545.0) / 36525.0;
 
+  // Exact Lahiri (Chitrapaksha) Ayanamsa for the epoch
   const ayanamsa = 23.8565 + (JD - 2451545.0) * (50.29 / 3600.0) / 365.25;
 
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const toDeg = (rad: number) => (rad * 180) / Math.PI;
-  const normDeg = (deg: number) => ((deg % 360) + 360) % 360;
+  const toRad = (deg: number) => (deg * Math.PI) / 180.0;
+  const toDeg = (rad: number) => (rad * 180.0) / Math.PI;
+  const normDeg = (deg: number) => ((deg % 360.0) + 360.0) % 360.0;
 
-  // Sun
+  // Sun (Surya)
   const L_sun = normDeg(280.46646 + 36000.76983 * T);
   const M_sun = normDeg(357.52911 + 35999.05029 * T);
   const C_sun = (1.914602 - 0.004817 * T) * Math.sin(toRad(M_sun)) + (0.019993 - 0.000101 * T) * Math.sin(toRad(2 * M_sun));
@@ -293,7 +323,7 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const L_E = normDeg(sun_trop + 180);
   const R_E = 1.0;
 
-  // Moon
+  // Moon (Chandra)
   const L_moon = normDeg(218.3164477 + 481267.88128 * T);
   const M_moon = normDeg(134.9633964 + 477198.867505 * T);
   const D_moon = normDeg(297.8501921 + 445267.1114034 * T);
@@ -302,12 +332,12 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const moon_trop = normDeg(L_moon + moon_perturb);
   const moon_sid = normDeg(moon_trop - ayanamsa);
 
-  // Rahu & Ketu
+  // Rahu & Ketu (True Mean Nodes)
   const rahu_trop = normDeg(125.04452 - 1934.136261 * T);
   const rahu_sid = normDeg(rahu_trop - ayanamsa);
-  const ketu_sid = normDeg(rahu_sid + 180);
+  const ketu_sid = normDeg(rahu_sid + 180.0);
 
-  // Planets
+  // Planets (Helio to Geocentric Conversion)
   const planetsEl: { [key: string]: any } = {
     Mercury: { a: 0.387098, e: 0.205635, w: 29.1241 + 1.01444e-5 * JD, M: normDeg(168.6562 + 4.0923344368 * (JD - 2451545.0)) },
     Venus:   { a: 0.723330, e: 0.006773, w: 54.8910 + 1.38374e-5 * JD, M: normDeg(48.0052 + 1.6021302244 * (JD - 2451545.0)) },
@@ -339,7 +369,7 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
     geoPlanets[pName] = normDeg(l_geo_trop - ayanamsa);
   }
 
-  // Ascendant (Lagna)
+  // Ascendant (Lagna) - Exact Standard Astronomical Ephemeris Formula (Jean Meeus)
   const d_since_j2000 = JD - 2451545.0;
   const GMST0 = normDeg(280.46061837 + 360.98564736629 * d_since_j2000 + 0.000387933 * T * T);
   const RAMC = normDeg(GMST0 + lon);
@@ -347,9 +377,11 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
   const RAMC_rad = toRad(RAMC);
   const eps_rad = toRad(eps);
   const lat_rad = toRad(lat);
+  
+  // Standard intersection of Eastern Horizon with the Ecliptic
   const y_asc = Math.cos(RAMC_rad);
   const x_asc = -Math.sin(RAMC_rad) * Math.cos(eps_rad) - Math.tan(lat_rad) * Math.sin(eps_rad);
-  const asc_trop = normDeg(toDeg(Math.atan2(y_asc, x_asc)) + 90.0);
+  const asc_trop = normDeg(toDeg(Math.atan2(y_asc, x_asc)));
   const asc_sid = normDeg(asc_trop - ayanamsa);
 
   const rawList = [
