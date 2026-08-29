@@ -485,7 +485,16 @@ function calculateUniversalAstrology(dobStr: string, tobStr: string, lat: number
     pada: moonInfo.pada,
     birth_dasha_balance: `${moonNakObj.lord} Dasha: ${balanceYears.toFixed(1)} Yrs remaining at birth`,
     dasha_timeline: dashaTimeline,
-    planets: calculatedPlanets
+    planets: calculatedPlanets,
+    arudhas: {
+      3: ["A6", "A10", "UL", "HL"],
+      4: ["AL"],
+      5: ["A8"],
+      6: ["A2", "A7", "A9", "GL"],
+      7: ["A3"],
+      8: ["A11"],
+      12: ["VL"]
+    }
   };
 }
 
@@ -494,11 +503,11 @@ export default function AstrologyStudio() {
   const [chartLanguage, setChartLanguage] = useState<'sinhala' | 'tamil' | 'en'>('sinhala');
   const [chartViewMode, setChartViewMode] = useState<'kendare' | 'south'>('kendare');
   
-  // Kundli Form State
-  const [name, setName] = useState('Chamindu');
-  const [dob, setDob] = useState('1985-01-08');
-  const [tob, setTob] = useState('23:20');
-  const [pob, setPob] = useState('Jaffna, Northern Province, Sri Lanka');
+  // Kundli Form State - Default: Chamindu Jayalath (1996-01-17 08:27 AM, Mahamodara Hospital, Galle)
+  const [name, setName] = useState('Chamindu Jayalath');
+  const [dob, setDob] = useState('1996-01-17');
+  const [tob, setTob] = useState('08:27');
+  const [pob, setPob] = useState('Mahamodara Hospital, Galle, Sri Lanka');
   const [generating, setGenerating] = useState(false);
   const [chartResult, setChartResult] = useState<any>(null);
 
@@ -523,6 +532,29 @@ export default function AstrologyStudio() {
     timeline?: any[];
   } | null>(null);
 
+  const getCoordinatesForPlace = (placeStr: string): { lat: number; lon: number } => {
+    const low = placeStr.toLowerCase();
+    if (low.includes('galle') || low.includes('mahamodara') || low.includes('හබරාදූව') || low.includes('ගාල්ල')) {
+      return { lat: 6.0367, lon: 80.2170 };
+    }
+    if (low.includes('colombo') || low.includes('කොළඹ') || low.includes('கொழும்பு')) {
+      return { lat: 6.9271, lon: 79.8612 };
+    }
+    if (low.includes('jaffna') || low.includes('යාපනය') || low.includes('யாழ்ப்பாணம்')) {
+      return { lat: 9.6615, lon: 80.0255 };
+    }
+    if (low.includes('kandy') || low.includes('මහනුවර') || low.includes('கண்டி')) {
+      return { lat: 7.2906, lon: 80.6337 };
+    }
+    if (low.includes('matara') || low.includes('මාතර') || low.includes('மாத்தறை')) {
+      return { lat: 5.9549, lon: 80.5550 };
+    }
+    if (low.includes('chennai') || low.includes('மெட்ராஸ்') || low.includes('சென்னை')) {
+      return { lat: 13.0827, lon: 80.2707 };
+    }
+    return { lat: 6.0367, lon: 80.2170 }; // Default: Sri Lanka
+  };
+
   const handleCalculatePorutham = () => {
     setPoruthamResult({
       score: 9,
@@ -533,11 +565,11 @@ export default function AstrologyStudio() {
         { name: "Gana Porutham (ගණ පොරොන්දම / கணப் பொருத்தம்)", status: "Deva Gana - Highly Compatible", ok: true, exp: "Matches temperament and spiritual frequency. Deva Gana pairs exhibit mutual respect, patience, and kindness." },
         { name: "Mahendra Porutham (මාහේන්ද්‍ර / மகேந்திரப் பொருத்தம்)", status: "Blessed (Wealth & Progeny)", ok: true, exp: "Fosters lineage continuity, deep attachment, and collective family wealth growth." },
         { name: "Stree Deerkha (ස්ත්‍රී දීර්ඝ / ஸ்திரී தீர்க்கப் பொருத்தம்)", status: "Auspicious Longevity", ok: true, exp: "Assures prosperity and longevity of the bride in the matrimonial home." },
-        { name: "Yoni Porutham (යෝනි පොරොන්දම / யோனிப் பொருத்தம்)", status: "Friendly & Harmonious", ok: true, exp: "Biological, physical, and intimate compatibility ensuring sustained romantic bonding." },
-        { name: "Rasi Porutham (රාශි පොරොන්දම / ராசிப் பொருத்தம்)", status: "Favorable Planetary Harmony", ok: true, exp: "Mental alignment between Moon signs prevents ego clashes and encourages cooperative decision-making." },
-        { name: "Rasi Athipathi (රාශ්‍යාධිපති / ராசி அதிபதிப் பொருத்தம்)", status: "Friendly Planet Lords", ok: true, exp: "Planetary rulers of both Moon signs are friendly, blessing the union with mutual appreciation." },
+        { name: "Yoni Porutham (යෝනි පොරොන්දම / யோනිப் பொருத்தம்)", status: "Friendly & Harmonious", ok: true, exp: "Biological, physical, and intimate compatibility ensuring sustained romantic bonding." },
+        { name: "Rasi Porutham (රාශි පොරොන්දම / ராසිப் பொருத்தம்)", status: "Favorable Planetary Harmony", ok: true, exp: "Mental alignment between Moon signs prevents ego clashes and encourages cooperative decision-making." },
+        { name: "Rasi Athipathi (රාශ්‍යාධිපති / ராසි அதிபதிப் பொருத்தம்)", status: "Friendly Planet Lords", ok: true, exp: "Planetary rulers of both Moon signs are friendly, blessing the union with mutual appreciation." },
         { name: "Vasiya Porutham (වශ්‍ය පොරොන්දම / வசியப் பொருத்தம்)", status: "Mutual Affection", ok: true, exp: "Creates reciprocal magnetic attraction and emotional loyalty between partners." },
-        { name: "Rajju Porutham (රජ්ජු පොරොන්දම / ரஜ்ජුப் பொருத்தம்)", status: "Auspicious Mangalya Balam (100%)", ok: true, exp: "The supreme match for marital longevity (Mangalya Balam). Different Rajju lines prevent health afflictions." },
+        { name: "Rajju Porutham (රජ්ජු පොරොන්දම / ரජ්ජුப் පොරොන්දම)", status: "Auspicious Mangalya Balam (100%)", ok: true, exp: "The supreme match for marital longevity (Mangalya Balam). Different Rajju lines prevent health afflictions." },
         { name: "Vedha Porutham (වේධ පොරොන්දම / வேதைப் பொருத்தம்)", status: "No Afflictions (Auspicious)", ok: true, exp: "Ensures the couple is free from conflicting energetic stars, removing sudden life disruptions." }
       ]
     });
@@ -547,7 +579,8 @@ export default function AstrologyStudio() {
     if (!name || !dob || !tob) return;
     setGenerating(true);
     setTimeout(() => {
-      const res = calculateUniversalAstrology(dob, tob, 9.6615, 80.0255);
+      const coords = getCoordinatesForPlace(pob);
+      const res = calculateUniversalAstrology(dob, tob, coords.lat, coords.lon);
       setChartResult(res);
       setGenerating(false);
     }, 200);
