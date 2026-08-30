@@ -16,7 +16,7 @@ from routers import (
     gateway as gateway_router, sam_ai as sam_ai_router,
     secrets as secrets_router,
     developer, pdf_studio, autonomous_hub,
-    communication as communication_router, astrology
+    communication as communication_router, astrology, mt5_trader
 )
 from routers.modules.module import router as module_router
 
