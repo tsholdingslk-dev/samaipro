@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createChart, ColorType, CrosshairMode } from "lightweight-charts";
+import { createChart, ColorType, CrosshairMode, CandlestickSeries } from "lightweight-charts";
 import Link from "next/link";
 import { apiFetch } from "../../../utils/api";
 
@@ -115,7 +115,7 @@ export default function CryptoModulePage() {
       });
       chartInstanceRef.current = chart;
 
-      const candlestickSeries = chart.addCandlestickSeries({
+      const candlestickSeries = chart.addSeries(CandlestickSeries, {
         upColor: "#34d399",
         downColor: "#fb7185",
         borderVisible: false,
