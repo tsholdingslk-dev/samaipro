@@ -363,93 +363,108 @@ async def predict_time_series_price(
 @router.get("/strategy/ny-breakout")
 async def get_ny_breakout_strategy(symbol: str = "BTC", asset_type: str = "crypto"):
     """
-    Simulates fetching 5-minute data, finding NY 9:30 AM Range, 
-    detecting breakouts, and calculating Flip Zone entries.
+    Fetches real 5-minute data from yfinance, finds NY 9:30 AM Range, 
+    detects breakouts, and calculates Flip Zone entries.
     """
-    import random
-    import time
+    import yfinance as yf
+    import pandas as pd
+    import pytz
     
     symbol = symbol.upper()
     
-    # Base simulated prices
-    base_prices = {
-        "BTC": 79200.0, "ETH": 2520.0, "SOL": 106.0, "BNB": 702.0, "TRX": 0.34,
-        "EURUSD": 1.0850, "GBPUSD": 1.2650, "XAUUSD": 2045.0
-    }
-    
-    base_price = base_prices.get(symbol, 100.0)
-    
-    # 1. 9:30 AM Range (First 15 mins -> 3 candles of 5m)
-    range_high = base_price * 1.0015
-    range_low = base_price * 0.9985
-    
-    # 2. Determine Breakout Direction (Randomized for simulation, in reality derived from OHLC)
-    is_bullish_breakout = random.choice([True, False])
-    
-    def generate_strategy_candles(bp, is_bullish):
-        candles = []
-        now = int(time.time()) - (int(time.time()) % 300) # round to nearest 5m
-        current_p = bp
-        
-        for i in range(25):
-            t = now - ((25 - i) * 300)
-            change = (random.random() - 0.5) * (bp * 0.001)
-            
-            if is_bullish:
-                if i > 8 and i <= 15:
-                    change = abs(change) + (bp * 0.0005) # Go up (breakout)
-                elif i > 15:
-                    change = -abs(change) - (bp * 0.0002) # Pullback to retest
-            else:
-                if i > 8 and i <= 15:
-                    change = -abs(change) - (bp * 0.0005) # Go down (breakdown)
-                elif i > 15:
-                    change = abs(change) + (bp * 0.0002) # Pullback to retest
-                    
-            open_p = current_p
-            close_p = open_p + change
-            high_p = max(open_p, close_p) + (random.random() * bp * 0.0002)
-            low_p = min(open_p, close_p) - (random.random() * bp * 0.0002)
-            
-            candles.append({
-                "time": t,
-                "open": round(open_p, 4),
-                "high": round(high_p, 4),
-                "low": round(low_p, 4),
-                "close": round(close_p, 4)
-            })
-            current_p = close_p
-            
-        return candles
-
-    if is_bullish_breakout:
-        # Broken the HIGH -> Bullish Trend
-        flip_zone = range_high # Resistance turns Support
-        sl = range_low - (base_price * 0.001)
-        tp = flip_zone + ((flip_zone - sl) * 2) # 1:2 RR
-        trend = "Bullish Breakout (Long)"
-        entry_signal = "Buy (Long) at Flip Zone Retest"
-        candles = generate_strategy_candles(base_price, True)
+    # Mapping for Yahoo Finance Tickers
+    if asset_type == "crypto":
+        yf_symbol = f"{symbol}-USD"
     else:
-        # Broken the LOW -> Bearish Trend
-        flip_zone = range_low # Support turns Resistance
-        sl = range_high + (base_price * 0.001)
-        tp = flip_zone - ((sl - flip_zone) * 2) # 1:2 RR
+        # Forex
+        if symbol == "XAUUSD":
+            yf_symbol = "GC=F"
+        else:
+            yf_symbol = f"{symbol}=X"
+            
+    # Fetch real 5-minute data
+    # Maximum for 5m interval is 60 days. We fetch 2 days to get enough context.
+    df = yf.download(yf_symbol, interval="5m", period="2d", progress=False)
+    
+    if df.empty:
+        return {"error": f"Could not fetch data for {yf_symbol}"}
+        
+    # Convert index to NY Time
+    ny_tz = pytz.timezone('America/New_York')
+    df = df.tz_convert(ny_tz)
+    
+    # Keep flat columns if MultiIndex is returned by yfinance
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.droplevel(1)
+        
+    df = df.dropna()
+    
+    # We want to find the latest day that has a 9:30 AM candle
+    df['date'] = df.index.date
+    
+    # Find the most recent date with a 9:30 AM candle
+    df_930 = df.between_time('09:30', '09:44')
+    
+    if df_930.empty:
+        # Fallback if no 9:30 AM data exists in the period (e.g. weekend forex)
+        range_high = float(df['High'].max())
+        range_low = float(df['Low'].min())
+        is_bullish_breakout = df['Close'].iloc[-1] > df['Open'].iloc[-1]
+    else:
+        latest_date = df_930['date'].max()
+        df_target_range = df_930[df_930['date'] == latest_date]
+        
+        range_high = float(df_target_range['High'].max())
+        range_low = float(df_target_range['Low'].min())
+        
+        # After 9:45 AM NY time
+        df_after_range = df[(df['date'] == latest_date) & (df.index.time >= pd.to_datetime('09:45').time())]
+        
+        # Check for breakout direction
+        is_bullish_breakout = True
+        if not df_after_range.empty:
+            # Simple check if current price is above the mid point
+            current_price = df_after_range['Close'].iloc[-1]
+            mid_point = (range_high + range_low) / 2
+            is_bullish_breakout = current_price > mid_point
+            
+    # Logic for Entry, Stop Loss, Take Profit
+    if is_bullish_breakout:
+        trend = "Bullish Breakout (Long)"
+        entry = range_high
+        stop_loss = range_low
+        take_profit = entry + ((entry - stop_loss) * 2)
+    else:
         trend = "Bearish Breakout (Short)"
-        entry_signal = "Sell (Short) at Flip Zone Retest"
-        candles = generate_strategy_candles(base_price, False)
-
+        entry = range_low
+        stop_loss = range_high
+        take_profit = entry - ((stop_loss - entry) * 2)
+        
+    # Prepare candles for Lightweight Charts (requires {time, open, high, low, close})
+    # Time must be UTC timestamp
+    candles_out = []
+    
+    # Convert index back to UTC for the frontend chart
+    df_utc = df.tz_convert('UTC')
+    
+    # Return last 60 candles to keep payload small
+    for timestamp, row in df_utc.tail(60).iterrows():
+        candles_out.append({
+            "time": int(timestamp.timestamp()),
+            "open": float(row['Open']),
+            "high": float(row['High']),
+            "low": float(row['Low']),
+            "close": float(row['Close']),
+        })
+        
     return {
-        "status": "success",
+        "strategy_name": "ICT 9:30 AM NY Breakout",
         "symbol": symbol,
-        "asset_type": asset_type,
+        "trend": trend,
         "range_high": round(range_high, 4),
         "range_low": round(range_low, 4),
-        "flip_zone": round(flip_zone, 4),
-        "stop_loss": round(sl, 4),
-        "take_profit": round(tp, 4),
-        "trend": trend,
-        "entry_signal": entry_signal,
-        "risk_reward_ratio": "1:2",
-        "candles": candles
+        "entry_price": round(entry, 4),
+        "stop_loss": round(stop_loss, 4),
+        "take_profit": round(take_profit, 4),
+        "candles": candles_out
     }
