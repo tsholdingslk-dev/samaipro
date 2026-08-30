@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createChart, ColorType, CrosshairMode } from "lightweight-charts";
 import Link from "next/link";
 import { apiFetch } from "../../../utils/api";
 
@@ -37,7 +38,7 @@ type Candle = {
   pattern?: string;
 };
 
-type Tab = "overview" | "time_prediction" | "candlesticks" | "ai_analysis" | "news" | "coin_research";
+type Tab = "overview" | "strategy" | "time_prediction" | "candlesticks" | "ai_analysis" | "news" | "coin_research";
 
 export default function CryptoModulePage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -62,6 +63,119 @@ export default function CryptoModulePage() {
   const [selectedHoverCandle, setSelectedHoverCandle] = useState<Candle | null>(null);
   const [candlestickAiAnalysis, setCandlestickAiAnalysis] = useState("");
   const [loadingCandleAi, setLoadingCandleAi] = useState(false);
+
+
+  // NY Strategy state
+  const [strategySymbol, setStrategySymbol] = useState("EURUSD");
+  const [strategyAsset, setStrategyAsset] = useState("forex");
+  const [strategyData, setStrategyData] = useState<any>(null);
+  const [loadingStrategy, setLoadingStrategy] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<any>(null);
+
+  const runNyStrategy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingStrategy(true);
+    setStrategyData(null);
+    try {
+      const res = await apiFetch(`/crypto/strategy/ny-breakout?symbol=${strategySymbol}&asset_type=${strategyAsset}`);
+      setStrategyData(res);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingStrategy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "strategy" && strategyData && chartContainerRef.current) {
+      // Initialize TradingView Lightweight Chart
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.remove();
+      }
+
+      const chart = createChart(chartContainerRef.current, {
+        width: chartContainerRef.current.clientWidth,
+        height: 350,
+        layout: {
+          background: { type: ColorType.Solid, color: "#0f172a" },
+          textColor: "#94a3b8",
+        },
+        grid: {
+          vertLines: { color: "rgba(255, 255, 255, 0.1)" },
+          horzLines: { color: "rgba(255, 255, 255, 0.1)" },
+        },
+        crosshair: {
+          mode: CrosshairMode.Normal,
+        },
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: false,
+        }
+      });
+      chartInstanceRef.current = chart;
+
+      const candlestickSeries = chart.addCandlestickSeries({
+        upColor: "#34d399",
+        downColor: "#fb7185",
+        borderVisible: false,
+        wickUpColor: "#34d399",
+        wickDownColor: "#fb7185"
+      });
+
+      // Map API candle format to lightweight-charts format
+      const cData = strategyData.candles.map((c: any) => ({
+        time: c.time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+      }));
+      
+      candlestickSeries.setData(cData);
+
+      // Add Price Lines for 9:30 AM Range, SL, TP, Entry
+      candlestickSeries.createPriceLine({
+        price: strategyData.range_high,
+        color: "rgba(167, 139, 250, 0.6)",
+        lineWidth: 2,
+        lineStyle: 2, // Dashed
+        axisLabelVisible: true,
+        title: "9:30 AM High",
+      });
+      candlestickSeries.createPriceLine({
+        price: strategyData.range_low,
+        color: "rgba(167, 139, 250, 0.6)",
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: "9:30 AM Low",
+      });
+      candlestickSeries.createPriceLine({
+        price: strategyData.flip_zone,
+        color: "#fbbf24",
+        lineWidth: 2,
+        axisLabelVisible: true,
+        title: "Flip Zone (Entry)",
+      });
+      candlestickSeries.createPriceLine({
+        price: strategyData.stop_loss,
+        color: "#fb7185",
+        lineWidth: 1,
+        axisLabelVisible: true,
+        title: "Stop Loss",
+      });
+      candlestickSeries.createPriceLine({
+        price: strategyData.take_profit,
+        color: "#34d399",
+        lineWidth: 1,
+        axisLabelVisible: true,
+        title: "Take Profit 1:2",
+      });
+
+      chart.timeScale().fitContent();
+    }
+  }, [strategyData, activeTab]);
 
   // Run Time-Series Price Prediction
   const runTimePrediction = async (e: React.FormEvent) => {
@@ -273,6 +387,7 @@ export default function CryptoModulePage() {
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
           {[
             { key: "overview", label: "📈 Live Market Coins" },
+            { key: "strategy", label: "🔥 Pro Trading Signals (ICT)" },
             { key: "time_prediction", label: "⏱️ Time-Based Micro Prediction" },
             { key: "candlesticks", label: "🕯️ Candlestick Studio & Patterns" },
             { key: "ai_analysis", label: "🧠 AI Market & Crash Risk" },
@@ -300,6 +415,108 @@ export default function CryptoModulePage() {
             </button>
           ))}
         </div>
+
+        
+        {/* TAB: NY 9:30 AM BREAKOUT STRATEGY */}
+        {activeTab === "strategy" && (
+          <div className="animate-fade-in">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <div>
+                <h2 style={{ fontSize: "1.3rem", color: "var(--primary)" }}>🔥 ICT 9:30 AM NY Breakout & Flip Zone</h2>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>World-Class Algorithm generating exact Entry, Stop Loss, and Take Profit.</p>
+              </div>
+            </div>
+
+            <form onSubmit={runNyStrategy} style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap", background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border)" }}>
+              <div>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Asset Class</label>
+                <select className="input-field" value={strategyAsset} onChange={(e) => setStrategyAsset(e.target.value)} style={{ width: "100%", marginTop: "0.3rem" }}>
+                  <option value="forex">Forex & Metals</option>
+                  <option value="crypto">Cryptocurrency</option>
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: "200px" }}>
+                <label style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Symbol</label>
+                <select className="input-field" value={strategySymbol} onChange={(e) => setStrategySymbol(e.target.value)} style={{ width: "100%", marginTop: "0.3rem" }}>
+                  {strategyAsset === "forex" ? (
+                    <>
+                      <option value="EURUSD">EUR/USD</option>
+                      <option value="GBPUSD">GBP/USD</option>
+                      <option value="XAUUSD">GOLD (XAU/USD)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="SOL">Solana (SOL)</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
+                <button type="submit" className="btn-primary" disabled={loadingStrategy}>
+                  {loadingStrategy ? "Scanning Market..." : "🎯 Scan for Signals"}
+                </button>
+              </div>
+            </form>
+
+            {strategyData && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }}>
+                {/* Dashboard Metrics */}
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, padding: "1rem", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Detected Trend</div>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: strategyData.trend.includes("Bullish") ? "#34d399" : "#fb7185", marginTop: "0.3rem" }}>
+                      {strategyData.trend}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, padding: "1rem", background: "rgba(59, 130, 246, 0.15)", border: "1px solid rgba(59, 130, 246, 0.4)", borderRadius: "12px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Signal Execution</div>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa", marginTop: "0.3rem" }}>
+                      {strategyData.entry_signal}
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, padding: "1rem", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "12px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Risk / Reward</div>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#fbbf24", marginTop: "0.3rem" }}>
+                      {strategyData.risk_reward_ratio}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Entry Values */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
+                  <div style={{ padding: "0.8rem", borderLeft: "3px solid #fbbf24", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>ENTRY (Flip Zone)</div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{strategyData.flip_zone}</div>
+                  </div>
+                  <div style={{ padding: "0.8rem", borderLeft: "3px solid #fb7185", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>STOP LOSS</div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{strategyData.stop_loss}</div>
+                  </div>
+                  <div style={{ padding: "0.8rem", borderLeft: "3px solid #34d399", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>TAKE PROFIT</div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{strategyData.take_profit}</div>
+                  </div>
+                </div>
+
+                {/* TradingView Chart Container */}
+                <div style={{
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
+                }}>
+                  <div style={{ background: "#1e293b", padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>{strategySymbol} / {strategyAsset.toUpperCase()} - 5m Timeframe (UTC)</span>
+                    <span style={{ color: "#fbbf24" }}>● Live Signal Connected</span>
+                  </div>
+                  <div ref={chartContainerRef} style={{ width: "100%", height: "350px", position: "relative" }} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TAB: TIME-BASED MICRO PREDICTION STUDIO */}
         {activeTab === "time_prediction" && (

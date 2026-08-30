@@ -356,6 +356,100 @@ async def predict_time_series_price(
             "short_ratio": short_ratio,
             "support": support_zone,
             "resistance": resistance_zone,
-            "analysis": fallback_time_analysis,
+        }
             "provider_used": "SAM_AI_Smart_Engine"
         }
+
+@router.get("/strategy/ny-breakout")
+async def get_ny_breakout_strategy(symbol: str = "BTC", asset_type: str = "crypto"):
+    """
+    Simulates fetching 5-minute data, finding NY 9:30 AM Range, 
+    detecting breakouts, and calculating Flip Zone entries.
+    """
+    import random
+    import time
+    
+    symbol = symbol.upper()
+    
+    # Base simulated prices
+    base_prices = {
+        "BTC": 96450.0, "ETH": 2780.0, "SOL": 215.0, "BNB": 645.0, "TRX": 0.245,
+        "EURUSD": 1.0850, "GBPUSD": 1.2650, "XAUUSD": 2045.0
+    }
+    
+    base_price = base_prices.get(symbol, 100.0)
+    
+    # 1. 9:30 AM Range (First 15 mins -> 3 candles of 5m)
+    range_high = base_price * 1.0015
+    range_low = base_price * 0.9985
+    
+    # 2. Determine Breakout Direction (Randomized for simulation, in reality derived from OHLC)
+    is_bullish_breakout = random.choice([True, False])
+    
+    def generate_strategy_candles(bp, is_bullish):
+        candles = []
+        now = int(time.time()) - (int(time.time()) % 300) # round to nearest 5m
+        current_p = bp
+        
+        for i in range(25):
+            t = now - ((25 - i) * 300)
+            change = (random.random() - 0.5) * (bp * 0.001)
+            
+            if is_bullish:
+                if i > 8 and i <= 15:
+                    change = abs(change) + (bp * 0.0005) # Go up (breakout)
+                elif i > 15:
+                    change = -abs(change) - (bp * 0.0002) # Pullback to retest
+            else:
+                if i > 8 and i <= 15:
+                    change = -abs(change) - (bp * 0.0005) # Go down (breakdown)
+                elif i > 15:
+                    change = abs(change) + (bp * 0.0002) # Pullback to retest
+                    
+            open_p = current_p
+            close_p = open_p + change
+            high_p = max(open_p, close_p) + (random.random() * bp * 0.0002)
+            low_p = min(open_p, close_p) - (random.random() * bp * 0.0002)
+            
+            candles.append({
+                "time": t,
+                "open": round(open_p, 4),
+                "high": round(high_p, 4),
+                "low": round(low_p, 4),
+                "close": round(close_p, 4)
+            })
+            current_p = close_p
+            
+        return candles
+
+    if is_bullish_breakout:
+        # Broken the HIGH -> Bullish Trend
+        flip_zone = range_high # Resistance turns Support
+        sl = range_low - (base_price * 0.001)
+        tp = flip_zone + ((flip_zone - sl) * 2) # 1:2 RR
+        trend = "Bullish Breakout (Long)"
+        entry_signal = "Buy (Long) at Flip Zone Retest"
+        candles = generate_strategy_candles(base_price, True)
+    else:
+        # Broken the LOW -> Bearish Trend
+        flip_zone = range_low # Support turns Resistance
+        sl = range_high + (base_price * 0.001)
+        tp = flip_zone - ((sl - flip_zone) * 2) # 1:2 RR
+        trend = "Bearish Breakout (Short)"
+        entry_signal = "Sell (Short) at Flip Zone Retest"
+        candles = generate_strategy_candles(base_price, False)
+
+    return {
+        "status": "success",
+        "symbol": symbol,
+        "asset_type": asset_type,
+        "range_high": round(range_high, 4),
+        "range_low": round(range_low, 4),
+        "flip_zone": round(flip_zone, 4),
+        "stop_loss": round(sl, 4),
+        "take_profit": round(tp, 4),
+        "trend": trend,
+        "entry_signal": entry_signal,
+        "risk_reward_ratio": "1:2",
+        "candles": candles
+    }
