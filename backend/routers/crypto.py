@@ -464,6 +464,7 @@ async def get_ny_breakout_strategy(symbol: str = "BTC", asset_type: str = "crypt
         "range_high": round(range_high, 4),
         "range_low": round(range_low, 4),
         "entry_price": round(entry, 4),
+        "flip_zone": round(entry, 4),
         "stop_loss": round(stop_loss, 4),
         "take_profit": round(take_profit, 4),
         "candles": candles_out
