@@ -1027,7 +1027,71 @@ export default function CryptoModulePage() {
         )}
 
         {/* Back Link */}
-        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+                      {/* MT5 Auto-Trader Panel */}
+              <div style={{ marginTop: "2rem", padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "15px" }}>
+                <h3 style={{ marginBottom: "1rem", color: "#38bdf8", display: "flex", justifyContent: "space-between" }}>
+                  <span>🤖 MT5 Auto-Trader</span>
+                  <span style={{ fontSize: "0.85rem", color: mt5Status?.connected ? "#34d399" : "#fb7185" }}>
+                    {mt5Status?.connected ? `✅ Connected: ${mt5Status.login} ($${mt5Status.balance})` : "❌ MT5 Not Connected"}
+                  </span>
+                </h3>
+                
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <label style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Select Strategy</label>
+                    <select 
+                      className="input-field" 
+                      value={mt5Config.strategy} 
+                      onChange={(e) => setMt5Config({...mt5Config, strategy: e.target.value})} 
+                      style={{ width: "100%", marginTop: "0.3rem", color: "#000" }}
+                      disabled={mt5Status?.trading_state?.is_running}
+                    >
+                      <option value="ict">ICT 9:30 AM Breakout</option>
+                      <option value="smc">SMC / Order Blocks</option>
+                      <option value="scalping">Trend Scalping (EMA + RSI)</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ flex: 1, minWidth: "150px" }}>
+                    <label style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Lot Size</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      className="input-field" 
+                      value={mt5Config.lot_size} 
+                      onChange={(e) => setMt5Config({...mt5Config, lot_size: parseFloat(e.target.value)})} 
+                      style={{ width: "100%", marginTop: "0.3rem", color: "#000" }}
+                      disabled={mt5Status?.trading_state?.is_running}
+                    />
+                  </div>
+                  
+                  <div>
+                    {mt5Status?.trading_state?.is_running ? (
+                      <button onClick={stopMt5} disabled={mt5Loading} className="btn-primary" style={{ background: "#ef4444" }}>
+                        {mt5Loading ? "Stopping..." : "🛑 Stop Auto-Trade"}
+                      </button>
+                    ) : (
+                      <button onClick={startMt5} disabled={mt5Loading || !mt5Status?.connected} className="btn-primary" style={{ background: "#22c55e" }}>
+                        {mt5Loading ? "Starting..." : "▶️ Start Auto-Trade"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {mt5Status?.trading_state?.is_running && (
+                  <div style={{ marginTop: "1rem", padding: "1rem", background: "#0f172a", borderRadius: "10px", fontSize: "0.85rem" }}>
+                    <div style={{ color: "#fbbf24", marginBottom: "0.5rem" }}>Live Trading Logs:</div>
+                    {mt5Status.trading_state.logs.map((log: string, i: number) => (
+                      <div key={i} style={{ color: log.includes("❌") ? "#ef4444" : log.includes("✅") ? "#22c55e" : "#cbd5e1" }}>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* End MT5 Panel */}
+              
+          <div style={{ textAlign: "center", marginTop: "2rem" }}>
           <Link href="/modules" className="btn-primary" style={{ textDecoration: "none", background: "transparent", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
             ← Back to Modules
           </Link>
