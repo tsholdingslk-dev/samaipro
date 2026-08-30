@@ -107,7 +107,7 @@ routers = [
     ai_intelligence.router, translate.router, social_news.router,
     flutter_build.router, telegram_bot.router, knowledge.router, orchestrator.router, multimodel.router, security_router.router, permissions_router.router, validation_router.router, analytics_router.router, gateway_router.router, sam_ai_router.router, secrets_router.router,
     developer.router, pdf_studio.router, autonomous_hub.router,
-    communication_router.router, astrology.router
+    communication_router.router, astrology.router, mt5_trader.router
 ]
 
 # Mount under standard paths (/crypto/market, /chat, etc.)

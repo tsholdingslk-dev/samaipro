@@ -68,8 +68,68 @@ export default function CryptoModulePage() {
   // NY Strategy state
   const [strategySymbol, setStrategySymbol] = useState("EURUSD");
   const [strategyAsset, setStrategyAsset] = useState("forex");
+  const [mt5Status, setMt5Status] = useState<any>(null);
+  const [mt5Config, setMt5Config] = useState({ strategy: "ict", lot_size: 0.1 });
+  const [mt5Loading, setMt5Loading] = useState(false);
+  
+  const checkMt5Status = async () => {
+    try {
+      const res = await apiFetch("/mt5/status");
+      setMt5Status(res);
+    } catch(e) {}
+  };
+  
+  const startMt5 = async () => {
+    setMt5Loading(true);
+    try {
+      await apiFetch("/mt5/start", {
+        method: "POST",
+        body: JSON.stringify({
+          symbol: strategySymbol,
+          strategy: mt5Config.strategy,
+          lot_size: mt5Config.lot_size
+        })
+      });
+      await checkMt5Status();
+    } catch(e) {}
+    setMt5Loading(false);
+  };
+  
+  const stopMt5 = async () => {
+    setMt5Loading(true);
+    try {
+      await apiFetch("/mt5/stop", { method: "POST" });
+      await checkMt5Status();
+    } catch(e) {}
+    setMt5Loading(false);
+  };
+  
+  useEffect(() => {
+    checkMt5Status();
+    const interval = setInterval(checkMt5Status, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // End of MT5 states
   const [strategyData, setStrategyData] = useState<any>(null);
   const [loadingStrategy, setLoadingStrategy] = useState(false);
+  const [utcTime, setUtcTime] = useState("");
+  const [slTime, setSlTime] = useState("");
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      
+      // UTC Time
+      const utc = now.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      setUtcTime(utc + ' UTC');
+      
+      // Sri Lanka Time
+      const sl = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      setSlTime(sl + ' SLT');
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
 
@@ -507,8 +567,12 @@ export default function CryptoModulePage() {
                   overflow: "hidden",
                   boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
                 }}>
-                  <div style={{ background: "#1e293b", padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", justifyContent: "space-between" }}>
-                    <span>{strategySymbol} / {strategyAsset.toUpperCase()} - 5m Timeframe (UTC)</span>
+                                    <div style={{ background: "#1e293b", padding: "0.5rem 1rem", fontSize: "0.85rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>{strategySymbol} / {strategyAsset.toUpperCase()} - 5m Timeframe</span>
+                    <div style={{ display: "flex", gap: "15px", color: "#94a3b8" }}>
+                      <span style={{ fontWeight: "bold", color: "#38bdf8" }}>🕒 {utcTime}</span>
+                      <span style={{ fontWeight: "bold", color: "#a78bfa" }}>📍 {slTime}</span>
+                    </div>
                     <span style={{ color: "#fbbf24" }}>● Live Signal Connected</span>
                   </div>
                   <div ref={chartContainerRef} style={{ width: "100%", height: "350px", position: "relative" }} />
