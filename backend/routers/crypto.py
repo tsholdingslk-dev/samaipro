@@ -53,11 +53,11 @@ async def get_crypto_market():
         }
     except Exception as e:
         fallback_coins = [
-            {"id": "bitcoin", "name": "Bitcoin", "symbol": "BTC", "price": 96450.0, "change_24h": 3.45, "market_cap": 1900000000000, "volume": 35000000000, "image": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png", "high_24h": 98200.0, "low_24h": 94800.0},
-            {"id": "ethereum", "name": "Ethereum", "symbol": "ETH", "price": 2780.5, "change_24h": -1.2, "market_cap": 335000000000, "volume": 18000000000, "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png", "high_24h": 2850.0, "low_24h": 2710.0},
-            {"id": "solana", "name": "Solana", "symbol": "SOL", "price": 215.8, "change_24h": 6.85, "market_cap": 102000000000, "volume": 8500000000, "image": "https://assets.coingecko.com/coins/images/4128/large/solana.png", "high_24h": 222.0, "low_24h": 204.0},
-            {"id": "binancecoin", "name": "BNB", "symbol": "BNB", "price": 645.2, "change_24h": 0.8, "market_cap": 94000000000, "volume": 1200000000, "image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png", "high_24h": 655.0, "low_24h": 638.0},
-            {"id": "ripple", "name": "XRP", "symbol": "XRP", "price": 2.45, "change_24h": 12.4, "market_cap": 140000000000, "volume": 9200000000, "image": "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png", "high_24h": 2.60, "low_24h": 2.15},
+            {"id": "bitcoin", "name": "Bitcoin", "symbol": "BTC", "price": 79204.0, "change_24h": 3.45, "market_cap": 1900000000000, "volume": 35000000000, "image": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png", "high_24h": 98200.0, "low_24h": 94800.0},
+            {"id": "ethereum", "name": "Ethereum", "symbol": "ETH", "price": 2523.59, "change_24h": -1.2, "market_cap": 335000000000, "volume": 18000000000, "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png", "high_24h": 2850.0, "low_24h": 2710.0},
+            {"id": "solana", "name": "Solana", "symbol": "SOL", "price": 106.82, "change_24h": 6.85, "market_cap": 102000000000, "volume": 8500000000, "image": "https://assets.coingecko.com/coins/images/4128/large/solana.png", "high_24h": 222.0, "low_24h": 204.0},
+            {"id": "binancecoin", "name": "BNB", "symbol": "BNB", "price": 702.13, "change_24h": 0.8, "market_cap": 94000000000, "volume": 1200000000, "image": "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png", "high_24h": 655.0, "low_24h": 638.0},
+            {"id": "ripple", "name": "XRP", "symbol": "XRP", "price": 1.41, "change_24h": 12.4, "market_cap": 140000000000, "volume": 9200000000, "image": "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png", "high_24h": 2.60, "low_24h": 2.15},
             {"id": "cardano", "name": "Cardano", "symbol": "ADA", "price": 0.88, "change_24h": 4.12, "market_cap": 31000000000, "volume": 1400000000, "image": "https://assets.coingecko.com/coins/images/975/large/cardano.png", "high_24h": 0.92, "low_24h": 0.84}
         ]
         return {
