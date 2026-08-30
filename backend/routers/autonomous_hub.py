@@ -57,7 +57,7 @@ async def autonomous_agent_pipeline(goal: str, context: str):
     try:
         code = get_ai_response(user_message=f"Goal: {goal}\nStack: {research}\nContext: {context}", system_prompt=dev_prompt)
     except Exception:
-        code = f"// SAM AI Autonomous Code Output for {goal}\nimport React, { useState, useEffect } from 'react';\n\nexport default function App() {\n  const [status, setStatus] = useState('Active');\n  return (\n    <div className='p-6 bg-slate-900 text-white rounded-xl'>\n      <h1 className='text-2xl font-bold'>Crypto Live Dashboard</h1>\n      <p>Status: {status}</p>\n    </div>\n  );\n}"
+        code = f"// SAM AI Autonomous Code Output for {goal}\nimport React, {{ useState, useEffect }} from 'react';\n\nexport default function App() {{\n  const [status, setStatus] = useState('Active');\n  return (\n    <div className='p-6 bg-slate-900 text-white rounded-xl'>\n      <h1 className='text-2xl font-bold'>Crypto Live Dashboard</h1>\n      <p>Status: {{status}}</p>\n    </div>\n  );\n}}"
 
     yield f"data: {json.dumps({'agent': 'developer', 'agent_progress': 100, 'overall': 80, 'status': 'Code Generated', 'log': '[Developer] Code compilation and logic synthesis complete.', 'code': code})}\n\n"
     await asyncio.sleep(0.8)
