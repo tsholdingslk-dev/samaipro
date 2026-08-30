@@ -430,7 +430,7 @@ export default function CryptoModulePage() {
             <form onSubmit={runNyStrategy} style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap", background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border)" }}>
               <div>
                 <label style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Asset Class</label>
-                <select className="input-field" value={strategyAsset} onChange={(e) => setStrategyAsset(e.target.value)} style={{ width: "100%", marginTop: "0.3rem" }}>
+                <select className="input-field" value={strategyAsset} onChange={(e) => { setStrategyAsset(e.target.value); setStrategySymbol(e.target.value === "forex" ? "EURUSD" : "BTC"); }} style={{ width: "100%", marginTop: "0.3rem" }}>
                   <option value="forex">Forex & Metals</option>
                   <option value="crypto">Cryptocurrency</option>
                 </select>

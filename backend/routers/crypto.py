@@ -373,7 +373,7 @@ async def get_ny_breakout_strategy(symbol: str = "BTC", asset_type: str = "crypt
     
     # Base simulated prices
     base_prices = {
-        "BTC": 96450.0, "ETH": 2780.0, "SOL": 215.0, "BNB": 645.0, "TRX": 0.245,
+        "BTC": 79200.0, "ETH": 2520.0, "SOL": 106.0, "BNB": 702.0, "TRX": 0.34,
         "EURUSD": 1.0850, "GBPUSD": 1.2650, "XAUUSD": 2045.0
     }
     
