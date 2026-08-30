@@ -1043,7 +1043,7 @@ export default function CryptoModulePage() {
                       className="input-field" 
                       value={mt5Config.strategy} 
                       onChange={(e) => setMt5Config({...mt5Config, strategy: e.target.value})} 
-                      style={{ width: "100%", marginTop: "0.3rem", color: "#000" }}
+                      style={{ width: "100%", marginTop: "0.3rem", color: "#fff", background: "rgba(255,255,255,0.05)" }}
                       disabled={mt5Status?.trading_state?.is_running}
                     >
                       <option value="ict">ICT 9:30 AM Breakout</option>
@@ -1060,7 +1060,7 @@ export default function CryptoModulePage() {
                       className="input-field" 
                       value={mt5Config.lot_size} 
                       onChange={(e) => setMt5Config({...mt5Config, lot_size: parseFloat(e.target.value)})} 
-                      style={{ width: "100%", marginTop: "0.3rem", color: "#000" }}
+                      style={{ width: "100%", marginTop: "0.3rem", color: "#fff", background: "rgba(255,255,255,0.05)" }}
                       disabled={mt5Status?.trading_state?.is_running}
                     />
                   </div>
