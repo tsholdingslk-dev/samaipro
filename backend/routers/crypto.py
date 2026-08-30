@@ -356,7 +356,7 @@ async def predict_time_series_price(
             "short_ratio": short_ratio,
             "support": support_zone,
             "resistance": resistance_zone,
-        }
+            "analysis": fallback_time_analysis,
             "provider_used": "SAM_AI_Smart_Engine"
         }
 
